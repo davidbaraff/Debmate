@@ -1,15 +1,23 @@
 import XCTest
 @testable import Debmate
+@testable import DebmateC
 
 final class DebmateTests: XCTestCase {
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(Debmate().text, "Hello, World!")
+    func testMD5() {
+        XCTAssertEqual(Util.md5Digest(""), "d41d8cd98f00b204e9800998ecf8427e")
+        XCTAssertEqual(Util.md5Digest("deb"), "38db7ce1861ee11b6a231c764662b68a")
+
+        XCTAssertEqual(Util.md5Digest(Data()), "d41d8cd98f00b204e9800998ecf8427e")
+        XCTAssertEqual(Util.md5Digest("deb".data(using: .utf8)!), "38db7ce1861ee11b6a231c764662b68a")
     }
 
+    func testExceptionCatching() {
+        var setMe = ""
+        XCTAssert(Debmate_CatchException( {  setMe = "xyzzy" }))
+        XCTAssertEqual(setMe, "xyzzy")
+    }
     static var allTests = [
-        ("testExample", testExample),
+        ("testMD5", testMD5),
+        ("testExceptionCatching", testExceptionCatching)
     ]
 }

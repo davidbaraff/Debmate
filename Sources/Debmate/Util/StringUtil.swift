@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CommonCrypto
+import CryptoKit
 
 extension String {
     /// Return an NSRange that full encompasses the string
@@ -45,31 +45,17 @@ extension Util {
         guard let messageData = s.data(using: .utf8) else {
             fatalErrorForCrashReport("Failed to convert string into data via utf8 encoding: string is \"\(s)\"")
         }
-        
-        var digestData = Data(count: Int(CC_MD5_DIGEST_LENGTH))
-        
-        _ = digestData.withUnsafeMutableBytes { digestBytes in
-            messageData.withUnsafeBytes { messageBytes in
-                CC_MD5(messageBytes.baseAddress, CC_LONG(messageData.count), digestBytes.bindMemory(to: UInt8.self).baseAddress)
-            }
-        }
-        
-        return digestData.map { String(format: "%02hhx", $0) }.joined()
+        return md5Digest(messageData)
     }
 
     /// Computes an md5 digest hash string.
     /// - Parameter d: Input data
     /// - Returns: md5 digest string
-    public static func md5Digest(_ d: Data) -> String {
-        var digestData = Data(count: Int(CC_MD5_DIGEST_LENGTH))
-        
-        _ = digestData.withUnsafeMutableBytes { digestBytes in
-            d.withUnsafeBytes { messageBytes in
-                CC_MD5(messageBytes.baseAddress, CC_LONG(d.count), digestBytes.bindMemory(to: UInt8.self).baseAddress)
-            }
-        }
-        
-        return digestData.map { String(format: "%02hhx", $0) }.joined()
+    public static func md5Digest(_ data: Data) -> String {
+        let digest = Insecure.MD5.hash(data: data)
+        return digest.map {
+            String(format: "%02hhx", $0)
+        }.joined()
     }
     
     fileprivate static func wordToWordList(_ word: String) -> [String] {

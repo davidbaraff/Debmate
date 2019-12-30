@@ -16,8 +16,14 @@ final class DebmateTests: XCTestCase {
         XCTAssert(Debmate_CatchException( {  setMe = "xyzzy" }))
         XCTAssertEqual(setMe, "xyzzy")
     }
+    
+    func testStringExtensions() {
+        XCTAssert(" abc ".trimmed == "abc")
+        XCTAssert("a👗bc🧠".asciiSafe == "abc")
+    }
+
     static var allTests = [
         ("testMD5", testMD5),
-        ("testExceptionCatching", testExceptionCatching)
+        ("testStringExtensions", testStringExtensions),        ("testExceptionCatching", testExceptionCatching)
     ]
 }

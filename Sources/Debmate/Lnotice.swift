@@ -19,7 +19,7 @@ public class LnoticeKeySet {
     
     /// Add a new key into the set.
     ///
-    /// - Parameter lnoticeKey: An LnoticeKey object being listened to.
+    /// - Parameter lnoticeKey: Value returned from a call to ``Lnotice<T>.listen()``.
     public func add<T>(_ lnoticeKey: LnoticeKey<T>) {
         keys.append(lnoticeKey)
     }
@@ -37,7 +37,6 @@ public class LnoticeKeySet {
     private var keys = [Cancellable]()
 }
 
-///
 /// Object conforming to Cancellable returned from `Lnotice<T>.listen()`.
 ///
 /// As with any Cancellable object, the return instance must be retained
@@ -47,7 +46,7 @@ public class LnoticeKey<T> : Cancellable {
     fileprivate let receiveValue: ((T) -> ())
     fileprivate let cancellable: AnyCancellable
     
-    fileprivate init(cancellable c: AnyCancellable, receiveValue r: @escaping (T ) -> ()) {
+    fileprivate init(cancellable c: AnyCancellable, receiveValue r: @escaping (T) -> ()) {
         cancellable = c
         receiveValue = r
     }
@@ -56,7 +55,7 @@ public class LnoticeKey<T> : Cancellable {
     /// call that returned this LnoticeKey.
     ///
     /// - Parameter value: value to be passed to the original closure
-    public func callNow(_ value: T ) {
+    public func callNow(_ value: T) {
         receiveValue(value)
     }
     
@@ -68,24 +67,23 @@ public class LnoticeKey<T> : Cancellable {
 ///  Lightweight anonymous notification system, implemented via Combine publisher and subscribers.
 ///  It provides threadsafe many-1 anonymous notification.
 ///
-///  Canonical Use**
+///  Here is a typical use case:
 ///
-///  let valueChanged = Lnotice<Float>()
-///  let someObject = ...
-///  let key1 = valueChanged.listen() { print("New value: \($0)" }
-///  let key2 = valueChanged.listen() { someObject.takeValue($0) }
+///      let valueChanged = Lnotice<Float>()
+///      let someObject = ...
+///      let key1 = valueChanged.listen() { print("New value: \($0)" }
+///      let key2 = valueChanged.listen() { someObject.takeValue($0) }``
 ///
-///  valueChanged.broadcast(3.14)   // prints  "New value: 3.14" and calls someObject.takeValue(3.14)
+///      valueChanged.broadcast(3.14)   // prints  "New value: 3.14" and calls someObject.takeValue(3.14)
 ///
-///  key1.cancel()
+///      key1.cancel()
 ///
-///  valueChanged.broadcast(1.717)  // only calls someObject.takeValue(1.717)
-///
+///      valueChanged.broadcast(1.717)  // only calls someObject.takeValue(1.717)
 public class Lnotice<T> {
     /// The underlying publisher for this instance.
     public let publisher = PassthroughSubject<T, Never>()
 
-    private var keepAliveObjects = [Any]()
+    var keepAliveObjects = [Any]()
     
     /// Keep data alive.
     ///
@@ -109,17 +107,21 @@ public class Lnotice<T> {
     /// When the `broadcast()` function of this instance is invoked, any active closures
     /// are called  with the argument passed to `broadcast().
     ///
+    /// - Parameters:
+    ///     - callNow: optional value for immediate call to receiveValue()
+    ///     - dispatchQueue: optional queue; if specified, receiveValue is run from this queue
+    ///     - receiveOn: closure called with argument value from publisher
+    ///
     /// The closures are called synchronously from within the `broadcast()` function
     /// unless a specific dispatch queue is specified by dispatchQeueue.
     ///
     /// - returns: A listener key.
     ///
-    /// Call the key's `cancel()` method to prevent future calls to the closure.
+    /// Calling the return key's `cancel()` method to prevent future calls to the closure.
     /// If the callNow argument is supplied, the passed in closure is immediately invoked
     /// with the callNow arguments (ignoring any value of dispatchQueue).
-    @discardableResult
     public func listen(callNow params: T? = nil, dispatchQueue: DispatchQueue? = nil,
-                       receiveValue: @escaping ((T ) -> ())) -> LnoticeKey<T> {
+                       receiveValue: @escaping ((T) -> ())) -> LnoticeKey<T> {
         let cancellable: AnyCancellable
         if let dispatchQueue = dispatchQueue {
             cancellable = publisher.receive(on: dispatchQueue).sink { receiveValue($0) }
@@ -134,12 +136,13 @@ public class Lnotice<T> {
         }
         return lnoticeKey
     }
-    
+
     ///  Broadcast a change to all listeners.
     ///
-    ///  All registered callbacks/closures are called synchronously with the value `T `.
+    ///  All registered losures are called synchronously with the value `T `,
+    ///  except that closures registered with a specified dispatch queue are
+    ///  invoked on that queue.
     public func broadcast(_ value : T) {
         publisher.send(value)
     }
 }
-

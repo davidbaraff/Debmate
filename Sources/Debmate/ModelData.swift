@@ -8,20 +8,31 @@
 import Foundation
 import DebmateC
 
- #if os(iOS)
-#endif
-
 #if os(iOS)
 import UIKit
 public protocol ModelDataValuedControl: UIControl {
     var controlValue : Any { get set }
 }
+
+extension UISwitch : ModelDataValuedControl {
+    public var controlValue: Any {
+        get {
+            return self.isOn
+        }
+        
+        set(newValue) {
+            self.isOn = newValue as! Bool
+        }
+    }
+}
+
 #else
 import Cocoa
 public protocol ModelDataValuedControl: NSControl {
     var controlValue : Any { get set }
 }
 #endif
+
 /// Class for representing model data tied to state saving.
 ///
 /// The ModelData class is used to tie simple GUI elements with a value,

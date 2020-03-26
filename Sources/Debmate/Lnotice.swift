@@ -23,7 +23,7 @@ public class LnoticeKeySet {
     public func add<T>(_ lnoticeKey: LnoticeKey<T>) {
         keys.append(lnoticeKey)
     }
-    
+
     /// Calls cancel() on each key, and discards the keys from the set.
     public func cancelAllAndClear() {
         keys.forEach { $0.cancel() }
@@ -45,6 +45,7 @@ public class LnoticeKeySet {
 public class LnoticeKey<T> : Cancellable {
     fileprivate let receiveValue: ((T) -> ())
     fileprivate let cancellable: AnyCancellable
+    fileprivate var keepCycle: LnoticeKey<T>?
     
     fileprivate init(cancellable c: AnyCancellable, receiveValue r: @escaping (T) -> ()) {
         cancellable = c
@@ -83,6 +84,9 @@ public class Lnotice<T> {
     /// The underlying publisher for this instance.
     public let publisher = PassthroughSubject<T, Never>()
 
+    public init() {
+    }
+
     var keepAliveObjects = [Any]()
     
     /// Keep data alive.
@@ -117,9 +121,12 @@ public class Lnotice<T> {
     ///
     /// - returns: A listener key.
     ///
-    /// Calling the return key's `cancel()` method to prevent future calls to the closure.
+    /// Note: the caller must retain the returned key to prevent cancelation.
+    ///
+    /// Calling the return key's `cancel()` method prevents future calls to the closure.
     /// If the callNow argument is supplied, the passed in closure is immediately invoked
     /// with the callNow arguments (ignoring any value of dispatchQueue).
+
     public func listen(callNow params: T? = nil, dispatchQueue: DispatchQueue? = nil,
                        receiveValue: @escaping ((T) -> ())) -> LnoticeKey<T> {
         let cancellable: AnyCancellable
@@ -129,12 +136,49 @@ public class Lnotice<T> {
         else {
             cancellable = publisher.sink { receiveValue($0) }
         }
-
+        
         let lnoticeKey = LnoticeKey(cancellable: cancellable, receiveValue: receiveValue)
         if let params = params {
             lnoticeKey.callNow(params)
         }
         return lnoticeKey
+    }
+
+    /// Begin listening to an object.
+    ///
+    /// When the `broadcast()` function of this instance is invoked, any active closures
+    /// are called  with the argument passed to `broadcast().
+    ///
+    /// - Parameters:
+    ///     - callNow: optional value for immediate call to receiveValue()
+    ///     - dispatchQueue: optional queue; if specified, receiveValue is run from this queue
+    ///     - receiveOn: closure called with argument value from publisher
+    ///
+    /// The closures are called synchronously from within the `broadcast()` function
+    /// unless a specific dispatch queue is specified by dispatchQeueue.
+    ///
+    /// Unlike a call to `listen()`,  which can be canceled, the callback closure will always
+    /// be called for the life of the application when using this form of listen.
+    ///
+    /// If the callNow argument is supplied, the passed in closure is immediately invoked
+    /// with the callNow arguments (ignoring any value of dispatchQueue).
+
+    public func listenForever(callNow params: T? = nil, dispatchQueue: DispatchQueue? = nil,
+                              receiveValue: @escaping ((T) -> ())) {
+        let cancellable: AnyCancellable
+        if let dispatchQueue = dispatchQueue {
+            cancellable = publisher.receive(on: dispatchQueue).sink { receiveValue($0) }
+        }
+        else {
+            cancellable = publisher.sink { receiveValue($0) }
+        }
+        
+        let lnoticeKey = LnoticeKey(cancellable: cancellable, receiveValue: receiveValue)
+        if let params = params {
+            lnoticeKey.callNow(params)
+        }
+
+        lnoticeKey.keepCycle = lnoticeKey
     }
 
     ///  Broadcast a change to all listeners.

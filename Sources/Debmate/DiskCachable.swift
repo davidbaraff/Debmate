@@ -13,6 +13,19 @@ public protocol DiskCachable {
     static func fromCachableAny(_ cachableAny: Any) -> Self?
 }
 
+public extension DiskCachable where Self : RawRepresentable {
+    func enumToCachableAny() -> Any {
+        return self.rawValue
+    }
+    
+    static func enumFromCachableAny(_ cachableAny: Any) -> Self? {
+        if let v = cachableAny as? Self.RawValue {
+            return Self(rawValue: v)
+        }
+        return nil
+    }
+}
+
 public protocol CodableDiskCachable : DiskCachable, Codable {
 }
 

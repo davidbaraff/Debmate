@@ -36,13 +36,17 @@ public class PureModelData<T : Equatable> {
     public let noticeObject = Lnotice<T>()
     
     /// Specify a closure to be run when the value of the control changes.
-    @discardableResult
+    ///
+    /// Note: the returned key must be retained for the closure to be called when the control changes.
     public func listen(receiveValue: @escaping (T) -> ()) -> LnoticeKey<T> {
         return noticeObject.listen(receiveValue: receiveValue)
     }
     
     /// Specify a closure to be run when the value of the control changes.
-    /// Note: this form immediately invokes the closure if callNow is true.
+    ///
+    /// Tthis form immediately invokes the closure if callNow is true.
+    ///
+    /// Note: the returned key must be retained for the closure to be called when the control changes.
     public func listen(callNow: Bool, receiveValue: @escaping (T) -> ()) -> LnoticeKey<T> {
         let result = noticeObject.listen(receiveValue: receiveValue)
         if callNow {
@@ -50,7 +54,19 @@ public class PureModelData<T : Equatable> {
         }
         return result
     }
+
+    /// Specify a closure to be run when the value of the control changes.
+    public func listenForever(receiveValue: @escaping (T) -> ()) {
+        noticeObject.listenForever(receiveValue: receiveValue)
+    }
     
+    /// Specify a closure to be run when the value of the control changes.
+    ///
+    /// Tthis form immediately invokes the closure if callNow is true.
+    public func listenForever(callNow: Bool, receiveValue: @escaping (T) -> ()) {
+        noticeObject.listenForever(callNow: callNow ? curValue : nil, receiveValue: receiveValue)
+    }
+
     /// Create a PureModelData instance.
     ///
     /// - Parameters:

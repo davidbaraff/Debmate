@@ -23,6 +23,13 @@ extension String {
     public var asciiSafe: String {
         return String(self.unicodeScalars.filter { $0.isASCII })
     }
+    
+    /// Returns a utf8 contiguous version of a string
+    public var utf8Contiguous: String {
+        var s = self
+        s.makeContiguousUTF8()
+        return s
+    }
 }
 
 fileprivate let regex =  try! NSRegularExpression(pattern: "([0-9]+)|([^0-9]+)")

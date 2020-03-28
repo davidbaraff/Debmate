@@ -33,16 +33,70 @@ extension Util {
         return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
     }
 
-    /// Creates a directory as necessary.
-    ///
-    /// - Parameter url: directory location
-    /// - Returns: true if the directory exists or was succesfully created
-    @discardableResult
-    public static func ensureDirectoryExists(url: URL) -> Bool {
-        return isDirectory(url: url) ||
-          (try? FileManager.default.createDirectory(atPath: url.path,
-                                                    withIntermediateDirectories: true, attributes: nil)) != nil
+   /// Returns a resolved path
+      /// - Parameter url: path to resolve
+      /// Returns the path with symlinks resolved.
+      public static func realpath(url: URL) -> URL {
+          return (try? URL(fileURLWithPath: FileManager.default.destinationOfSymbolicLink(atPath: url.path))) ??
+                  (url as NSURL).resolvingSymlinksInPath ?? url
+      }
+      
+      /// Creates a directory as necessary.
+      ///
+      /// - Parameter url: directory location
+      /// - Returns: true if the directory exists or was succesfully created
+      @discardableResult
+      public static func ensureDirectoryExists(url: URL) -> Bool {
+          if isDirectory(url: url) {
+              return true
+          }
+
+          let rp = realpath(url: url)
+          return isDirectory(url: rp) ||
+              (try? FileManager.default.createDirectory(atPath: rp.path,
+                                                        withIntermediateDirectories: true, attributes: nil)) != nil
+      }
+    
+    /// Compute a file relative path
+    /// - Parameters:
+    ///   - src: The source file.
+    ///   - dest: The destination file.
+    /// The returned result reflects a relative path to dest using src as the starting point.
+    static public func fileRelativePath(src: URL, dest: URL) -> URL {
+        let pathComponents = (dest.path as NSString).pathComponents
+        let anchorComponents = (src.path as NSString).pathComponents
+        
+        var componentsInCommon = 0
+        for (c1, c2) in zip(pathComponents, anchorComponents) {
+            if c1 != c2 {
+                break
+            }
+            componentsInCommon += 1
+        }
+        
+        let numberOfParentComponents = anchorComponents.count - componentsInCommon
+        let numberOfPathComponents = pathComponents.count - componentsInCommon
+        
+        var relativeComponents = [String]()
+        relativeComponents.reserveCapacity(numberOfParentComponents + numberOfPathComponents)
+        for _ in 0..<numberOfParentComponents {
+            relativeComponents.append("..")
+        }
+        
+        for i in componentsInCommon ..< pathComponents.count {
+            relativeComponents.append(pathComponents[i])
+        }
+        
+        return URL(fileURLWithPath: relativeComponents.joined(separator: "/"))
     }
+    
+    /// List contents of directory, handling symlinks
+    /// - Parameter url: directory URL
+    public static func directoryContents(url: URL) throws -> [URL] {
+        let resolvedURL = (url as NSURL).resolvingSymlinksInPath ?? url
+        return try FileManager.default.contentsOfDirectory(at: resolvedURL, includingPropertiesForKeys: nil, options: [])
+    }
+
     
     /// Clear the contents of a directory
     ///

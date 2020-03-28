@@ -1,5 +1,5 @@
 //
-//  DictionaryUtil.swift
+//  DictionaryExtensions.swift
 //  Debmate
 //
 //  Copyright © 2020 David Baraff. All rights reserved.

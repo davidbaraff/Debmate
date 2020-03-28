@@ -7,6 +7,8 @@
 
 import Foundation
 
+public var logOnCrash: ((String) -> ())?
+
 private func fileForFatalErrorCrashReport() -> URL {
     return Util.cachesDirectory.appendingPathComponent("debmate-crashreport-msg")
 }
@@ -22,6 +24,11 @@ private func fileForFatalErrorCrashReport() -> URL {
 ///  - parameter line:    line number the fatal error was issued from
 public func fatalErrorForCrashReport(_ msg: String, file: StaticString = #file,  line: UInt = #line, function: StaticString = #function) -> Never  {
     let fullMsg = "Fatal error: \(msg) [\(function), \(file):\(line)]"
+    
+    if let logOnCrash = logOnCrash {
+        logOnCrash(fullMsg)
+        // kbsLog(fullMsg, NSLog: false, verifyTimeout: 0.2)
+    }
     
     do {
         try fullMsg.write(to: fileForFatalErrorCrashReport(), atomically: true, encoding: .utf8)

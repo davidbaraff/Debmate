@@ -1,3 +1,10 @@
+//
+//  Reachability.swift
+//  Debmate
+//
+//  Copyright © 2019 David Baraff. All rights reserved.
+//
+
 import SystemConfiguration
 import Foundation
 

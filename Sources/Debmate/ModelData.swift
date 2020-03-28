@@ -208,4 +208,3 @@ public class PureModelData<T : Equatable> : ModelData<T> {
     }
 }
 */
-

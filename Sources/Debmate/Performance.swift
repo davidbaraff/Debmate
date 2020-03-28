@@ -1,8 +1,7 @@
 //
 //  Performance.swift
-//  Debware
+//  Debmate
 //
-//  Created by David Baraff on 6/25/17.
 //  Copyright © 2017 David Baraff. All rights reserved.
 //
 

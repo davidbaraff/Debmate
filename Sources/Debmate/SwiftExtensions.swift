@@ -2,7 +2,6 @@
 //  SwiftExtensions.swift
 //  Debmate
 //
-//  Created by David Baraff on 3/22/20.
 //  Copyright © 2020 deb. All rights reserved.
 //
 
@@ -64,4 +63,14 @@ public func any<ST : Sequence>(_ sequence:ST) -> Bool where ST.Element == Bool {
         }
     }
     return false
+}
+
+public extension Sequence {
+    /// Count number of elements matching a predicate
+    ///
+    /// - Parameter predicate: predicate function
+    /// - Returns: Number of elements for which predicate is true
+    func count_members(where predicate: (Self.Element) -> Bool) -> Int {
+        return self.reduce(0) { predicate($1) ? $0 + 1 : $0 }
+    }
 }

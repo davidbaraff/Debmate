@@ -16,7 +16,7 @@ import CoreGraphics
 #endif
 */
 
-internal extension CGSize {
+public extension CGSize {
     init(_ x: Int, _ y: Int) {
         self.init(width: x, height: y)
     }
@@ -34,7 +34,7 @@ internal extension CGSize {
     }
 }
 
-internal extension CGPoint {
+public extension CGPoint {
     init(_ x: Int, _ y: Int) {
         self.init(x: x, y: y)
     }
@@ -52,83 +52,83 @@ internal extension CGPoint {
     }
 }
 
-internal func + (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
+public func + (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
     return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
 }
 
-internal func - (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
+public func - (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
     return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
 }
 
-internal prefix func - (p: CGPoint) -> CGPoint {
+public prefix func - (p: CGPoint) -> CGPoint {
     return CGPoint(x: -p.x, y: -p.y)
 }
 
-internal func * (scale: CGFloat, rhs: CGPoint) -> CGPoint {
+public func * (scale: CGFloat, rhs: CGPoint) -> CGPoint {
     return CGPoint(x: scale * rhs.x, y: scale * rhs.y)
 }
 
-internal func * (scale: Double, rhs: CGPoint) -> CGPoint {
+public func * (scale: Double, rhs: CGPoint) -> CGPoint {
     return CGFloat(scale) * rhs
 }
 
-internal func * (scale: Float, rhs: CGPoint) -> CGPoint {
+public func * (scale: Float, rhs: CGPoint) -> CGPoint {
     return CGFloat(scale) * rhs
 }
 
-internal func * (lhs: CGPoint, scale: CGFloat) -> CGPoint {
+public func * (lhs: CGPoint, scale: CGFloat) -> CGPoint {
     return CGPoint(x: scale * lhs.x, y: scale * lhs.y)
 }
 
-internal func * (lhs: CGPoint, scale: Float) -> CGPoint {
+public func * (lhs: CGPoint, scale: Float) -> CGPoint {
     return lhs * CGFloat(scale)
 }
 
-internal func * (lhs: CGPoint, scale: Double) -> CGPoint {
+public func * (lhs: CGPoint, scale: Double) -> CGPoint {
     return lhs * CGFloat(scale)
 }
 
-internal func + (lhs: CGSize, rhs: CGSize) -> CGSize {
+public func + (lhs: CGSize, rhs: CGSize) -> CGSize {
     return CGSize(lhs.width + rhs.width, lhs.height + rhs.height)
 }
 
-internal func - (lhs: CGSize, rhs: CGSize) -> CGSize {
+public func - (lhs: CGSize, rhs: CGSize) -> CGSize {
     return CGSize(lhs.width - rhs.width, lhs.height - rhs.height)
 }
 
-internal func * (scale: CGFloat, rhs: CGSize) -> CGSize {
+public func * (scale: CGFloat, rhs: CGSize) -> CGSize {
     return CGSize(width: scale * rhs.width, height: scale * rhs.height)
 }
 
-internal func * (scale: Double, rhs: CGSize) -> CGSize {
+public func * (scale: Double, rhs: CGSize) -> CGSize {
     return CGFloat(scale) * rhs
 }
 
-internal func * (scale: Float, rhs: CGSize) -> CGSize {
+public func * (scale: Float, rhs: CGSize) -> CGSize {
     return CGFloat(scale) * rhs
 }
 
-internal func * (lhs: CGSize, scale: CGFloat) -> CGSize {
+public func * (lhs: CGSize, scale: CGFloat) -> CGSize {
     return CGSize(width: scale * lhs.width, height: scale * lhs.height)
 }
 
-internal func * (lhs: CGSize, scale: Float) -> CGSize {
+public func * (lhs: CGSize, scale: Float) -> CGSize {
     return lhs * CGFloat(scale)
 }
 
-internal func * (lhs: CGSize, scale: Double) -> CGSize {
+public func * (lhs: CGSize, scale: Double) -> CGSize {
     return lhs * CGFloat(scale)
 }
 
-internal func / (lhs: CGSize, scale: CGFloat) -> CGSize {
+public func / (lhs: CGSize, scale: CGFloat) -> CGSize {
     return lhs * (1.0 / scale)
 }
 
-internal func / (lhs: CGSize, scale: Float) -> CGSize {
+public func / (lhs: CGSize, scale: Float) -> CGSize {
     return lhs * (1.0 / scale)
 }
 
-internal func / (lhs: CGSize, scale: Double) -> CGSize {
+public func / (lhs: CGSize, scale: Double) -> CGSize {
     return lhs * (1.0 / scale)
 }
 

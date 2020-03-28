@@ -200,11 +200,3 @@ public class ModelData<T : Equatable> {
         }
     }
 }
-
-/*
-public class PureModelData<T : Equatable> : ModelData<T> {
-    public override init(_ keyName: String, defaultValue: T) {
-        super.init(keyName, defaultValue: defaultValue)
-    }
-}
-*/

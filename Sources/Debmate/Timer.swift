@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 /// A basic timer.
 public class Timer {
     private var timer: DispatchSourceTimer?

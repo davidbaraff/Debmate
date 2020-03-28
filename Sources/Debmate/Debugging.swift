@@ -27,7 +27,6 @@ public func fatalErrorForCrashReport(_ msg: String, file: StaticString = #file, 
     
     if let logOnCrash = logOnCrash {
         logOnCrash(fullMsg)
-        // kbsLog(fullMsg, NSLog: false, verifyTimeout: 0.2)
     }
     
     do {

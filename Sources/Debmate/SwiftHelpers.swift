@@ -65,12 +65,22 @@ public func any<ST : Sequence>(_ sequence:ST) -> Bool where ST.Element == Bool {
     return false
 }
 
-public extension Sequence {
-    /// Count number of elements matching a predicate
-    ///
-    /// - Parameter predicate: predicate function
-    /// - Returns: Number of elements for which predicate is true
-    func count_members(where predicate: (Self.Element) -> Bool) -> Int {
-        return self.reduce(0) { predicate($1) ? $0 + 1 : $0 }
+
+/// A hashable tuple of two elements.
+public struct HashablePair<T1 : Hashable, T2 : Hashable> : Hashable {
+    public init(_ first: T1, _ second: T2) {
+        self.first = first
+        self.second = second
+    }
+    
+    public let first: T1
+    public let second: T2
+}
+
+public struct WeakRef<T : AnyObject> {
+    weak public var value: T?
+    
+    public init(_ value: T) {
+        self.value = value
     }
 }

@@ -141,4 +141,54 @@ extension Util {
             .mapError { $0 }
             .eraseToAnyPublisher()
     }
+    
+ /// Make an http request (DEPRECATED).
+  ///
+  /// - Parameters:
+  ///   - host: host
+  ///   - port: optional port
+  ///   - command: path (without parameters)
+  ///   - parameters: dictionary of string/value parameters
+  ///   - body: optional body (implies post)
+  /// - Returns: The data returned by the query
+  /// - Throws: errors that occured.
+  ///
+  /// Note: this is a synchronous call.
+  static public func makeHttpRequest(host: String, port:Int? = nil, command: String? = nil,
+                                     parameters: [String:Any]? = nil, body: Data? = nil)
+                                     throws -> Data {
+                                         let url = try Debmate.Util.createURL(host: host, port: port, command: command, parameters: parameters)
+      
+      let semaphore = DispatchSemaphore(value: 0)
+      let urlSession = URLSession(configuration: .ephemeral)
+      var urlRequest = URLRequest(url: url)
+      
+      if let body = body {
+          urlRequest.httpBody = body
+          urlRequest.httpMethod = "POST"
+      }
+
+      var data:Data?
+      var error:Error?
+      
+      let task = urlSession.dataTask(with: urlRequest) {
+          pData, response, pError in
+          data = pData
+          error = pError
+          semaphore.signal()
+      }
+      
+      task.resume()
+      
+      AsyncTask.addCancelationHandler {
+          task.cancel()
+      }
+      
+      _ = semaphore.wait(timeout: .distantFuture)
+      if let error = error {
+          throw error
+      }
+      
+      return data ?? Data()
+  }
 }

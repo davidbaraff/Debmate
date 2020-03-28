@@ -8,14 +8,6 @@
 import Foundation
 import CoreGraphics
 
-/*
-#if os(iOS)
-    import UIKit
-#else
-    import Cocoa
-#endif
-*/
-
 public extension CGSize {
     init(_ x: Int, _ y: Int) {
         self.init(width: x, height: y)

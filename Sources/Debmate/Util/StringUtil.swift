@@ -8,31 +8,7 @@
 import Foundation
 import CryptoKit
 
-extension String {
-    /// Return an NSRange that full encompasses the string
-    public var fullRange: NSRange {
-        return NSRange(location: 0, length: count)
-    }
-    
-    /// Return the string with leading and trailing whitespace trimmed off.
-    public var trimmed: String {
-        return self.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-    }
-    
-    /// Return an ascii-safe version of self
-    public var asciiSafe: String {
-        return String(self.unicodeScalars.filter { $0.isASCII })
-    }
-    
-    /// Returns a utf8 contiguous version of a string
-    public var utf8Contiguous: String {
-        var s = self
-        s.makeContiguousUTF8()
-        return s
-    }
-}
-
-fileprivate let regex =  try! NSRegularExpression(pattern: "([0-9]+)|([^0-9]+)")
+fileprivate let regex = try! NSRegularExpression(pattern: "([0-9]+)|([^0-9]+)")
 fileprivate func splitIntoWords(_ s: String) -> [String] {
     let ns = s as NSString
     return regex.matches(in: s, range: NSRange(location: 0, length: s.count)).map {
@@ -178,5 +154,3 @@ extension Util {
         }
     }
 }
-
-

@@ -316,5 +316,18 @@ extension Util {
     }
 
 }
+
+/// Use this segue when you need a completion callback to run after the segue is done.
+public class StoryboardSegueWithCompletion: UIStoryboardSegue {
+    public var completion: (() -> Void)?
+
+    override public func perform() {
+        super.perform()
+        if let completion = completion {
+            completion()
+        }
+    }
+}
+
 #endif
 

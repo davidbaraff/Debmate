@@ -1,6 +1,6 @@
 //
 //  PopupTextMenu.swift
-//  Debware
+//  Debmate
 //
 //  Copyright © 2018 David Baraff. All rights reserved.
 //

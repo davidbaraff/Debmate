@@ -1,6 +1,6 @@
 //
 //  CenteredTextPopupView.swift
-//  Debware
+//  Debmate
 //
 //  Created by David Baraff on 11/27/17.
 //  Copyright © 2017 David Baraff. All rights reserved.
@@ -10,7 +10,6 @@
 
 import Foundation
 import UIKit
-import Debmate
 
 public class CenteredTextPopupView : UIView {
     var label: UILabel!

@@ -74,13 +74,9 @@ public class ModelData<T : Equatable> {
     /// if callNow is true, the callback is immediately run with the current value
     /// of the control.
     public func listen(callNow: Bool = false, receiveValue: @escaping (T) -> ()) -> LnoticeKey<T> {
-        print("Model data Y1")
         let key = noticeObject.listen(receiveValue: receiveValue)
-        print("Model data Y2")
         if callNow {
-            print("Model data Y3")
             key.callNow(curValue)
-            print("Model data Y4")
         }
         return key
     }

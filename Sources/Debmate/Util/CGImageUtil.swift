@@ -39,7 +39,7 @@ extension Util {
     ///   - toSize: desired output size
     ///
     /// This function requires direct access to the file URL containing the image,
-    /// but is known to work for large images where Debware.Util.resizeCGImage() does not.
+    /// but is known to work for large images where Debmate.Util.resizeCGImage() does not.
     static public func resizeImage(fileURL url: URL, toSize size: CGSize) -> CGImage? {
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageIfAbsent: true,

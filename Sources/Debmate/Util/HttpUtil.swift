@@ -19,8 +19,8 @@ extension Util {
     /// The returned object can be listened to (see Lnotice) for changes in reachability
     /// of the host.  The reachability status is specified by the passed bool argument
     /// to the watching function.
-    static public func monitorHostReachability(_ host: String, initialState: Bool, _ connectionTest: @escaping () -> Bool) -> Lnotice<Bool> {
-        return Reachability.lnoticeForHost(host, initialState:initialState, connectionTest)
+    static public func monitorHostReachability(_ host: String, initialState: Bool, _ connectionTestPublisher: @escaping (() -> AnyPublisher<Bool, Error>)) -> Lnotice<Bool> {
+        return Reachability.lnoticeForHost(host, initialState: initialState, connectionTestPublisher)
     }
     
     // This accounts for the fact that URLQueryItem doesn't encode ';'
@@ -135,60 +135,90 @@ extension Util {
             urlRequest.httpBody = body
             urlRequest.httpMethod = "POST"
         }
-
+       
         return urlSession.dataTaskPublisher(for: urlRequest)
             .map { $0.data }
             .mapError { $0 }
             .eraseToAnyPublisher()
     }
     
- /// Make an http request (DEPRECATED).
-  ///
-  /// - Parameters:
-  ///   - host: host
-  ///   - port: optional port
-  ///   - command: path (without parameters)
-  ///   - parameters: dictionary of string/value parameters
-  ///   - body: optional body (implies post)
-  /// - Returns: The data returned by the query
-  /// - Throws: errors that occured.
-  ///
-  /// Note: this is a synchronous call.
-  static public func makeHttpRequest(host: String, port:Int? = nil, command: String? = nil,
-                                     parameters: [String:Any]? = nil, body: Data? = nil)
-                                     throws -> Data {
-                                         let url = try Debmate.Util.createURL(host: host, port: port, command: command, parameters: parameters)
-      
-      let semaphore = DispatchSemaphore(value: 0)
-      let urlSession = URLSession(configuration: .ephemeral)
-      var urlRequest = URLRequest(url: url)
-      
-      if let body = body {
-          urlRequest.httpBody = body
-          urlRequest.httpMethod = "POST"
-      }
-
-      var data:Data?
-      var error:Error?
-      
-      let task = urlSession.dataTask(with: urlRequest) {
-          pData, response, pError in
-          data = pData
-          error = pError
-          semaphore.signal()
-      }
-      
-      task.resume()
-      
-      AsyncTask.addCancelationHandler {
-          task.cancel()
-      }
-      
-      _ = semaphore.wait(timeout: .distantFuture)
-      if let error = error {
-          throw error
-      }
-      
-      return data ?? Data()
+    /// Make an http request (DEPRECATED).
+    ///
+    /// - Parameters:
+    ///   - host: host
+    ///   - port: optional port
+    ///   - command: path (without parameters)
+    ///   - parameters: dictionary of string/value parameters
+    ///   - body: optional body (implies post)
+    /// - Returns: The data returned by the query
+    /// - Throws: errors that occured.
+    ///
+    /// Note: this is a synchronous call.
+    static public func makeHttpRequest(host: String, port:Int? = nil, command: String? = nil,
+                                       parameters: [String:Any]? = nil, body: Data? = nil) throws -> Data {
+        let url = try Debmate.Util.createURL(host: host, port: port, command: command, parameters: parameters)
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        let urlSession = URLSession(configuration: .ephemeral)
+        var urlRequest = URLRequest(url: url)
+        
+        if let body = body {
+            urlRequest.httpBody = body
+            urlRequest.httpMethod = "POST"
+        }
+        
+        var data:Data?
+        var error:Error?
+        
+        let task = urlSession.dataTask(with: urlRequest) {
+            pData, response, pError in
+            data = pData
+            error = pError
+            semaphore.signal()
+        }
+        
+        task.resume()
+        
+        AsyncTask.addCancelationHandler {
+            task.cancel()
+        }
+        
+        _ = semaphore.wait(timeout: .distantFuture)
+        if let error = error {
+            throw error
+        }
+        
+        return data ?? Data()
   }
+    
+    static public func makeHttpRequest2(host: String, port:Int? = nil, command: String? = nil,
+                                        parameters: [String:Any]? = nil, body: Data? = nil) throws -> Data {
+        let semaphore = DispatchSemaphore(value: 0)
+        let publisher = httpRequestPublisher(host: host, port: port, command: command,
+                                             parameters: parameters, body: body)
+        var data = Data()
+        var error: Error?
+        
+        let cancellable = publisher.sink(receiveCompletion: { completion in
+            switch completion {
+            case .finished: return
+            case .failure(let err):
+                semaphore.signal()
+                error = err
+            }
+        }) {
+            data = $0
+            semaphore.signal()
+        }
+        
+        AsyncTask.addCancelationHandler {
+            cancellable.cancel()
+        }
+        
+        _ = semaphore.wait(timeout: .distantFuture)
+        if let error = error {
+            throw error
+        }
+        return data
+    }
 }

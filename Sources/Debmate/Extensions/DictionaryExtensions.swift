@@ -8,7 +8,7 @@
 import Foundation
 
 public extension Dictionary {
-    public init(overwriting items: [(Self.Key, Self.Value)]) {
+    init(overwriting items: [(Self.Key, Self.Value)]) {
         self = Dictionary(items) { first, second in second }
     }
     

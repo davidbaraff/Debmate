@@ -1,12 +1,11 @@
 //
 //  AsyncTask.swift
-//  Debware
+// Debmate
 //
 //  Copyright © 2017 David Baraff. All rights reserved.
 //
 
 import Foundation
-import Debmate
 
 internal protocol WorkItem {
     func execute()
@@ -20,7 +19,7 @@ internal protocol WorkItem {
 
 /**
     - requires:
- `import Debware`
+ `import Debmate`
 
  Run a computation on a non-main thread, delivering results
  back to the main thread, with cancelation.

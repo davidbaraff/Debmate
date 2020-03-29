@@ -121,14 +121,14 @@ public class CachableComputationManager {
     private var shutdown = false
     private var keepAlive:CachableComputationManager?
     private var keys = Set<String>()
-    static private var workQueue = DispatchQueue(label: "com.debware.cachableComputationManager" , qos: .utility,
+    static private var workQueue = DispatchQueue(label: "com.debmate.cachableComputationManager" , qos: .utility,
                                                  attributes: [.concurrent])
     
     /// Create a new manager.
     ///
     /// - Parameter name: name is used only for debugging purposes
     public init(name: String) {
-        let qname = "com.debware.cachable-computation-manager.\(name)"
+        let qname = "com.debmate.cachable-computation-manager.\(name)"
         lock = DispatchQueue(label: "\(qname)-lock")
         keepAlive = self
 

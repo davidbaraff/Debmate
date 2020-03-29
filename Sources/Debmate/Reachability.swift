@@ -7,6 +7,7 @@
 
 import SystemConfiguration
 import Foundation
+import Combine
 
 fileprivate func callback(reachability :SCNetworkReachability, flags: SCNetworkReachabilityFlags, info: UnsafeMutableRawPointer?) {
     guard let info = info else { return }
@@ -16,9 +17,9 @@ fileprivate func callback(reachability :SCNetworkReachability, flags: SCNetworkR
 }
 
 internal class Reachability {
-    static func lnoticeForHost(_ host: String, initialState: Bool, _ connectionTest: @escaping (() -> Bool)) -> Lnotice<Bool> {
+    static func lnoticeForHost(_ host: String, initialState: Bool, _ connectionTestPublisher: @escaping (() -> AnyPublisher<Bool, Error>)) -> Lnotice<Bool> {
         let lnotice = Lnotice<Bool>()
-        guard let reachability = Reachability(host, lnotice, initialState, connectionTest) else {
+        guard let reachability = Reachability(host, lnotice, initialState, connectionTestPublisher) else {
             debugPrint("Failed to create reachability object")
             return lnotice
         }
@@ -29,14 +30,14 @@ internal class Reachability {
     
     weak var lnotice:Lnotice<Bool>!
     var lastConnectedState: Bool
-    let connectionTest: () -> Bool
+    let connectionTestPublisher: (() -> AnyPublisher<Bool, Error>)
     var reachabilityRef: SCNetworkReachability!
     let reachabilitySerialQueue = DispatchQueue(label: "com.debmate.reachability")
     var recheckScheduled = false
 
-    init?(_ hostname: String, _ lnotice: Lnotice<Bool>, _ initialState: Bool, _ connectionTest: @escaping (() -> Bool)) {
+    init?(_ hostname: String, _ lnotice: Lnotice<Bool>, _ initialState: Bool, _ connectionTestPublisher:  @escaping (() -> AnyPublisher<Bool, Error>))  {
         self.lnotice = lnotice
-        self.connectionTest = connectionTest
+        self.connectionTestPublisher = connectionTestPublisher
         lastConnectedState = initialState
         guard let rref = SCNetworkReachabilityCreateWithName(nil, hostname) else {
             return nil
@@ -62,20 +63,29 @@ internal class Reachability {
         SCNetworkReachabilitySetDispatchQueue(reachabilityRef, nil)
     }
     
+    var cancelKey: AnyCancellable?
     
     fileprivate func reachabilityChanged() {
         guard !recheckScheduled else { return }
         
         recheckScheduled = true
         reachabilitySerialQueue.asyncAfter(deadline: .now() + 2.0) {
-            let connected = self.connectionTest()
-            if self.lastConnectedState != connected {
-                self.lastConnectedState = connected
-                DispatchQueue.main.async {
-                    self.lnotice.broadcast(connected)
-                }
-            }
             self.recheckScheduled = false
+
+            self.cancelKey = self.connectionTestPublisher().sink(receiveCompletion: { completion in
+                let connected: Bool
+                switch completion {
+                case .finished: connected = true
+                case  .failure: connected = false
+                }
+
+                if self.lastConnectedState != connected {
+                    self.lastConnectedState = connected
+                    DispatchQueue.main.async {
+                        self.lnotice.broadcast(connected)
+                    }
+                }
+            }, receiveValue: { _ in () })
         }
     }
 }

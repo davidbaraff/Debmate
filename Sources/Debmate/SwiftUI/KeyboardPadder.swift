@@ -5,6 +5,8 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if os(iOS)
+
 import SwiftUI
 
 /// A class with a published currentHeight object.
@@ -34,3 +36,6 @@ final public class KeyboardPadder : ObservableObject {
         currentHeight = 0
     }
 }
+
+#endif
+

@@ -38,21 +38,11 @@ public class RefreshHelper {
     
     /// The supplied handler is called when an update actually occurs.
     ///
-    /// - Parameter handler: callback handler
-    ///
-    /// Note: the handler is always invoked on the main queue.
-    public init(_ handler: @escaping () -> ()) {
-        updateHandler = handler
-        queue = DispatchQueue.main
-    }
-    
-    /// The supplied handler is called when an update actually occurs.
-    ///
-    /// - Parameter queue: queue to execute handler on.
+    /// - Parameter queue: queue to execute handler on (defaults to Dispatch.main)
     /// - Parameter handler: callback handler
     ///
     /// Note: the handler is invoked on the passed in queue.
-    public init(queue: DispatchQueue, _ handler: @escaping () -> ()) {
+    public init(queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
         updateHandler = handler
         self.queue = queue
     }

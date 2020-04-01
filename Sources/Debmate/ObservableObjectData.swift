@@ -17,11 +17,18 @@ import Combine
 ///
 public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
     typealias Element = T
-    public let value: T
+    public var value: T {
+        didSet {
+            forcedSave()
+            watchValue()
+        }
+    }
+
     let keyName: String
-    var primaryCancellable: Cancellable!
+    var primaryCancellable: Cancellable?
     var refreshHelper: RefreshHelper!
     
+/*
     /// Specify a closure to be run when the value of the control changes.
     ///
     /// The returned Cancelable must be retained for the closure to be called when the value changes.
@@ -41,6 +48,7 @@ public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
         }
         return result
     }
+*/
     
     /// Create an ObservableObjectData instance.
     ///
@@ -63,7 +71,7 @@ public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
             value = defaultValue
         }
 
-        self.primaryCancellable = value.objectWillChange.sink { [weak self] _ in self?.refreshHelper.updateNeeded() }
+        watchValue()
         refreshHelper = RefreshHelper {  [weak self] in self?.forcedSave() }
     }
     
@@ -90,5 +98,10 @@ public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
     private func forcedSave() {
         print("Regular update saving \(self)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
+    }
+    
+    private func watchValue() {
+        primaryCancellable?.cancel()
+        primaryCancellable = value.objectWillChange.sink { [weak self] _ in self?.refreshHelper.updateNeeded() }
     }
 }

@@ -8,6 +8,7 @@
 import Foundation
 import DebmateC
 import Combine
+import SwiftUI
 
 /// Class for representing model data tied to state saving.
 ///
@@ -92,5 +93,37 @@ public class ObservableValueData<T : Equatable> : ObservableObject {
         if value != oldValue {
             UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
         }
+    }
+}
+
+
+// Wrap a value into an observable object.
+///
+/// The ObservableValueData class is used to automatically save equable
+/// values to UserDefaults, while also allowing for anonymous notification
+/// the held value changes.  The value is stored as a published property
+/// on the ObservableValueData<> object, which is an observable object.
+///
+@propertyWrapper
+public class ObservableValue<T> : ObservableObject {
+    @Published public var value: T
+    
+    public var wrappedValue: T {
+        get { value }
+        set { value = newValue }
+    }
+
+    public init(wrappedValue: T) {
+        value = wrappedValue
+    }
+
+/*
+    public var value: Published<T> {
+        _curValue
+    }
+*/
+    
+    public var projectedValue: ObservableValue {
+      get { self }
     }
 }

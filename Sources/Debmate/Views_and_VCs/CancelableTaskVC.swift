@@ -65,7 +65,7 @@ class CancelableTaskVC : UIViewController {
        popupView.center = view.center
     }
     
-    func setProgress(_ value:Float) {
+    func setProgress(_ curValue:Float) {
         if !progressMode {
             progressMode = true
             activityIndicatorView.stopAnimating()
@@ -73,7 +73,7 @@ class CancelableTaskVC : UIViewController {
             progressView.isHidden = false
         }
         
-        progressView.setProgress(value, animated: false)
+        progressView.setProgress(curValue, animated: false)
     }
 }
 

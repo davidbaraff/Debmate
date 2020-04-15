@@ -11,53 +11,39 @@ import Combine
 
 /// Class for representing model data tied to state saving.
 ///
-/// The ObservableObjectData class is used to automatically save observable
+/// The ModeObject class is used to automatically save observable
 /// objects to UserDefaults, while also allowing for anonymous notification when any
 /// (published) )member of the observable object changes.
 ///
-public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
-    typealias Element = T
-    public var value: T {
-        didSet {
-            forcedSave()
+@propertyWrapper
+public class ModelObject<T : ObservableObject> {
+    let key: String
+    var primaryCancellable: Cancellable?
+    var refreshHelper: RefreshHelper!
+
+    public var value: T 
+
+    public var wrappedValue: T {
+        get { value }
+        set {
+            value = newValue
+            flush()
             watchValue()
         }
     }
+    
+    public var projectedValue: ModelObject {
+        get { self }
+    }
 
-    let keyName: String
-    var primaryCancellable: Cancellable?
-    var refreshHelper: RefreshHelper!
-    
-/*
-    /// Specify a closure to be run when the value of the control changes.
-    ///
-    /// The returned Cancelable must be retained for the closure to be called when the value changes.
-    public func listen(receiveValue: @escaping (T) -> ()) -> Cancellable {
-        return value.objectWillChange.sink { _ in DispatchQueue.main.async { receiveValue(self.value) } }
-    }
-    
-    /// Specify a closure to be run when the value of the control changes.
-    ///
-    /// Tthis form immediately invokes the closure if callNow is true.
-    ///
-    /// The returned Cancelable must be retained for the closure to be called when the value changes.
-    public func listen(callNow: Bool, receiveValue: @escaping (T) -> ()) -> Cancellable {
-        let result = listen(receiveValue: receiveValue)
-        if callNow {
-            receiveValue(value)
-        }
-        return result
-    }
-*/
-    
-    /// Create an ObservableObjectData instance.
+    /// Create a ModelObject instance.
     ///
     /// - Parameters:
-    ///   - keyName: The key the value will be stored under in UserDefaults for state restoral.
+    ///   - key: The key the value will be stored under in UserDefaults for state restoral.
     ///   - defaultValue: Initial value for data if not present in UserDefaults
     ///
-    public init(_ keyName: String, defaultValue: T) {
-        self.keyName = keyName
+    public init(wrappedValue defaultValue: T, key keyName: String) {
+        key = keyName
         let serializableDefaultValue = encodeAsCachableAny(defaultValue)
         
         if !Debmate_CatchException({ UserDefaults.standard.register(defaults: [keyName : serializableDefaultValue]) }) {
@@ -72,7 +58,7 @@ public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
         }
 
         watchValue()
-        refreshHelper = RefreshHelper {  [weak self] in self?.forcedSave() }
+        refreshHelper = RefreshHelper {  [weak self] in self?.flush() }
     }
     
     private var deferredWriteLevel = 0
@@ -88,16 +74,12 @@ public class ObservableObjectData<T : ObservableObject & CodableDiskCachable> {
         deferredWriteLevel += 1
         block()
         deferredWriteLevel -= 1
-
-        if /*value != oldValue*/ true {
-            print("Deferred writing user defaults: \(value) stored under \(keyName)")
-            UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
-        }
+        flush()
     }
     
-    private func forcedSave() {
-        print("Regular update saving \(self)")
-        UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
+    /// Write value to UserDefaults immediately.
+    public func flush() {
+        UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
     
     private func watchValue() {

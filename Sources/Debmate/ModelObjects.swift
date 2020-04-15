@@ -12,18 +12,25 @@ import Combine
 ///
 /// Use this class to ensure that any change to the sequence of type T, or one of its elements,
 /// is reflected to UserDefaults.
-public class ObservableObjectSequenceData<SequenceType : Sequence> where SequenceType.Element : ObservableObject {
-    @Published public var value: SequenceType {
-        didSet {
-            if deferredWriteLevel == 0 /* && value != oldValue*/ {
-                print("Writing user defaults: \(value) stored under \(keyName)")
-                UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
-                recomputeCancelKeys()
+@propertyWrapper
+public class ModelObjects<SequenceType : Sequence> : ObservableObject where SequenceType.Element : ObservableObject {
+    @Published public var value: SequenceType  
+
+    public var wrappedValue: SequenceType {
+        get { value }
+        set {
+            value = newValue
+            if deferredWriteLevel == 0 {
+                flush()
             }
         }
     }
 
-    let keyName: String
+    public var projectedValue: ModelObjects {
+        get { self }
+    }
+
+    let key: String
     var elementCancelKeys = [Cancellable]()
     var refreshHelper: RefreshHelper!
     
@@ -33,11 +40,11 @@ public class ObservableObjectSequenceData<SequenceType : Sequence> where Sequenc
     ///   - keyName: The key the value will be stored under in UserDefaults for state restoral.
     ///   - defaultValue: Initial value for data if not present in UserDefaults
     ///
-    public init(_ keyName: String, defaultValue: SequenceType) {
-        self.keyName = keyName
+    public init(wrappedValue defaultValue: SequenceType, keyName: String) {
+        key = keyName
         let serializableDefaultValue = encodeAsCachableAny(defaultValue)
         
-        if !Debmate_CatchException({ UserDefaults.standard.register(defaults: [keyName : serializableDefaultValue]) }) {
+        if !Debmate_CatchException({ UserDefaults.standard.register(defaults: ["keyName" : serializableDefaultValue]) }) {
             if (defaultValue as? DiskCachable) == nil {
                 fatalErrorForCrashReport("Type \(String(describing: SequenceType.self)) does not conform to DiskCachable")
             }
@@ -46,14 +53,14 @@ public class ObservableObjectSequenceData<SequenceType : Sequence> where Sequenc
             }
         }
         
-        if let storedValue = UserDefaults.standard.object(forKey: keyName) {
+        if let storedValue = UserDefaults.standard.object(forKey: key) {
             value = decodeFromCachableAny(storedValue) ?? defaultValue
         }
         else {
             value = defaultValue
         }
 
-        refreshHelper = RefreshHelper {  [weak self] in self?.forcedSave() }
+        refreshHelper = RefreshHelper {  [weak self] in self?.flush() }
         recomputeCancelKeys()
     }
     
@@ -72,10 +79,7 @@ public class ObservableObjectSequenceData<SequenceType : Sequence> where Sequenc
         block()
         deferredWriteLevel -= 1
 
-        if /* value != oldValue*/ true {
-            print("Deferred writing user defaults: \(value) stored under \(keyName)")
-            UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
-        }
+        UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
     
     private func recomputeCancelKeys() {
@@ -90,7 +94,7 @@ public class ObservableObjectSequenceData<SequenceType : Sequence> where Sequenc
     }
     
     /// Forces the current data to be saved to UserDefaults (even if unchanged).
-    public func forcedSave() {
-        UserDefaults.standard.set(encodeAsCachableAny(value), forKey: keyName)
+    public func flush() {
+        UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }

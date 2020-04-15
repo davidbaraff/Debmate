@@ -23,6 +23,7 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
             if deferredWriteLevel == 0 {
                 flush()
             }
+            recomputeCancelKeys()
         }
     }
 
@@ -40,7 +41,7 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
     ///   - keyName: The key the value will be stored under in UserDefaults for state restoral.
     ///   - defaultValue: Initial value for data if not present in UserDefaults
     ///
-    public init(wrappedValue defaultValue: SequenceType, keyName: String) {
+    public init(wrappedValue defaultValue: SequenceType, key keyName: String) {
         key = keyName
         let serializableDefaultValue = encodeAsCachableAny(defaultValue)
         

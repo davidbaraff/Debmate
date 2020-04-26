@@ -12,23 +12,12 @@ import Combine
 ///
 /// Use this class to ensure that any change to the sequence of type T, or one of its elements,
 /// is reflected to UserDefaults.
-@propertyWrapper
 public class ModelObjects<SequenceType : Sequence> : ObservableObject where SequenceType.Element : ObservableObject {
-    @Published public var value: SequenceType  
-
-    public var wrappedValue: SequenceType {
-        get { value }
-        set {
-            value = newValue
-            if deferredWriteLevel == 0 {
-                flush()
-            }
+    public var value: SequenceType {
+        didSet {
+            refreshHelper.updateNeeded()
             recomputeCancelKeys()
         }
-    }
-
-    public var projectedValue: ModelObjects {
-        get { self }
     }
 
     let key: String
@@ -41,7 +30,7 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
     ///   - keyName: The key the value will be stored under in UserDefaults for state restoral.
     ///   - defaultValue: Initial value for data if not present in UserDefaults
     ///
-    public init(wrappedValue defaultValue: SequenceType, key keyName: String) {
+    public init(key keyName: String, defaultValue: SequenceType) {
         key = keyName
         let serializableDefaultValue = encodeAsCachableAny(defaultValue)
         
@@ -67,22 +56,6 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
     
     private var deferredWriteLevel = 0
     
-    /// Group updates into one.
-    /// - Parameter block: update code
-    ///
-    /// Upon completion of block(), a notice is emitted and data is synchronized to UserDefaults
-    /// if value has been changed.
-    ///
-    /// This function should only be called on the main dispatch queue.
-    public func batchUpdate(block: () -> ()) {
-        // let oldValue = value
-        deferredWriteLevel += 1
-        block()
-        deferredWriteLevel -= 1
-
-        UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
-    }
-    
     private func recomputeCancelKeys() {
         for key in elementCancelKeys {
             key.cancel()
@@ -95,7 +68,9 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
     }
     
     /// Forces the current data to be saved to UserDefaults (even if unchanged).
-    public func flush() {
+    private func flush() {
+        print("Flushing \(Array(value).count) elements to user defaults under key \(key)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
+        objectWillChange.send()
     }
 }

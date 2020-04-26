@@ -22,5 +22,3 @@ extension Published : Codable where Value : Codable {
         try value.encode(to: encoder)
     }
 }
-
-

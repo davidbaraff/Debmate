@@ -16,30 +16,14 @@ import Combine
 /// when the held value changes.  The value is stored as a published property
 /// on the ModelValue<> object, which is an observable object.
 ///
-@propertyWrapper
 public class ModelValue<T : Equatable> : ObservableObject {
     @Published public var value: T
+
     let key: String
     var primaryCancellable: Cancellable?
     var refreshHelper: RefreshHelper!
     
-    public var wrappedValue: T {
-        get { value }
-        set {
-            print("Set called on wrapped value with key \(key)")
-            if value != newValue {
-                value = newValue
-                print("Value with key \(key) set to \(value)")
-                flush()
-            }
-        }
-    }
-    
-    public var projectedValue: ModelValue {
-        get { self }
-    }
-
-    public init(wrappedValue defaultValue: T, key keyName: String) {
+    public init(key keyName: String, defaultValue: T) {
         key = keyName
         value = defaultValue
 
@@ -61,8 +45,8 @@ public class ModelValue<T : Equatable> : ObservableObject {
     }
     
     /// Immediately saves data to UserDefaults.
-    public func flush() {
-        print("Flushed value of key \(key) with valye \(value)")
+    private func flush() {
+        print("Flushed value of key \(key) with value \(value)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }

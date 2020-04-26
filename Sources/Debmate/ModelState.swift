@@ -11,12 +11,12 @@ import Combine
 
 /// Class for representing model data tied to state saving.
 ///
-/// The ModeObject class is used to automatically save observable
+/// The ModeState class is used to automatically save observable
 /// objects to UserDefaults, while also allowing for anonymous notification when any
 /// (published) )member of the observable object changes.
 ///
 @propertyWrapper
-public class ModelObject<T : ObservableObject> {
+public class ModelState<T : ObservableObject> {
     let key: String
     var primaryCancellable: Cancellable?
     var refreshHelper: RefreshHelper!
@@ -27,12 +27,12 @@ public class ModelObject<T : ObservableObject> {
         get { value }
         set {
             value = newValue
-            flush()
+            refreshHelper.updateNeeded()
             watchValue()
         }
     }
     
-    public var projectedValue: ModelObject {
+    public var projectedValue: ModelState {
         get { self }
     }
 
@@ -63,22 +63,9 @@ public class ModelObject<T : ObservableObject> {
     
     private var deferredWriteLevel = 0
     
-    /// Group updates into one.
-    /// - Parameter block: update code
-    ///
-    /// Upon completion of block(), a notice is emitted and data is synchronized to UserDefaults
-    /// if value has been changed.
-    ///
-    /// This function should only be called on the main dispatch queue.
-    public func batchUpdate(block: () -> ()) {
-        deferredWriteLevel += 1
-        block()
-        deferredWriteLevel -= 1
-        flush()
-    }
-    
     /// Write value to UserDefaults immediately.
-    public func flush() {
+    private func flush() {
+        print("Flushing object \(value) under key \(key)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
     

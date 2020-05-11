@@ -27,7 +27,19 @@ public enum TestViews {
             self.color = color
             self.content = content()
         }
-           
+
+        #if os(iOS)
+        public init(color: UIColor, @ViewBuilder content: () -> Content) {
+            self.color = Color(color)
+            self.content = content()
+        }
+        #else
+        public init(color: NSColor, @ViewBuilder content: () -> Content) {
+            self.color = Color(color)
+            self.content = content()
+        }
+        #endif
+
         public var body: some View {
             GeometryReader { geometry in
                 ZStack {

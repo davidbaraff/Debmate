@@ -8,6 +8,11 @@
 import Foundation
 import CoreGraphics
 import ImageIO
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
 extension Util {
     /// Resize a CG Image.
@@ -68,4 +73,19 @@ extension Util {
         let scale = min(size.width / CGFloat(image.width), size.height / CGFloat(image.height))
         return resizeCGImage(image, toSize: scale * CGSize(image.width, image.height))
     }
+
+    
+    /// Construct a CGImage from Data
+    /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
+    /// - Returns: cgImage on success
+    static public func cgImage(from data: Data) -> CGImage? {
+        #if os(iOS)
+        return UIImage(data: data)?.cgImage
+        #else
+        return NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
+        #endif
+    }
 }
+
+
+

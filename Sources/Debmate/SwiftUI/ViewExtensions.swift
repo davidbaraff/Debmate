@@ -19,5 +19,21 @@ public extension View {
     func eraseToAnyView() -> AnyView {
         return AnyView(self)
     }
+    
+    func hideStatusBar() -> some View {
+        #if os(iOS)
+        return self.statusBar(hidden: true)
+        #else
+        return self
+        #endif
+    }
+    
+    func noAutocapitalization() -> some View {
+        #if os(iOS)
+        return self.autocapitalization(.none)
+        #else
+        return self
+        #endif
+    }
 }
 

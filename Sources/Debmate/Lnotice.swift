@@ -81,6 +81,18 @@ public class LnoticeKey<T> : Cancellable {
 ///
 ///      valueChanged.broadcast(1.717)  // only calls someObject.takeValue(1.717)
 public class Lnotice<T> {
+    public class Observable : ObservableObject {
+        @Published public private(set) var value: T
+        private var key: LnoticeKey<T>!
+
+        public init(_ lnotice: Lnotice<T>, initialValue: T) {
+            value = initialValue
+            key = lnotice.listen { [weak self]
+                newValue in self?.value = newValue
+            }
+        }
+    }
+    
     /// The underlying publisher for this instance.
     public let publisher = PassthroughSubject<T, Never>()
 
@@ -188,5 +200,16 @@ public class Lnotice<T> {
     ///  invoked on that queue.
     public func broadcast(_ value : T) {
         publisher.send(value)
+    }
+    
+    /// Create a new ObservableObject that watches self.
+    /// - Parameter initialValue: initial value of observed property
+    /// - Returns: An Observable instance.
+    ///
+    /// You can access the return object's `value` field to see what the last
+    /// broadcast value for this `Lnotice` was.  The initial value, before any
+    /// broadcasts have taken place is given by `initialValue`.
+    public func observable(initialValue: T) -> Observable {
+        return Observable(self, initialValue: initialValue)
     }
 }

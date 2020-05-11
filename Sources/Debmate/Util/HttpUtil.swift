@@ -89,7 +89,6 @@ extension Util {
         throw GeneralError("failed to create valid URL for \(host):\(command ?? ""), with params = \(String(describing: parameters))")
     }
 
-    
     /// Decode a URL
     ///
     /// - Parameter url: url
@@ -142,18 +141,7 @@ extension Util {
             .eraseToAnyPublisher()
     }
     
-    /// Make an http request (DEPRECATED).
-    ///
-    /// - Parameters:
-    ///   - host: host
-    ///   - port: optional port
-    ///   - command: path (without parameters)
-    ///   - parameters: dictionary of string/value parameters
-    ///   - body: optional body (implies post)
-    /// - Returns: The data returned by the query
-    /// - Throws: errors that occured.
-    ///
-    /// Note: this is a synchronous call.
+    /*
     static public func makeHttpRequest(host: String, port:Int? = nil, command: String? = nil,
                                        parameters: [String:Any]? = nil, body: Data? = nil) throws -> Data {
         let url = try Debmate.Util.createURL(host: host, port: port, command: command, parameters: parameters)
@@ -190,8 +178,20 @@ extension Util {
         
         return data ?? Data()
   }
-    
-    static public func makeHttpRequest2(host: String, port:Int? = nil, command: String? = nil,
+ */
+    /// Make an http request (DEPRECATED).
+    ///
+    /// - Parameters:
+    ///   - host: host
+    ///   - port: optional port
+    ///   - command: path (without parameters)
+    ///   - parameters: dictionary of string/value parameters
+    ///   - body: optional body (implies post)
+    /// - Returns: The data returned by the query
+    /// - Throws: errors that occured.
+    ///
+    /// Note: this is a synchronous call.
+    static public func makeHttpRequest(host: String, port:Int? = nil, command: String? = nil,
                                         parameters: [String:Any]? = nil, body: Data? = nil) throws -> Data {
         let semaphore = DispatchSemaphore(value: 0)
         let publisher = httpRequestPublisher(host: host, port: port, command: command,

@@ -49,6 +49,7 @@ public class CenteredPopupView : UIView {
     ///   - tint: optional image tint
     ///   - backgroundColor: optional background color (default is dark grey)
     ///   - duration: default duration for popover display (ignoring animations)
+    ///   - centerToFullScreen: if true, centers over full screen
     ///   - completionHandler: optional completion handler
     ///
     /// If no view controller is supplied, the current root view controller is used.
@@ -58,6 +59,7 @@ public class CenteredPopupView : UIView {
                             tint: UIColor? = nil,
                             backgroundColor: UIColor? = nil,
                             duration: Double = 1.0,
+                            centerToFullScreen: Bool = false,
                             completionHandler: (() -> ())? = nil) {
         let popupView = CenteredPopupView()
         
@@ -87,7 +89,14 @@ public class CenteredPopupView : UIView {
         }
         
         let vc = viewController ?? Debmate.Util.rootViewController()
-        popupView.center = vc.view.center
+        if centerToFullScreen {
+            let r = UIScreen.main.bounds
+            popupView.center = CGPoint(r.midX, r.midY)
+        }
+        else {
+            popupView.center = vc.view.center
+        }
+
         popupView.alpha = 0.0
         vc.view.addSubview(popupView)
         

@@ -31,6 +31,7 @@ public class PopupTextMenuVC : UITableViewController {
     var completionHandler: (() -> ())?
     var treeTitle: String?
     var enabled = [Bool]()
+    var selectedIndex: Int?
     
     /// Present a popup menu
     ///
@@ -49,6 +50,7 @@ public class PopupTextMenuVC : UITableViewController {
                                preferredContentWidth: Int = 300,
                                preferredCellHeight: Int = 44,
                                textAndCallbacks: [(String, (() ->())?)],
+                               selectedIndex: Int? = nil,
                                completionHandler: (() -> ())? = nil) -> PopupTextMenuVC {
         let menuVC = PopupTextMenuVC()
         menuVC.textEntries = textAndCallbacks.map { $0.0 }
@@ -64,6 +66,7 @@ public class PopupTextMenuVC : UITableViewController {
         
         menuVC.preferredContentSize = CGSize(preferredContentWidth, menuVC.textEntries.count * preferredCellHeight)
         menuVC.tableView.rowHeight = CGFloat(preferredCellHeight)
+        menuVC.selectedIndex = selectedIndex
         presentingViewController.present(menuVC, animated: true)
         return menuVC
     }
@@ -153,6 +156,7 @@ public class PopupTextMenuVC : UITableViewController {
             cell.textLabel?.alpha = enabled[indexPath.row] ? 1 : 0.5
         }
         cell.textLabel?.text = textEntries[indexPath.row]
+        cell.accessoryType = (indexPath.row == selectedIndex) ? .checkmark : .none
         return cell
     }
     

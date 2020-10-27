@@ -13,12 +13,15 @@ extension Published : Codable where Value : Codable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        let mirror = Mirror(reflecting: self)
-
-        guard let valueChild = mirror.children.first(where: { $0.label == "value" }),
-            let value = valueChild.value as? Encodable else {
-                fatalErrorForCrashReport("unable to extract value from Published<\(type(of: Value.self))>")
-        }
-        try value.encode(to: encoder)
+        var copy = self
+        let c = copy.projectedValue.sink(receiveValue: { (val) in
+            do {
+                try val.encode(to: encoder)
+            } catch {
+                fatalErrorForCrashReport("unable to extract value from Published<\(type(of: Value.self))>: \(error)")
+            }
+            
+        })
+        c.cancel()
     }
 }

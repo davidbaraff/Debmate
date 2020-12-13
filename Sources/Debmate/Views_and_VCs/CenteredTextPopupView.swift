@@ -54,6 +54,8 @@ public class CenteredTextPopupView : UIView {
         let vc = viewController ?? Debmate.Util.rootViewController()
         
         popupView.label.text = message
+        popupView.label.lineBreakMode = .byWordWrapping
+        popupView.label.numberOfLines = 3
         if let backgroundColor = backgroundColor {
             popupView.backgroundColor = backgroundColor
         }

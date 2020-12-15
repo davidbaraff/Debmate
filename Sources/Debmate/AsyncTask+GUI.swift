@@ -212,8 +212,8 @@ extension AsyncTask {
                            showAfter: Double = 0.5,
                            cancelAfter: Double? = 3.0,
                            over viewController: UIViewController? = nil,
-                           cancelationHandler: (() ->Void)? = nil,
-                           completionHandler: ((T) ->Void)? = nil) -> AsyncTask {
+                           completionHandler: ((T) ->Void)? = nil,
+                           cancelationHandler: (() ->Void)? = nil) -> AsyncTask {
         let op = CancelableGUIOperation(msg, showAfter, cancelAfter)
         op.execute(work, viewController, cancelationHandler, completionHandler)
         return op.asyncTask
@@ -225,8 +225,8 @@ extension AsyncTask {
                            showAfter: Double = 0.5,
                            cancelAfter: Double? = 3.0,
                            over viewController: UIViewController? = nil,
-                           cancelationHandler: (() ->Void)? = nil,
-                           completionHandler: ((T?, Error?) ->Void)? = nil) -> AsyncTask {
+                           completionHandler: ((T?, Error?) ->Void)? = nil,
+                           cancelationHandler: (() ->Void)? = nil) -> AsyncTask {
         let op = CancelableGUIOperation(msg, showAfter, cancelAfter)
         op.execute(work, viewController, cancelationHandler, completionHandler)
         return op.asyncTask

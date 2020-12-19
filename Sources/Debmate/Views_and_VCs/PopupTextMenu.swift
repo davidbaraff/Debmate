@@ -30,7 +30,7 @@ public class PopupTextMenuVC : UITableViewController {
     var indentations = [Int]()
     var completionHandler: (() -> ())?
     var treeTitle: String?
-    var enabled = [Bool]()
+    var tracePaperEnabled = [Bool]()
     var selectedIndex: Int?
     
     /// Present a popup menu
@@ -56,7 +56,7 @@ public class PopupTextMenuVC : UITableViewController {
         menuVC.textEntries = textAndCallbacks.map { $0.0 }
         menuVC.callbacks = textAndCallbacks.map { $0.1 }
         menuVC.completionHandler = completionHandler
-        menuVC.enabled = textAndCallbacks.map { $0.1 != nil }
+        menuVC.tracePaperEnabled = textAndCallbacks.map { $0.1 != nil }
         
         menuVC.modalPresentationStyle = .popover
         menuVC.popoverPresentationController?.permittedArrowDirections = arrowDirections
@@ -94,7 +94,7 @@ public class PopupTextMenuVC : UITableViewController {
         menuVC.images = dataAndCallbacks.map { $0.1 }
         menuVC.indentations = dataAndCallbacks.map { $0.2 }
         menuVC.callbacks = dataAndCallbacks.map { $0.3 }
-        menuVC.enabled = dataAndCallbacks.map { $0.4 }
+        menuVC.tracePaperEnabled = dataAndCallbacks.map { $0.4 }
         menuVC.completionHandler = completionHandler
         menuVC.treeTitle = treeTitle
         
@@ -148,12 +148,12 @@ public class PopupTextMenuVC : UITableViewController {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 1.5 * cell.indentationWidth * CGFloat(indentations[indexPath.row]), bottom: 0, right: 0)
             cell.textLabel?.textAlignment = .left
             cell.imageView?.image = images[indexPath.row]
-            cell.textLabel?.alpha = enabled[indexPath.row] ? 1 : 0.5
-            cell.isUserInteractionEnabled = enabled[indexPath.row]
+            cell.textLabel?.alpha = tracePaperEnabled[indexPath.row] ? 1 : 0.5
+            cell.isUserInteractionEnabled = tracePaperEnabled[indexPath.row]
         }
-        else if !enabled.isEmpty {
-            cell.isUserInteractionEnabled = enabled[indexPath.row]
-            cell.textLabel?.alpha = enabled[indexPath.row] ? 1 : 0.5
+        else if !tracePaperEnabled.isEmpty {
+            cell.isUserInteractionEnabled = tracePaperEnabled[indexPath.row]
+            cell.textLabel?.alpha = tracePaperEnabled[indexPath.row] ? 1 : 0.5
         }
         cell.textLabel?.text = textEntries[indexPath.row]
         cell.accessoryType = (indexPath.row == selectedIndex) ? .checkmark : .none

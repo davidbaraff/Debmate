@@ -38,13 +38,15 @@ public class PopupTextMenuVC : UITableViewController {
     /// - Parameters:
     ///   - presentingViewController: Controller the menu is being presented from
     ///   - sourceView: anchoring view
+    ///   - sourceRect: optional rect for source
     ///   - arrowDirections: allowed arrow directions
     ///   - preferredContentWidth: prefered menu width
     ///   - preferredCellHeight: prefered per-entry height
     ///   - textAndCallbacks: menu strings and the corresponding callback function on selection
     ///   - completionHandler: Run when the menu is dismissed
     @discardableResult
-    static public func present(presentingViewController: UIViewController, sourceView: UIView,
+    static public func present(presentingViewController: UIViewController,
+                               sourceView: UIView,
                                sourceRect: CGRect? = nil,
                                arrowDirections: UIPopoverArrowDirection = .left,
                                preferredContentWidth: Int = 300,
@@ -76,12 +78,15 @@ public class PopupTextMenuVC : UITableViewController {
     /// - Parameters:
     ///   - presentingViewController: Controller the menu is being presented from
     ///   - sourceView: anchoring view
+    ///   - sourceRect: optional rect for source
     ///   - arrowDirections: allowed arrow directions
     ///   - preferredContentWidth: prefered menu width
     ///   - preferredCellHeight: prefered per-entry height
     ///   - dataAndCallbacks: list of (menu label, image, indentation level, selection callback) tuples
     ///   - completionHandler: Run when the menu is dismissed
-    static public func presentTree(presentingViewController: UIViewController, sourceView: UIView,
+    static public func presentTree(presentingViewController: UIViewController,
+                                   sourceView: UIView,
+                                   sourceRect: CGRect? = nil,
                                    arrowDirections: UIPopoverArrowDirection = .left,
                                    treeTitle: String? = nil,
                                    preferredContentWidth: Int = 300,
@@ -101,7 +106,7 @@ public class PopupTextMenuVC : UITableViewController {
         menuVC.modalPresentationStyle = .popover
         menuVC.popoverPresentationController?.permittedArrowDirections = arrowDirections
         menuVC.popoverPresentationController?.sourceView = sourceView
-        menuVC.popoverPresentationController?.sourceRect = sourceView.bounds
+        menuVC.popoverPresentationController?.sourceRect = sourceRect ?? sourceView.bounds
         menuVC.popoverPresentationController?.backgroundColor = .white
         
         menuVC.preferredContentSize = CGSize(preferredContentWidth, menuVC.textEntries.count * preferredCellHeight)

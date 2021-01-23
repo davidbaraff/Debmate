@@ -74,6 +74,40 @@ extension Util {
         return resizeCGImage(image, toSize: scale * CGSize(image.width, image.height))
     }
 
+    /// Recolor an image
+    ///
+    /// - Parameters:
+    ///   - image: input image
+    ///   - tint: tint color
+    /// - Returns: recolored image
+    ///
+    /// If there is an issue, the original image is returned.
+    static public func tintedImage(_ image: CGImage, tint: CGColor) -> CGImage? {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+        guard let context = CGContext(data: nil, width: image.width, height: image.height,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: colorSpace,
+                                      bitmapInfo: bitmapInfo.rawValue) else {
+            print("Failed to create cg context")
+                                        return nil
+        }
+        
+        let destRect = CGRect(origin: .zero, size: CGSize(image.width, image.height))
+        context.interpolationQuality = .high
+        context.draw(image, in: destRect)
+        
+        // draw alpha-mask
+        context.setBlendMode(.normal)
+        context.draw(image, in: destRect)
+        
+        // draw tint color, preserving alpha values of original image
+        context.setBlendMode(.sourceIn)
+        context.setFillColor(tint)
+        context.fill(destRect)
+        return context.makeImage()
+    }
+    
     
     /// Construct a CGImage from Data
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
@@ -83,6 +117,17 @@ extension Util {
         return UIImage(data: data)?.cgImage
         #else
         return NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
+        #endif
+    }
+
+    /// Construct a CGImage from Data
+    /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
+    /// - Returns: cgImage on success
+    static public func cgImage(from url: URL) -> CGImage? {
+        #if os(iOS)
+        return UIImage(contentsOfFile: url.path)?.cgImage
+        #else
+        return NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
         #endif
     }
 }

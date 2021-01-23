@@ -69,7 +69,6 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
     
     /// Forces the current data to be saved to UserDefaults (even if unchanged).
     private func flush() {
-        print("Flushing \(Array(value).count) elements to user defaults under key \(key)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
         objectWillChange.send()
     }

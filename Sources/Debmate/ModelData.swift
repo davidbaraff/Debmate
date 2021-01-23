@@ -155,8 +155,8 @@ public class ModelData<T : Equatable> {
         
         #if os(iOS)
         self.control?.removeTarget(self, action: #selector(valueDidChange), for: [.valueChanged])
-        #else
-        fatalErrorForCrashReport("unimplemented for macOS")
+        //#else
+        //fatalErrorForCrashReport("unimplemented for macOS")
         #endif
         
         guard let control = control else {

@@ -34,7 +34,6 @@ public class ModelValue<T : Equatable> : ObservableObject {
         
         if let storedValue = UserDefaults.standard.object(forKey: key) {
             value = decodeFromCachableAny(storedValue) ?? defaultValue
-            print("Init value with key \(key) to start with \(value)")
         }
         else {
             value = defaultValue
@@ -46,7 +45,6 @@ public class ModelValue<T : Equatable> : ObservableObject {
     
     /// Immediately saves data to UserDefaults.
     private func flush() {
-        print("Flushed value of key \(key) with value \(value)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }

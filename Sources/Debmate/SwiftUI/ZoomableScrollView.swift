@@ -13,13 +13,21 @@ import UIKit
 import Combine
 import CoreGraphics
 
+
+/// Class for observing state changes on a ZoomableScrollView.
 public class ZoomableScrollViewState : ObservableObject{
     @Published public var zoomScale = CGFloat(1)
     @Published public var invZoomScale = CGFloat(1)
     @Published public var visibleRect = CGRect.zero
 }
 
+/// Class for controlling a ZoomableScrollView.
 public protocol ZoomableScrollViewControl {
+    /// Scroll and zoom the view.
+    /// - Parameters:
+    ///   - location: location in content space which should be centered in the view
+    ///   - zoom: desired zoom level if not nil
+    ///   - animated: if the scroll/zoom should be animated
     func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool)
 }
 
@@ -30,10 +38,29 @@ public extension ZoomableScrollViewControl {
 }
 
 #if os(iOS)
+/// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
+/// feature-poor version of ScrollView exposed by SwiftUI.
+///
+/// Example use:
+///
+///     ZoomableScrollView(contentSize: CGSize) {   (scrollViewState, scrollViewControl) -> AnyView in
+///         ZStack {
+///              ...
+///         }.eraseToAnyVIew()
+///     }
+///
+/// In particular, the passed in scrollViewState and scrollViewControl objects can be used
+/// to monitor and control, respectively, the scroll view.
 public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
     let coordinator: Coordinator
 
+    /// Construct a ZoomableScrollView
+    /// - Parameters:
+    ///   - contentSize: size of the content held
+    ///   - minZoom: minimum allowed magnification
+    ///   - maxZoom: maximum allowed magnification
+    ///   - content: held content
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,

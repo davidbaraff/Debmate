@@ -18,12 +18,32 @@ import CoreGraphics
  of ZoomableScrollViewState and ZoomableScrollViewControl.
  */
 
+/// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
+/// feature-poor version of ScrollView exposed by SwiftUI.
+///
+/// Example use:
+///
+///     ZoomableScrollView(contentSize: CGSize) {   (scrollViewState, scrollViewControl) -> AnyView in
+///         ZStack {
+///            ...
+///         }.eraseToAnyVIew()
+///      }
+///
+/// In particular, the passed in scrollViewState and scrollViewControl objects can be used
+/// to monitor and control, respectively, the scroll view.
 public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
     public typealias NSViewType = NSView
     
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
     let coordinator: Coordinator
 
+    
+    /// Construct a ZoomableScrollView
+    /// - Parameters:
+    ///   - contentSize: size of the content held
+    ///   - minZoom: minimum allowed magnification
+    ///   - maxZoom: maximum allowed magnification
+    ///   - content: held content
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
@@ -93,7 +113,7 @@ public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
     public func updateNSView(_ nsView: NSView, context: NSViewRepresentableContext<ZoomableScrollView>) {
     }
 
-    public class Coordinator: NSObject /*, NSScrollViewDelegate*/ {
+    public class Coordinator: NSObject {
         class Control : ZoomableScrollViewControl {
             weak var coordinator: Coordinator?
 

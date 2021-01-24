@@ -43,14 +43,16 @@ public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
     ///   - contentSize: size of the content held
     ///   - minZoom: minimum allowed magnification
     ///   - maxZoom: maximum allowed magnification
+    ///   - configureCallback: optional callback shortly after initialization
     ///   - content: held content
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
+         configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.content = content
 
-        coordinator = Coordinator(contentSize)
+        coordinator = Coordinator(contentSize, configureCallback)
         coordinator.scrollView.minMagnification = minZoom
         coordinator.scrollView.maxMagnification = maxZoom
     }
@@ -98,12 +100,8 @@ public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
             scrollView.contentView.window?.makeFirstResponder(scrollView.contentView)
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            coordinator.scrollCenter(to: coordinator.offset, zoom: 1, animated: false)
-        }
-        
         NotificationCenter.default.addObserver(coordinator,
-                                               selector: #selector(Coordinator.viewDidScroll),
+                                               selector: #selector(Coordinator.boundsDidChange),
                                                name: NSView.boundsDidChangeNotification,
                                                object: scrollView.contentView)
         
@@ -111,6 +109,9 @@ public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
     }
         
     public func updateNSView(_ nsView: NSView, context: NSViewRepresentableContext<ZoomableScrollView>) {
+        DispatchQueue.main.async {
+            coordinator.viewUpdated()
+        }
     }
 
     public class Coordinator: NSObject {
@@ -133,14 +134,26 @@ public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
 
         let scrollView = NSScrollView()
         var view: NSView!
-
-        init(_ contentSize: CGSize) {
+        let configureCallback: ((ZoomableScrollViewControl) ->())?
+        var inConfigureCallback = false
+        
+        init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
             self.contentSize = contentSize
+            self.configureCallback = configureCallback
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
             super.init()
             scrollViewControl = Control(self)
         }
 
+        func viewUpdated() {
+            if !scrollViewState.valid {
+                scrollViewState.valid = true
+                inConfigureCallback = true
+                self.configureCallback?(self.scrollViewControl)
+                inConfigureCallback = false
+            }
+        }
+        
         func computeVisibleRect() -> CGRect {
             let invZoom = 1.0 / scrollView.magnification
             let origin = scrollView.documentVisibleRect.origin /** invZoom */
@@ -148,28 +161,35 @@ public struct ZoomableScrollView<Content : View> : NSViewRepresentable {
             return CGRect(origin: origin /* - offset */, size: size)
         }
  
-        @objc func viewDidScroll(_ notification: Notification) {
+        @objc func boundsDidChange(_ notification: Notification) {
             scrollViewStateChanged()
         }
 
         func scrollViewStateChanged() {
+            guard scrollViewState.valid else { return }
             scrollViewState.visibleRect = computeVisibleRect()
             scrollViewState.zoomScale = scrollView.magnification
             scrollViewState.invZoomScale = 1.0 / scrollView.magnification
         }
         
         func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false) {
-            NSAnimationContext.runAnimationGroup {
-                $0.duration = 0.2
-                
-                let zoomScale = zoom ?? scrollView.magnification
-                let p = position - (0.5/zoomScale) * CGPoint(fromSize: scrollView.bounds.size)
-                
-                if let zoom = zoom {
-                    scrollView.animator().magnification = zoom
-                }
+            let zoomScale = zoom ?? scrollView.magnification
+            let p = position - (0.5/zoomScale) * CGPoint(fromSize: scrollView.bounds.size)
 
-                scrollView.contentView.animator().setBoundsOrigin(p)
+            if animated || inConfigureCallback {
+                NSAnimationContext.runAnimationGroup {
+                    $0.duration = inConfigureCallback ? 0.01 : 0.2
+                    if let zoom = zoom {
+                        scrollView.animator().magnification = zoom
+                    }
+                    scrollView.contentView.animator().setBoundsOrigin(p)
+                }
+            }
+            else {
+                if let zoom = zoom {
+                    scrollView.magnification = zoom
+                }
+                scrollView.contentView.setBoundsOrigin(p)
             }
         }
     }

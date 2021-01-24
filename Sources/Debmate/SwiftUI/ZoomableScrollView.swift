@@ -71,7 +71,7 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
-         configureCallback: (() ->())? = nil,
+         configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.content = content
 
@@ -137,9 +137,9 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         var rotationCancelKey: Cancellable?
         var refreshHelper: RefreshHelper!
         var allowRecenter = false
-        let configureCallback: (() ->())?
+        let configureCallback: ((ZoomableScrollViewControl) ->())?
         
-        public init(_ contentSize: CGSize, _ configureCallback: (() -> ())?) {
+        public init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
             self.contentSize = contentSize
             self.configureCallback = configureCallback
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
@@ -166,7 +166,7 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         func viewUpdated() {
             if !scrollViewState.valid {
                 scrollViewState.valid = true
-                self.configureCallback?()
+                self.configureCallback?(self.scrollViewControl)
             }
         }
         

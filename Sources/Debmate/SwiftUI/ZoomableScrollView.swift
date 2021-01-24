@@ -19,6 +19,12 @@ public class ZoomableScrollViewState : ObservableObject{
     @Published public var zoomScale = CGFloat(1)
     @Published public var invZoomScale = CGFloat(1)
     @Published public var visibleRect = CGRect.zero
+    
+    public var contentOffset: CGPoint {
+        CGPoint(visibleRect.midX, visibleRect.midY)
+    }
+    
+    public internal (set) var valid = false
 }
 
 /// Class for controlling a ZoomableScrollView.
@@ -60,14 +66,16 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
     ///   - contentSize: size of the content held
     ///   - minZoom: minimum allowed magnification
     ///   - maxZoom: maximum allowed magnification
+    ///   - configureCallback: optional callback shortly after initialization
     ///   - content: held content
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
+         configureCallback: (() ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.content = content
 
-        coordinator = Coordinator(contentSize)
+        coordinator = Coordinator(contentSize, configureCallback)
         coordinator.scrollView.minimumZoomScale = minZoom
         coordinator.scrollView.maximumZoomScale = maxZoom
     }
@@ -97,15 +105,13 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         coordinator.scrollView.contentOffset = .zero
         view.frame.size = coordinator.contentSize
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            coordinator.scrollCenter(to: coordinator.offset, zoom: 1.0, animated: false)
-            coordinator.allowRecenter = true
-        }
-
         return coordinator.scrollView
     }
 
     public func updateUIView(_ scrollView: UIScrollView, context: UIViewRepresentableContext<ZoomableScrollView>) {
+        DispatchQueue.main.async {
+            coordinator.viewUpdated()
+        }
     }
     
     public class Coordinator: NSObject, UIScrollViewDelegate {
@@ -131,9 +137,11 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         var rotationCancelKey: Cancellable?
         var refreshHelper: RefreshHelper!
         var allowRecenter = false
-    
-        public init(_ contentSize: CGSize) {
+        let configureCallback: (() ->())?
+        
+        public init(_ contentSize: CGSize, _ configureCallback: (() -> ())?) {
             self.contentSize = contentSize
+            self.configureCallback = configureCallback
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
             super.init()
             scrollViewControl = Control(self)
@@ -155,6 +163,13 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
             }
         }
     
+        func viewUpdated() {
+            if !scrollViewState.valid {
+                scrollViewState.valid = true
+                self.configureCallback?()
+            }
+        }
+        
         public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
             return view
         }
@@ -167,6 +182,7 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         }
  
         func scrollViewStateChanged() {
+            guard scrollViewState.valid else { return }
             scrollViewState.visibleRect = computeVisibleRect()
             scrollViewState.zoomScale = scrollView.zoomScale
             scrollViewState.invZoomScale = 1.0 / scrollView.zoomScale
@@ -199,7 +215,7 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
             
             view.frame = contentsFrame
         }
-    
+        
         func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false) {
             let z = zoom ?? scrollView.zoomScale
             let p = z * position - 0.5 * CGPoint(fromSize: scrollView.bounds.size)

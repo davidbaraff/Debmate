@@ -69,15 +69,15 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
     ///   - configureCallback: optional callback shortly after initialization
     ///   - content: held content
     public init(contentSize: CGSize,
-         minZoom: CGFloat = 1/250,
-         maxZoom: CGFloat = 4,
+         minMagnification: CGFloat = 1/250,
+         maxMagnification: CGFloat = 4,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.content = content
 
         coordinator = Coordinator(contentSize, configureCallback)
-        coordinator.scrollView.minimumZoomScale = minZoom
-        coordinator.scrollView.maximumZoomScale = maxZoom
+        coordinator.scrollView.minimumZoomScale = minMagnification
+        coordinator.scrollView.maximumZoomScale = maxMagnification
     }
     
     public func makeCoordinator() -> Coordinator {

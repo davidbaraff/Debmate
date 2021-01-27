@@ -128,3 +128,19 @@ extension CGPoint : DiskCachable {
         return nil
     }
 }
+
+extension CGSize : DiskCachable {
+    public func toCachableAny() -> Any {
+        return [Float(self.width), Float(self.height)]
+    }
+    
+    public static func fromCachableAny(_ cachableAny: Any) -> CGSize? {
+        if let array = cachableAny as? [Any],
+            array.count == 2,
+            let w = array[0] as? Float,
+            let h = array[1] as? Float {
+            return CGSize(width: CGFloat(w), height: CGFloat(h))
+        }
+        return nil
+    }
+}

@@ -9,7 +9,7 @@ import Foundation
 import DebmateC
 import Combine
 
-// Wrap a value into an observable object.
+/// Wrap a value into an observable object.
 ///
 /// The ModelValue class is used to automatically save equatable
 /// values to UserDefaults, while also allowing for anonymous notification

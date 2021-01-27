@@ -42,6 +42,26 @@ public extension CGPoint {
     init(fromSize size: CGSize) {
         self.init(x: size.width, y:size.height)
     }
+    
+    func distanceSquared(to p: CGPoint) -> CGFloat {
+        let dx = x - p.x
+        let dy = y - p.y
+        return dx*dx + dy*dy
+    }
+    
+    func distance(to p: CGPoint) -> CGFloat {
+        return sqrt(distanceSquared(to: p))
+    }
+}
+
+public extension CGRect {
+    var center: CGPoint {
+        origin + 0.5 * CGPoint(fromSize: size)
+    }
+    
+    var oppositeCorner: CGPoint {
+        origin + CGPoint(fromSize: size)
+    }
 }
 
 public func + (lhs: CGPoint, rhs: CGPoint) -> CGPoint {

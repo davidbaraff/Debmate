@@ -57,10 +57,13 @@ public extension ZoomableScrollViewControl {
 ///
 /// In particular, the passed in scrollViewState and scrollViewControl objects can be used
 /// to monitor and control, respectively, the scroll view.
-public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
+public struct ZoomableScrollView<Content : View> : View {
+    let contentSize: CGSize
+    let minZoom: CGFloat
+    let maxZoom: CGFloat
+    let configureCallback: ((ZoomableScrollViewControl) ->())?
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
-    let coordinator: Coordinator
-
+    
     /// Construct a ZoomableScrollView
     /// - Parameters:
     ///   - contentSize: size of the content held
@@ -69,6 +72,50 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
     ///   - configureCallback: optional callback shortly after initialization
     ///   - content: held content
     public init(contentSize: CGSize,
+         minZoom: CGFloat = 1/250,
+         maxZoom: CGFloat = 4,
+         configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
+         @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
+        self.contentSize = contentSize
+        self.minZoom = minZoom
+        self.maxZoom = maxZoom
+        self.configureCallback = configureCallback
+        self.content = content
+    }
+        
+    public var body: some View {
+        InternalZoomableScrollView(contentSize: contentSize, minMagnification: minZoom, maxMagnification: maxZoom, configureCallback: configureCallback) {
+            (scrollViewState, scrollViewControl) in
+            UpdatableContentView(scrollViewState: scrollViewState) {
+               self.content(scrollViewState, scrollViewControl)
+            }
+        }
+    }
+}
+
+fileprivate struct UpdatableContentView<Content : View> : View {
+    // We don't care about the scrollview state, but because updateUIView() causes
+    // this object to mutate, we can handle dynamic content in the view held by the
+    // call to UpdateContentView(), just above here.
+    @ObservedObject var scrollViewState: ZoomableScrollViewState
+    let content: () -> Content
+
+    init(scrollViewState: ZoomableScrollViewState,
+         @ViewBuilder content: @escaping () -> Content) {
+        self.scrollViewState = scrollViewState
+        self.content = content
+    }
+    
+    var body: some View {
+        self.content()
+    }
+}
+
+fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresentable {
+    let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
+    let coordinator: Coordinator
+
+    init(contentSize: CGSize,
          minMagnification: CGFloat = 1/250,
          maxMagnification: CGFloat = 4,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
@@ -80,11 +127,11 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         coordinator.scrollView.maximumZoomScale = maxMagnification
     }
     
-    public func makeCoordinator() -> Coordinator {
+    func makeCoordinator() -> Coordinator {
         return coordinator
     }
     
-    public func makeUIView(context: UIViewRepresentableContext<ZoomableScrollView>) -> UIScrollView {
+    func makeUIView(context: UIViewRepresentableContext<InternalZoomableScrollView>) -> UIScrollView {
         let coordinator = context.coordinator
         let view = UIHostingController(rootView: content(coordinator.scrollViewState, coordinator.scrollViewControl)).view!
 
@@ -108,13 +155,14 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         return coordinator.scrollView
     }
 
-    public func updateUIView(_ scrollView: UIScrollView, context: UIViewRepresentableContext<ZoomableScrollView>) {
+    func updateUIView(_ scrollView: UIScrollView, context: UIViewRepresentableContext<InternalZoomableScrollView>) {
         DispatchQueue.main.async {
-            coordinator.viewUpdated()
+            context.coordinator.viewUpdated()
+            context.coordinator.scrollViewStateChanged()
         }
     }
     
-    public class Coordinator: NSObject, UIScrollViewDelegate {
+    class Coordinator: NSObject, UIScrollViewDelegate {
         class Control : ZoomableScrollViewControl {
             weak var coordinator: Coordinator?
 
@@ -139,7 +187,7 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
         var allowRecenter = false
         let configureCallback: ((ZoomableScrollViewControl) ->())?
         
-        public init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
+        init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
             self.contentSize = contentSize
             self.configureCallback = configureCallback
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
@@ -188,11 +236,11 @@ public struct ZoomableScrollView<Content : View> : UIViewRepresentable {
             scrollViewState.invZoomScale = 1.0 / scrollView.zoomScale
         }
         
-        public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
             scrollViewStateChanged()
         }
         
-        public func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
             centerScrollViewContents()
             scrollViewStateChanged()
         }

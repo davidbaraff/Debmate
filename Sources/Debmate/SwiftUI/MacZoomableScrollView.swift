@@ -166,8 +166,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         
     func updateNSView(_ nsView: NSView, context: NSViewRepresentableContext<InternalZoomableScrollView>) {
         DispatchQueue.main.async {
-            coordinator.viewUpdated()
-            coordinator.scrollViewStateChanged()
+            context.coordinator.viewUpdated()
+            context.coordinator.scrollViewStateChanged()
         }
     }
 }

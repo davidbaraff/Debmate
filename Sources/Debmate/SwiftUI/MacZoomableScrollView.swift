@@ -421,6 +421,17 @@ fileprivate class DraggableClipView: NSClipView {
             }
         }
     }
+    
+    override func magnify(with event: NSEvent) {
+        let p = zoomAnchorPoint(contentViewPoint:  convert(event.locationInWindow, from: nil))
+
+        if event.magnification > 0 {
+            modifyMagnification(event.magnification, zoomIn: true, centeredAt: p)
+        }
+        else {
+            modifyMagnification(-event.magnification, zoomIn: false, centeredAt: p)
+        }
+    }
 
     override func scrollWheel(with event: NSEvent) {
         guard event.subtype == .mouseEvent else {

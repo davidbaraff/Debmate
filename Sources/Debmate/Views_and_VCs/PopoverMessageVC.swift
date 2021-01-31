@@ -43,14 +43,14 @@ public class PopoverMessageVC : UIViewController {
                 backgroundColor: UIColor = UIColor.white,
                 pressedTextColor: UIColor = UIColor.gray, buttonHandler bh: (() -> ())?) {
         self.init(nibName: nil, bundle: nil)
-        let b = UIButton()
-        button = b
+        let boxes = UIButton()
+        button = boxes
         buttonHandler = bh
         self.extraMargin = extraMargin
-        b.setTitle(buttonText, for: .normal)
-        b.setTitleColor(textColor, for: .normal)
-        b.setTitleColor(pressedTextColor, for: .highlighted)
-        b.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
+        boxes.setTitle(buttonText, for: .normal)
+        boxes.setTitleColor(textColor, for: .normal)
+        boxes.setTitleColor(pressedTextColor, for: .highlighted)
+        boxes.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
     }
     
     

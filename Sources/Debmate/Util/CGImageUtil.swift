@@ -130,6 +130,33 @@ extension Util {
         return NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
         #endif
     }
+    
+    /// Convert cgImage to jpeg data
+    /// - Parameters:
+    ///   - from: input cgImage
+    ///   - compressionQuality: 0 is maximally compressed, 1 is maximum image quality
+    /// - Returns: <#description#>
+    static public func jpegData(from cgImage: CGImage, compressionQuality: CGFloat = 1) -> Data? {
+        #if os(iOS)
+        return UIImage(cgImage: cgImage).jpegData(compressionQuality: compressionQuality)
+        #else
+        let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
+        return bitmapRep.representation(using: NSBitmapImageRep.FileType.jpeg, properties: [:])
+        #endif
+    }
+
+    /// Convert cgImage to png data
+    /// - Parameters:
+    ///   - from: input cgImage
+    /// - Returns: <#description#>
+    static public func pngData(from cgImage: CGImage) -> Data? {
+        #if os(iOS)
+        return UIImage(cgImage: cgImage).pngData()
+        #else
+        let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
+        return bitmapRep.representation(using: NSBitmapImageRep.FileType.png, properties: [:])
+        #endif
+    }
 }
 
 

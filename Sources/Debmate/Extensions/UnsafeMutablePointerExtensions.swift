@@ -2,7 +2,7 @@
 //  UnsafeMutablePointerExtensions.swift
 //  Debmate
 //
-// Copyright © 2019 David Baraff. All rights reserved.
+//  Copyright © 2019 David Baraff. All rights reserved.
 //
 
 import Foundation

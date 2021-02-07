@@ -64,23 +64,3 @@ public func any<ST : Sequence>(_ sequence:ST) -> Bool where ST.Element == Bool {
     }
     return false
 }
-
-
-/// A hashable tuple of two elements.
-public struct HashablePair<T1 : Hashable, T2 : Hashable> : Hashable {
-    public init(_ first: T1, _ second: T2) {
-        self.first = first
-        self.second = second
-    }
-    
-    public let first: T1
-    public let second: T2
-}
-
-public struct WeakRef<T : AnyObject> {
-    weak public var value: T?
-    
-    public init(_ value: T) {
-        self.value = value
-    }
-}

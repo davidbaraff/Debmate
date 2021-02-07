@@ -38,7 +38,7 @@ extension Util {
         return context.makeImage()
     }
     
-    /// Resize an image
+    /// Resize an image.
     /// - Parameters:
     ///   - fileURL: a file URL containing the image
     ///   - toSize: desired output size
@@ -57,6 +57,50 @@ extension Util {
         return CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary)
     }
     
+    /// Returns an image read from an app's asset catalog.
+    /// - Parameter named: The name of the image asset or file.
+    /// - Returns: an image
+    ///
+    /// See the documentation for UIImage(named: ) or NSImage(named: ) as appropriate.
+    static public func cgImage(named: String) -> CGImage? {
+        #if os(iOS)
+        return UIImage(named: named)?.cgImage
+        #else
+        return NSImage(named: named)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
+        #endif
+    }
+    
+    /// Create an empty image with a size and fill color.
+    ///
+    /// - Parameters:
+    ///   - fillColor: contents of image
+    ///   - size: image size
+    /// - Returns: image
+    static public func createEmptyImage(width: Int, height: Int, fillColor: CGColor = .clear) -> CGImage {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+        
+        guard let ctx = CGContext(data: nil,
+                                  width: width,
+                                  height: height,
+                                  bitsPerComponent: 8,
+                                  bytesPerRow: 0,
+                                  space: colorSpace,
+                                  bitmapInfo: bitmapInfo.rawValue) else {
+                                    fatalErrorForCrashReport("failed to create CGContext")
+        }
+        
+        ctx.setBlendMode(.normal)
+        ctx.setFillColor(fillColor)
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        
+        guard let finalImage = ctx.makeImage() else {
+            fatalErrorForCrashReport("ctx.makeImage() failed")
+        }
+
+        return finalImage
+    }
+   
     /// Returns an image scaled to fit within the given size.
     ///
     /// - Parameters:

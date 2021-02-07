@@ -17,7 +17,7 @@ public class WorkerPool {
     let nworkers: Int
     var nrunning = 0
     let work: () -> ()
-
+    let debugName: String
     
     /// Construct a new pool
     /// - Parameters:
@@ -25,26 +25,30 @@ public class WorkerPool {
     ///   - workQueue: The queue they should run on (defaults to DispatchQueue.global()).
     ///   - work: The task they should run.
     /// - Note: You must call ensureWorking() to actually start the workers working.
-    public init(nworkers: Int, workQueue: DispatchQueue? = nil, work: @escaping () -> ()) {
+    public init(nworkers: Int, workQueue: DispatchQueue? = nil, debugName: String = "", work: @escaping () -> ()) {
         self.nworkers = nworkers
         self.workQueue = workQueue ?? DispatchQueue.global()
         self.work = work
+        self.debugName = debugName
     }
 
-    
     /// Ensure that the workers are running.
     ///
     /// This call makes sure that all nworkers workers have started running.
     public func ensureWorking() {
         lock.sync {
             while nrunning < nworkers {
-                print("Started worker (nrunning = \(nrunning) out of \(nworkers))")
+                if !debugName.isEmpty {
+                    print("WorkerPool[\(debugName) ]Started worker (nrunning = \(nrunning) out of \(nworkers))")
+                }
                 nrunning += 1
                 workQueue.async {
                     self.work()
                     self.lock.sync {
                         self.nrunning -= 1
-                        print("Ended worker (nrunning = \(self.nrunning) out of \(self.nworkers))")
+                        if !self.debugName.isEmpty {
+                            print("WorkerPool[\(self.debugName)] Ended worker (nrunning = \(self.nrunning) out of \(self.nworkers))")
+                        }
                     }
                 }
             }
@@ -65,31 +69,40 @@ public class WorkerPool {
             }
         }
     }
-
+    
     func upToDateWorker() {
         while true {
-            print("Up to date worker has started")
-            lock.sync {
-                upToDate = true
+            autoreleasepool {
+                if !doWork() {
+                    return
+                }
             }
-        
-            work()
+        }
+    }
+    
+    // returns false to signal stopping the worker
+    func doWork() -> Bool {
+        if !debugName.isEmpty {
+            print("WorkerPool[\(debugName) ] Up to date worker has started")
+        }
 
-            let shouldExit: Bool = lock.sync {
-                if upToDate {
-                    print("Up to date worker has ended")
-                    upToDateWorkerRunning = false
-                    return true
+        lock.sync { upToDate = true }
+        work()
+        
+        return lock.sync {
+            if upToDate {
+                if !debugName.isEmpty {
+                    print("WorkerPool[\(debugName)] Up to date worker has ended")
                 }
-                else {
-                    return false
-                }
+                upToDateWorkerRunning = false
+                return false
             }
-            
-            if shouldExit {
-                return
+            else {
+                return true
             }
         }
     }
 }
+
+
 

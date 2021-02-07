@@ -2,7 +2,6 @@
 //  RefreshHelper.swift
 //  Debmate
 //
-//  Created by David Baraff on 7/25/19.
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 

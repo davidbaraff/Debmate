@@ -109,9 +109,6 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         let coordinator = context.coordinator
 
         let view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.blue.cgColor
-
         let scrollView = coordinator.scrollView
         let clipView = coordinator.clipView
 
@@ -120,7 +117,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
 
         scrollView.contentView = clipView
 
-        scrollView.backgroundColor = NSColor.green
+        scrollView.backgroundColor = NSColor.clear
         scrollView.hasHorizontalScroller = true
         scrollView.hasVerticalScroller = true
         
@@ -142,10 +139,12 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         innerView.translatesAutoresizingMaskIntoConstraints = true
 
         scrollView.documentView = innerView
+        
         view.addSubview(scrollView)
 
         scrollView.frame = view.frame
         innerView.frame = view.frame
+        coordinator.scrollView.drawsBackground = false
 
         DispatchQueue.main.async {
             scrollView.contentView.window?.makeFirstResponder(scrollView.contentView)

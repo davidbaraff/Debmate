@@ -156,7 +156,9 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
     }
 
     func updateUIView(_ scrollView: UIScrollView, context: UIViewRepresentableContext<InternalZoomableScrollView>) {
+        context.coordinator.centerScrollViewContents()
         DispatchQueue.main.async {
+            context.coordinator.centerScrollViewContents()
             context.coordinator.viewUpdated()
             context.coordinator.scrollViewStateChanged()
         }

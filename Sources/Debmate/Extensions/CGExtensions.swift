@@ -1,5 +1,5 @@
 //
-//  CGOverloads.swift
+//  CGExtensions.swift
 //  Debmate
 //
 //  Copyright © 2019 David Baraff. All rights reserved.
@@ -7,6 +7,18 @@
 
 import Foundation
 import CoreGraphics
+
+public extension CGImage {
+    var size: CGSize {
+        CGSize(self.width, self.height)
+    }
+}
+
+#if os(iOS)
+public extension CGColor {
+    static let clear = CGColor(gray: 0, alpha: 0)
+}
+#endif
 
 public extension CGSize {
     init(_ x: Int, _ y: Int) {
@@ -61,6 +73,18 @@ public extension CGRect {
     
     var oppositeCorner: CGPoint {
         origin + CGPoint(fromSize: size)
+    }
+    
+    /// Return a rectangle fitting within self.
+    /// - Parameter size: The aspect ratio of the rectangle
+    /// - Returns: A centered and scaled CGRect.
+    func fittedRect(aspectRatio size: CGSize) -> CGRect {
+        let scale = Swift.min(width / size.width, height / size.height)
+        let newWidth = scale * size.width
+        let newHeight = scale * size.height
+        return CGRect(x: origin.x + (width - newWidth)/2,
+                      y: origin.y + (height - newHeight)/2,
+                      width: newWidth, height: newHeight)
     }
 }
 

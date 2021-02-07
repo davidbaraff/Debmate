@@ -70,6 +70,30 @@ extension Util {
         #endif
     }
     
+    static let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+    static let colorSpace = CGColorSpaceCreateDeviceRGB()
+
+    
+    /// Create a standard 32-bit ARGB context.
+    /// - Parameters:
+    ///   - width: width in pixels
+    ///   - height: height in pixels
+    ///   - fillColor: optional fill color to fill context upon creation
+    static public func createStandardARGBContext(width: Int, height: Int, fillColor: CGColor? = nil) -> CGContext {
+        guard let cgContext = CGContext(data: nil, width: width, height: height,
+                                        bitsPerComponent: 8, bytesPerRow: 0,
+                                        space: colorSpace,
+                                        bitmapInfo: bitmapInfo.rawValue) else {
+            fatalErrorForCrashReport("failed to create CGContext")
+        }
+        
+        if let fillColor = fillColor {
+            cgContext.setFillColor(fillColor)
+            cgContext.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        }
+        return cgContext
+    }
+
     /// Create an empty image with a size and fill color.
     ///
     /// - Parameters:

@@ -60,7 +60,7 @@ extension CGPoint {
 /// 2-D Hierarchical Bounding Volume
 public class Hbv {
     /// Tree root
-    public private (set) var root = HbvNode(contents: .nonleaf[])
+    public private (set) var root = HbvNode(contents: .nonleaf([]))
     
     /// Depth of current tree.
     public private (set) var nlevels = 0
@@ -307,6 +307,21 @@ public class HbvNode : ClassIdentityBase {
         if let children = children {
             for child in children {
                 child.findNodes(callback: callback)
+            }
+        }
+    }
+    
+    /// Run a callback on every node of the tree.
+    /// - Parameter callback: callback to be run.
+    /// If callback returns false, the search does not
+    /// descend past that node.
+    public func walk(callback: (HbvNode) -> (Bool)) {
+        if !callback(self) {
+            return
+        }
+        if let children = children {
+            for child in children {
+                child.walk(callback: callback)
             }
         }
     }

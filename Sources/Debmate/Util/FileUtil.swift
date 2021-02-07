@@ -138,7 +138,23 @@ extension Util {
     /// directory is prepended.
     public static func md5FileCacheLocation(assetName: String, directory: URL? = nil,
                                             pathExtension: String? = nil) -> URL {
-        let digest = md5Digest(assetName)
+        md5FileCacheLocation(hexDigest: md5Digest(assetName), directory: directory, pathExtension: pathExtension)
+    }
+
+    /// Cache file location for a given md5 hex digest.
+    ///
+    /// - Parameters:
+    ///   - md5Digest: A hex md5 digest.
+    ///   - directory: optional directory
+    ///   - pathExtension: optional path extension
+    ///
+    /// Returns a path of the form d[0]/d[1]d[2]/d[3:] + <pathExtension> where d is
+    /// a (presumed) 16 byte md5 hex digest.  At any rate, d must be at least length
+    /// three or greater.
+    ///
+    /// If directory is supplied, directory is prepended.
+    public static func md5FileCacheLocation(hexDigest digest: String, directory: URL? = nil,
+                                            pathExtension: String? = nil) -> URL {
         var startIndex = digest.startIndex
         
         let d0 = digest[startIndex]

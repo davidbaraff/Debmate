@@ -25,7 +25,7 @@ internal extension Date {
 ///   - msg: Descriptive message printed after block completes.
 ///   - block: code to be timed
 /// - Returns: return value of block
-public func timed_execution<T>(withMsg msg: String, block: () -> T) -> T {
+public func timed_execution<T>(_ msg: String, block: () -> T) -> T {
     let now = Date()
     let result = block()
     print("\(msg): \(now.elapsedTime) seconds")

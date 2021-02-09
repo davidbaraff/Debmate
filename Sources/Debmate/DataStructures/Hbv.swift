@@ -284,7 +284,21 @@ public class HbvNode : ClassIdentityBase {
             }
         }
     }
-
+    
+    
+    /// Return the lowest ancestor matching a predicate.
+    /// - Parameter predicate: predicate function
+    /// - Returns: The closest ancestor matching predicate, or nil.
+    public func closestAncestor(where predicate: (HbvNode) -> (Bool)) -> HbvNode? {
+        var curNode = self
+        while let p = curNode.parent {
+            if predicate(p) {
+                return p
+            }
+            curNode = p
+        }
+        return nil
+    }
     
     /// Run a callback on every leaf node of the tree.
     /// - Parameter callback: callback to be run.
@@ -299,7 +313,23 @@ public class HbvNode : ClassIdentityBase {
             }
         }
     }
-    
+
+    /// Run a callback on every "terminal" node of the tree.
+    /// - Parameter stoppingWhen: callback that returns true for terminal nodes.
+    /// - Parameter callback: callback to be run on each terminal node.
+    public func findTerminalNodes(isTerminal: (HbvNode) -> (Bool), callback: (HbvNode) -> ()) {
+        if isTerminal(self) {
+            callback(self)
+            return
+        }
+
+        if case .nonleaf(let children) = contents {
+            for child in children {
+                child.findTerminalNodes(isTerminal: isTerminal, callback: callback)
+            }
+        }
+    }
+
     /// Run a callback on every node of the tree.
     /// - Parameter callback: callback to be run.
     public func findNodes(callback: (HbvNode) -> ()) {

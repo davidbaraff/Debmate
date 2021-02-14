@@ -18,6 +18,7 @@ public class WorkerPool {
     var nrunning = 0
     let work: () -> ()
     let debugName: String
+    var completion: (() -> ())?
     
     /// Construct a new pool
     /// - Parameters:
@@ -46,6 +47,10 @@ public class WorkerPool {
                     self.work()
                     self.lock.sync {
                         self.nrunning -= 1
+                        if self.nrunning == 0 {
+                            self.completion?()
+                            self.completion = nil
+                        }
                         if !self.debugName.isEmpty {
                             print("WorkerPool[\(self.debugName)] Ended worker (nrunning = \(self.nrunning) out of \(self.nworkers))")
                         }
@@ -55,9 +60,33 @@ public class WorkerPool {
         }
     }
 
+    
+    /// Set a callback to be run when the last worker stops.
+    /// - Parameter callback: callback
+    /// Sets a completion function to be run when the last worker stops.
+    /// If work has already stopped, the callback is run immediately.
+    ///
+    /// Note: The callback value is guaranteed not to be
+    /// held if all workers have already stopped, and is dropped as soon
+    /// as the last worker stops.  The callback is called exactly once.
+    public func executeWhenStopped(callback: @escaping () -> ()) {
+        let wasStopped: Bool = lock.sync {
+            if nrunning > 0 {
+                self.completion = callback
+                return false
+            }
+            return true
+        }
+        
+        if wasStopped {
+            callback()
+        }
+    }
+
     var upToDate = false
     var upToDateWorkerRunning = false
     
+    /// Don't use this API.
     public func ensureUpToDate() {
         lock.sync {
             upToDate = false
@@ -70,6 +99,7 @@ public class WorkerPool {
         }
     }
     
+    /// Don't use this API.
     func upToDateWorker() {
         while true {
             autoreleasepool {

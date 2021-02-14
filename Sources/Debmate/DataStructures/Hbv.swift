@@ -44,6 +44,11 @@ public struct Range2d {
         return range.max.x < min.x || range.max.y < min.y ||
                max.x < range.min.x || max.y < range.min.y
     }
+    
+    public func contains(point: CGPoint) -> Bool {
+        return min.x < point.x && max.x > point.x &&
+               min.y < point.y && max.y > point.y
+    }
 }
 
 extension CGRect {
@@ -285,6 +290,25 @@ public class HbvNode : ClassIdentityBase {
         }
     }
     
+    
+    /// Runs a callback for each leaf containing point.
+    /// - Parameters:
+    ///   - point: point in space
+    ///   - callback: callback to be run
+    public func findLeavesContaining(point: CGPoint, callback: (Int) ->()) {
+        guard range.contains(point: point) else {
+            return
+        }
+
+        switch contents {
+        case .leaf(let index):
+            callback(index)
+        case .nonleaf(let children):
+            for child in children {
+                child.findLeavesContaining(point: point, callback: callback)
+            }
+        }
+    }
     
     /// Return the lowest ancestor matching a predicate.
     /// - Parameter predicate: predicate function

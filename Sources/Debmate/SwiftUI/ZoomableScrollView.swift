@@ -25,6 +25,8 @@ public class ZoomableScrollViewState : ObservableObject{
     }
     
     public internal (set) var valid = false
+    
+    public  internal (set) var recentTouchLocation: (() -> CGPoint)!
 }
 
 /// Class for controlling a ZoomableScrollView.
@@ -111,6 +113,15 @@ fileprivate struct UpdatableContentView<Content : View> : View {
     }
 }
 
+fileprivate class TouchSpyingView : UIView {
+    var registerTouchLocation: ((CGPoint) -> ())!
+
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        registerTouchLocation(point - superview!.bounds.origin)
+        return nil
+    }
+}
+
 fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresentable {
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
     let coordinator: Coordinator
@@ -136,7 +147,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         let view = UIHostingController(rootView: content(coordinator.scrollViewState, coordinator.scrollViewControl)).view!
 
         coordinator.view = view
-        coordinator.watchScrollViewsState()
+        coordinator.watchScrollViewState()
+        view.backgroundColor = .clear
         
         coordinator.scrollView.delegate = coordinator
         coordinator.scrollView.isDirectionalLockEnabled = false
@@ -148,9 +160,22 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         coordinator.scrollView.backgroundColor = .clear
         coordinator.scrollView.addSubview(view)
     
+        let touchSpyingView = TouchSpyingView()
+        touchSpyingView.backgroundColor = UIColor(red: 0.2, green: 0, blue: 0, alpha: 0.5)
+        touchSpyingView.translatesAutoresizingMaskIntoConstraints = false
+        coordinator.scrollView.addSubview(touchSpyingView)
+        
         coordinator.scrollView.contentSize = coordinator.contentSize
         coordinator.scrollView.contentOffset = .zero
         view.frame.size = coordinator.contentSize
+        touchSpyingView.frame.size = coordinator.scrollView.frame.size
+
+        touchSpyingView.registerTouchLocation = { [weak coordinator] location in
+            guard let coordinator = coordinator else { return }
+            let invZoom = 1.0 / coordinator.scrollView.zoomScale
+            let origin = coordinator.scrollView.contentOffset * invZoom
+            coordinator.recentTouchLocation = origin + invZoom * location
+        }
         
         return coordinator.scrollView
     }
@@ -186,8 +211,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         var controlCancelKey: Cancellable?
         var rotationCancelKey: Cancellable?
         var refreshHelper: RefreshHelper!
-        var allowRecenter = false
         let configureCallback: ((ZoomableScrollViewControl) ->())?
+        var recentTouchLocation = CGPoint.zero
         
         init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
             self.contentSize = contentSize
@@ -195,20 +220,17 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
             super.init()
             scrollViewControl = Control(self)
+            scrollViewState.recentTouchLocation = { [weak self] in
+                return self?.recentTouchLocation ?? .zero
+            }
         }
     
-        func watchScrollViewsState() {
+        func watchScrollViewState() {
             rotationCancelKey = NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification).sink {
                 [weak self] _ in
-
-                if let self = self,
-                   self.allowRecenter {
-                    let vr = self.computeVisibleRect()
-                    let center = CGPoint(x: vr.midX, y: vr.midY)
-                    DispatchQueue.main.async {
-                        self.scrollCenter(to: center)
-                        self.scrollViewStateChanged()
-                    }
+                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    self.scrollViewStateChanged()
                 }
             }
         }

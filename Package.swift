@@ -6,6 +6,7 @@ import PackageDescription
 let package = Package(
     name: "Debmate",
     platforms: [.iOS(.v13),
+                .tvOS(.v14),
                 .macOS(.v10_15)],
     products: [
         .library(

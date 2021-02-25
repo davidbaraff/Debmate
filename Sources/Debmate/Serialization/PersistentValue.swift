@@ -8,8 +8,7 @@
 import Foundation
 import DebmateC
 
-// Wrap a value that stores itself persistently in UserDefaults.
-///
+/// Wrap a value that stores itself persistently in UserDefaults.
 @propertyWrapper
 public class PersistentValue<T : Equatable> {
     let key: String

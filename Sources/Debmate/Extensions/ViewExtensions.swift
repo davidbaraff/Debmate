@@ -12,12 +12,17 @@ public extension View {
         return AnyView(self)
     }
     
-    func hide(when hidden: Bool) -> some View {
-        self.disabled(hidden).opacity(hidden ? 0 : 1)
+    func background<Content: View>(_ background: Content, when enabled: Bool) -> AnyView {
+        if enabled {
+            return self.background(background).anyView()
+        }
+        else {
+            return self.anyView()
+        }
     }
     
-    func eraseToAnyView() -> AnyView {
-        return AnyView(self)
+    func hide(when hidden: Bool) -> some View {
+        self.disabled(hidden).opacity(hidden ? 0 : 1)
     }
     
     func hideStatusBar() -> some View {
@@ -29,11 +34,15 @@ public extension View {
     }
     
     func noAutocapitalization() -> some View {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         return self.autocapitalization(.none)
         #else
         return self
         #endif
+    }
+    
+    func frame(size: CGSize) -> some View {
+        self.frame(width: size.width, height: size.height)
     }
 }
 

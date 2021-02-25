@@ -39,8 +39,18 @@ public func fatalErrorForCrashReport(_ msg: String, file: StaticString = #file, 
     fatalError(msg, file: file, line: line)
 }
 
-public func fatalErrorForCrashReportMessage() -> String? {
-    return try? String(contentsOf: fileForFatalErrorCrashReport())
+/// Return the message last written by a call to fatalErrorForCrashReport().
+/// - parameter deleteOnRead: if true, deletes the backing file storing the message
+///   after the message is read
+/// - Returns: last message sent by fatalErrorForCrashReport
+public func fatalErrorForCrashReportMessage(deleteOnRead: Bool = true) -> String? {
+    if let msg = try? String(contentsOf: fileForFatalErrorCrashReport()) {
+        if deleteOnRead {
+            try? FileManager.default.removeItem(at: fileForFatalErrorCrashReport())
+        }
+        return msg
+    }
+    return nil
 }
 
 /// Return the address of an object as a hex string.

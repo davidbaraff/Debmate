@@ -8,7 +8,7 @@
 import Foundation
 import CoreGraphics
 import ImageIO
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 import UIKit
 #else
 import AppKit
@@ -63,7 +63,7 @@ extension Util {
     ///
     /// See the documentation for UIImage(named: ) or NSImage(named: ) as appropriate.
     static public func cgImage(named: String) -> CGImage? {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         return UIImage(named: named)?.cgImage
         #else
         return NSImage(named: named)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
@@ -92,6 +92,14 @@ extension Util {
             cgContext.fill(CGRect(x: 0, y: 0, width: width, height: height))
         }
         return cgContext
+    }
+    
+    /// Create a standard 32-bit ARGB context.
+    /// - Parameters:
+    ///   - size: image size (rounded to integer width/height)
+    ///   - fillColor: optional fill color to fill context upon creation
+    static public func createStandardARGBContext(size: CGSize, fillColor: CGColor? = nil) -> CGContext {
+        createStandardARGBContext(width: Int(size.width.rounded()), height: Int(size.height.rounded()), fillColor: fillColor)
     }
 
     /// Create an empty image with a size and fill color.
@@ -181,7 +189,7 @@ extension Util {
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
     /// - Returns: cgImage on success
     static public func cgImage(from data: Data) -> CGImage? {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         return UIImage(data: data)?.cgImage
         #else
         return NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
@@ -192,7 +200,7 @@ extension Util {
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
     /// - Returns: cgImage on success
     static public func cgImage(from url: URL) -> CGImage? {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         return UIImage(contentsOfFile: url.path)?.cgImage
         #else
         return NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
@@ -205,7 +213,7 @@ extension Util {
     ///   - compressionQuality: 0 is maximally compressed, 1 is maximum image quality
     /// - Returns: <#description#>
     static public func jpegData(from cgImage: CGImage, compressionQuality: CGFloat = 1) -> Data? {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         return UIImage(cgImage: cgImage).jpegData(compressionQuality: compressionQuality)
         #else
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
@@ -218,7 +226,7 @@ extension Util {
     ///   - from: input cgImage
     /// - Returns: <#description#>
     static public func pngData(from cgImage: CGImage) -> Data? {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         return UIImage(cgImage: cgImage).pngData()
         #else
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)

@@ -7,7 +7,7 @@
 
 import Foundation
 import SwiftUI
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 import UIKit
 #endif
 import Combine
@@ -19,7 +19,8 @@ public class ZoomableScrollViewState : ObservableObject{
     @Published public var zoomScale = CGFloat(1)
     @Published public var invZoomScale = CGFloat(1)
     @Published public var visibleRect = CGRect.zero
-    
+    public var externalControl = false
+
     public var contentOffset: CGPoint {
         CGPoint(visibleRect.midX, visibleRect.midY)
     }
@@ -30,22 +31,50 @@ public class ZoomableScrollViewState : ObservableObject{
 }
 
 /// Class for controlling a ZoomableScrollView.
-public protocol ZoomableScrollViewControl {
+public protocol ZoomableScrollViewControl : AnyObject {
     /// Scroll and zoom the view.
     /// - Parameters:
     ///   - location: location in content space which should be centered in the view
     ///   - zoom: desired zoom level if not nil
     ///   - animated: if the scroll/zoom should be animated
-    func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool)
+    ///   - externalControl: if the update to the ZoomableScrollViewState
+    ///     for this view should set extenralControl to true.  (Do not
+    ///     set both animated and externalControl to true in the same call.)
+
+    func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool)
+    var windowSize: CGSize { get }
 }
 
 public extension ZoomableScrollViewControl {
     func scrollCenter(to location: CGPoint, zoom: CGFloat?) {
-        scrollCenter(to: location, zoom: zoom, animated: true)
+        scrollCenter(to: location, zoom: zoom, animated: true, externalControl: false)
+    }
+    
+    func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool = false) {
+        scrollCenter(to: location, zoom: zoom, animated: animated, externalControl: false)
+    }
+    
+    /// Scroll view to fit around a rectangle
+    /// - Parameters:
+    ///   - rect: rectangle to be centered on screen
+    ///   - undershoot: zoom is set to undershoot*actualZoom where actualZom
+    ///     is the largest zoom that fits the rectangle completely inside the view
+    ///   - horizontalFit: if true, computes the fit only using the horizontal axis
+    ///   - animated: if the scroll/zoom should be animated
+    ///   - externalControl: if the update to the ZoomableScrollViewState
+    ///     for this view should set extenralControl to true.  (Do not
+    ///     set both animated and externalControl to true in the same call.)
+
+    func scrollAndZoom(around rect: CGRect, undershoot: CGFloat = 0.90, horizontalFit: Bool = false,
+                       animated: Bool = true, externalControl: Bool = false) {
+        let scale = horizontalFit ? windowSize.width / rect.width :
+                    min(windowSize.width / rect.width, windowSize.height / rect.height)
+        scrollCenter(to: rect.center, zoom: undershoot * scale,
+                     animated: animated, externalControl: externalControl)
     }
 }
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
 /// feature-poor version of ScrollView exposed by SwiftUI.
 ///
@@ -153,7 +182,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         coordinator.scrollView.delegate = coordinator
         coordinator.scrollView.isDirectionalLockEnabled = false
         coordinator.scrollView.zoomScale = 1.0
-
+        coordinator.scrollView.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+        
         coordinator.scrollView.showsVerticalScrollIndicator = true
         coordinator.scrollView.showsHorizontalScrollIndicator = true
         coordinator.scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -185,7 +215,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         DispatchQueue.main.async {
             context.coordinator.centerScrollViewContents()
             context.coordinator.viewUpdated()
-            context.coordinator.scrollViewStateChanged()
+            context.coordinator.scrollViewStateChanged(treatAsExternal: true)
         }
     }
     
@@ -197,16 +227,21 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
                 self.coordinator = coordinator
             }
 
-            func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool) {
-                coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated)
+            func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool) {
+                coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated, externalControl: externalControl)
+            }
+            
+            var windowSize: CGSize {
+                coordinator?.scrollView.bounds.size ?? CGSize(1,1)
             }
         }
+
         let contentSize: CGSize
         let scrollViewState = ZoomableScrollViewState()
         var scrollViewControl: ZoomableScrollViewControl!
         let offset: CGPoint
 
-        var scrollView = UIScrollView()
+        var scrollView = UIScrollView() // PenIgnoringScrollView()
         var view: UIView!
         var controlCancelKey: Cancellable?
         var rotationCancelKey: Cancellable?
@@ -226,6 +261,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         }
     
         func watchScrollViewState() {
+        #if os(iOS)
             rotationCancelKey = NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification).sink {
                 [weak self] _ in
                 guard let self = self else { return }
@@ -233,8 +269,9 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
                     self.scrollViewStateChanged()
                 }
             }
+        #endif
         }
-    
+
         func viewUpdated() {
             if !scrollViewState.valid {
                 scrollViewState.valid = true
@@ -253,11 +290,12 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             return CGRect(origin: origin, size: size)
         }
  
-        func scrollViewStateChanged() {
+        func scrollViewStateChanged(treatAsExternal: Bool = false) {
             guard scrollViewState.valid else { return }
             scrollViewState.visibleRect = computeVisibleRect()
             scrollViewState.zoomScale = scrollView.zoomScale
             scrollViewState.invZoomScale = 1.0 / scrollView.zoomScale
+            scrollViewState.externalControl = inExternalControl || treatAsExternal
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -288,16 +326,22 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             view.frame = contentsFrame
         }
         
-        func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false) {
-            let z = zoom ?? scrollView.zoomScale
+        private var inExternalControl = false
+        
+        func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false) {
+            let z = max(min(zoom ?? scrollView.zoomScale, scrollView.maximumZoomScale), scrollView.minimumZoomScale)
             let p = z * position - 0.5 * CGPoint(fromSize: scrollView.bounds.size)
             
-            UIView.animate(withDuration: animated ? 0.2 : 0.0) {
+            inExternalControl = externalControl
+
+            UIView.animate(withDuration: (animated && !externalControl) ? 0.2 : 0.0) {
                 if let zoom = zoom {
                     self.scrollView.zoomScale = zoom
                 }
                 self.scrollView.contentOffset = p
             }
+
+            inExternalControl = false
         }
    }
 }

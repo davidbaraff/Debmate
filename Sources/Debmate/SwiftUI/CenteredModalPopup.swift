@@ -42,7 +42,14 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                     return self.overlayedContent.anyView()
                 }
                 else {
-                    return self.overlayedContent.blur(radius: 6).overlay(Color(.displayP3, white: 0.6, opacity: 0.5)).onTapGesture { withAnimation { self.isPresented = false} }.anyView()
+                    #if os(iOS)
+                    return self.overlayedContent.blur(radius: 6)
+                        .overlay(Color(.displayP3, white: 0.6, opacity: 0.5))
+                        .onTapGesture { withAnimation { self.isPresented = false} }.anyView()
+                    #else
+                    return self.overlayedContent.blur(radius: 6)
+                        .overlay(Color(.displayP3, white: 0.6, opacity: 0.5)).anyView()
+                    #endif
                 }
             }
 

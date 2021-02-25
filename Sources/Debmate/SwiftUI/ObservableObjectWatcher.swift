@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 
 /// Run a callback when an observable object changed.
@@ -32,15 +33,46 @@ public struct ObservableObjectWatcher<T : ObservableObject> : View {
 
     public var body: some View {
         onChange(observed)
-        return Group { }.eraseToAnyView()
+
+        // must erase to stop view from being elided completely
+        return Group { }.anyView()
     }
 }
 
-/*
-class Watcher<T> : ObservableObject {
-    var value: T!
-    var cancellable: Cancellable!
+public class FutureObservable<T> : ObservableObject {
+    public private(set) var  hasUpdated = false
+
+    public var currentValue: T {
+        didSet {
+            objectWillChange.send()
+            hasUpdated = true
+        }
+    }
+    
+    public init(placeholderValue: T) {
+        currentValue = placeholderValue
+    }
 }
+
+public class PublisherWatcher<T> : ObservableObject {
+    private var cancellable: Cancellable?
+    public var currentValue: T
+    
+    public init(publisher: AnyPublisher<T, Never>, initialValue: T) {
+        self.currentValue = initialValue
+        self.cancellable = publisher.receiveOnMain().sink { [weak self] in
+            self?.currentValue = $0
+            self?.objectWillChange.send()
+        }
+    }
+}
+
+
+/*
+ class Watcher<T> : ObservableObject {
+     var value: T!
+     var cancellable: Cancellable!
+ }
 
 struct PublishedWatcher<T, Content : View>: View {
     @ObservedObject var watcher = Watcher<T>()

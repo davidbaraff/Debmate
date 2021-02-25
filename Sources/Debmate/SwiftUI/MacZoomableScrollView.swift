@@ -123,7 +123,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         scrollView.backgroundColor = NSColor.clear
         scrollView.hasHorizontalScroller = true
         scrollView.hasVerticalScroller = true
-        
+
         scrollView.allowsMagnification = false
         scrollView.usesPredominantAxisScrolling = false
         scrollView.contentView.postsFrameChangedNotifications = true
@@ -157,7 +157,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
 
         DispatchQueue.main.async {
             scrollView.contentView.window?.makeFirstResponder(mouseHitView)
-            coordinator.scrollViewStateChanged()
+            coordinator.scrollViewStateChanged(treatAsExternalControl: true)
         }
 
         NotificationCenter.default.addObserver(coordinator,
@@ -175,21 +175,29 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
     func updateNSView(_ nsView: NSView, context: NSViewRepresentableContext<InternalZoomableScrollView>) {
         DispatchQueue.main.async {
             context.coordinator.viewUpdated()
-            context.coordinator.scrollViewStateChanged()
+            context.coordinator.scrollViewStateChanged(treatAsExternalControl: true)
         }
     }
 }
 
 fileprivate class Coordinator: NSObject {
     class Control : ZoomableScrollViewControl {
+        var windowSize: CGSize {
+            if let visibleRect = coordinator?.scrollView.documentVisibleRect {
+                return CGSize(visibleRect.size.width, visibleRect.size.height - 22)
+            }
+
+            return CGSize(1,1)
+        }
+        
         weak var coordinator: Coordinator?
 
         init(_ coordinator: Coordinator) {
             self.coordinator = coordinator
         }
 
-        func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool) {
-            coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated)
+        func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool) {
+            coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated, externalControl: externalControl)
         }
     }
     
@@ -294,42 +302,47 @@ fileprivate class Coordinator: NSObject {
         scrollViewStateChanged()
     }
 
-    func scrollViewStateChanged() {
+    func scrollViewStateChanged(treatAsExternalControl: Bool = false) {
         scrollView.documentView?.frame.size = contentSize  * clipView.currentMagnification
         
         guard scrollViewState.valid else { return }
         scrollViewState.visibleRect = computeVisibleRect()
         scrollViewState.zoomScale = clipView.currentMagnification
         scrollViewState.invZoomScale = 1.0 / clipView.currentMagnification
+        scrollViewState.externalControl = inExternalControl || treatAsExternalControl
     }
     
     func scrollOrigin(to position: CGPoint) {
         scrollView.contentView.setBoundsOrigin(position * clipView.currentMagnification)
     }
 
-    func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false) {
-        let zoomScale = zoom ?? clipView.currentMagnification
+    private var inExternalControl = false
+    
+    func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false) {
+        let zoomScale = max(min(zoom ?? clipView.currentMagnification, maxMagnification), minMagnification)
         let p = zoomScale * position - 0.5 * CGPoint(fromSize: scrollView.bounds.size)
 
-        if animated || inConfigureCallback {
+        if (animated && !externalControl) || inConfigureCallback {
             NSAnimationContext.runAnimationGroup {
                 $0.duration = inConfigureCallback ? 0.01 : animationDuration
                 $0.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 
-                if let zoom = zoom {
-                    clipView.animator().currentMagnification = zoom
+                if zoom != nil {
+                    clipView.animator().currentMagnification = zoomScale
                 }
                 scrollView.contentView.animator().setBoundsOrigin(p)
             }
         }
         else {
-            if let zoom = zoom {
-                clipView.currentMagnification = zoom
+            if zoom != nil {
+                clipView.currentMagnification = zoomScale
             }
             scrollView.contentView.setBoundsOrigin(p)
         }
         
+        inExternalControl = externalControl
         scrollViewStateChanged()
+        inExternalControl = false
     }
 }
 
@@ -503,7 +516,6 @@ fileprivate class DraggableClipView: NSClipView {
         originalOrigin = nil
     }
 
-
     override func magnify(with event: NSEvent) {
         let p = zoomAnchorPoint(contentViewPoint:  convert(event.locationInWindow, from: nil))
 
@@ -514,7 +526,7 @@ fileprivate class DraggableClipView: NSClipView {
             modifyMagnification(-event.magnification, zoomIn: false, centeredAt: p)
         }
     }
-
+    
     override func scrollWheel(with event: NSEvent) {
         guard event.subtype == .mouseEvent else {
             super.scrollWheel(with: event)

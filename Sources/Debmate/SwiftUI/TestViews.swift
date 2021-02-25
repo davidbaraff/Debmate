@@ -28,7 +28,7 @@ public enum TestViews {
             self.content = content()
         }
 
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         public init(color: UIColor, @ViewBuilder content: () -> Content) {
             self.color = Color(color)
             self.content = content()

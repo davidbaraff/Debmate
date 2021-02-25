@@ -14,7 +14,7 @@ public extension CGImage {
     }
 }
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 public extension CGColor {
     static let clear = CGColor(gray: 0, alpha: 0)
 }
@@ -67,6 +67,12 @@ public extension CGPoint {
 }
 
 public extension CGRect {
+    init(origin o: CGPoint, safelySized s: CGSize) {
+        let x1 = o.x + s.width
+        let y1 = o.y + s.height
+        self.init(x: Swift.min(o.x, x1), y: Swift.min(o.y, y1), width: abs(s.width), height: abs(s.height))
+    }
+
     var center: CGPoint {
         origin + 0.5 * CGPoint(fromSize: size)
     }
@@ -75,6 +81,14 @@ public extension CGRect {
         origin + CGPoint(fromSize: size)
     }
     
+    func offset(by size: CGSize) -> CGRect {
+        self.offsetBy(dx: size.width, dy: size.height)
+    }
+
+    func offset(by p: CGPoint) -> CGRect {
+        self.offsetBy(dx: p.x, dy: p.y)
+    }
+
     /// Return a rectangle fitting within self.
     /// - Parameter size: The aspect ratio of the rectangle
     /// - Returns: A centered and scaled CGRect.

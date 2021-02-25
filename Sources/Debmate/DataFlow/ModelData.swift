@@ -8,12 +8,13 @@
 import Foundation
 import DebmateC
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 import UIKit
 public protocol ModelDataValuedControl: UIControl {
     var controlValue : Any { get set }
 }
 
+#if os(iOS)
 extension UISwitch : ModelDataValuedControl {
     public var controlValue: Any {
         get {
@@ -25,6 +26,7 @@ extension UISwitch : ModelDataValuedControl {
         }
     }
 }
+#endif
 
 #else
 import Cocoa
@@ -153,7 +155,7 @@ public class ModelData<T : Equatable> {
             return
         }
         
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         self.control?.removeTarget(self, action: #selector(valueDidChange), for: [.valueChanged])
         //#else
         //fatalErrorForCrashReport("unimplemented for macOS")
@@ -174,7 +176,7 @@ public class ModelData<T : Equatable> {
         self.control = control
         control.controlValue = curValue
         
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         control.addTarget(self, action: #selector(valueDidChange), for: [.valueChanged])
         #else
         fatalErrorForCrashReport("unimplemented for macOS")

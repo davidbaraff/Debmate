@@ -5,7 +5,7 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 import Foundation
 import UIKit
 
@@ -34,8 +34,22 @@ extension Util {
     static public var applicationIsInForeground: Bool {
         return UIApplication.shared.applicationState != .background
     }
+    
+    
+    static public func applicationUniqueID(applicationName: String) -> String? {
+        if let id = UIDevice.current.identifierForVendor {
+            return "\(applicationName)(\(id.uuidString.prefix(8)))"
+        }
+        return nil
+    }
 }
-
+#else
+extension Util {
+    static public func applicationUniqueID(applicationName: String) -> String? {
+        return nil
+    }
+}
 #endif
+
 
 

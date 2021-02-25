@@ -23,6 +23,9 @@ extension Util {
     
     /// The application's documents directory.
     public static let documentsDirectory = applicationURL(forDirectory: .documentDirectory)
+
+    /// The application's Application Support directory
+    public static let applicationSupportDirectory = applicationURL(forDirectory: .applicationSupportDirectory)
     
     /// Test if a directory exists.
     ///
@@ -146,14 +149,16 @@ extension Util {
     /// - Parameters:
     ///   - md5Digest: A hex md5 digest.
     ///   - directory: optional directory
+    ///   - pathSuffix: optional path suffix
     ///   - pathExtension: optional path extension
     ///
-    /// Returns a path of the form d[0]/d[1]d[2]/d[3:] + <pathExtension> where d is
+    /// Returns a path of the form d[0]/d[1]d[2]/d[3:] + <pathSuffix>.<pathExtension> where d is
     /// a (presumed) 16 byte md5 hex digest.  At any rate, d must be at least length
     /// three or greater.
     ///
     /// If directory is supplied, directory is prepended.
     public static func md5FileCacheLocation(hexDigest digest: String, directory: URL? = nil,
+                                            pathSuffix: String? = nil,
                                             pathExtension: String? = nil) -> URL {
         var startIndex = digest.startIndex
         
@@ -164,9 +169,9 @@ extension Util {
         startIndex = digest.index(after: startIndex)
         let d2 = digest[startIndex]
         
-        var suffix = ""
+        var suffix = pathSuffix ?? ""
         if let pathExtension = pathExtension {
-            suffix = ".\(pathExtension)"
+            suffix = "\(suffix).\(pathExtension)"
         }
         
         let cacheFile = "\(d0)/\(d1)\(d2)/\(digest.suffix(13))" + suffix

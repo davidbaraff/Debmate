@@ -40,7 +40,7 @@ extension Util {
             String(format: "%02hhx", $0)
         }.joined()
     }
-    
+
     fileprivate static func wordToWordList(_ word: String) -> [String] {
         var wordList = splitIntoWords(word)
         wordList.append("")

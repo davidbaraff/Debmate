@@ -18,7 +18,7 @@ public class WorkerPool {
     var nrunning = 0
     let work: () -> ()
     let debugName: String
-    var completion: (() -> ())?
+    var completions =  [() -> ()]()
     
     /// Construct a new pool
     /// - Parameters:
@@ -48,8 +48,8 @@ public class WorkerPool {
                     self.lock.sync {
                         self.nrunning -= 1
                         if self.nrunning == 0 {
-                            self.completion?()
-                            self.completion = nil
+                            self.completions.forEach { $0() }
+                            self.completions = []
                         }
                         if !self.debugName.isEmpty {
                             print("WorkerPool[\(self.debugName)] Ended worker (nrunning = \(self.nrunning) out of \(self.nworkers))")
@@ -72,7 +72,7 @@ public class WorkerPool {
     public func executeWhenStopped(callback: @escaping () -> ()) {
         let wasStopped: Bool = lock.sync {
             if nrunning > 0 {
-                self.completion = callback
+                self.completions.append(callback)
                 return false
             }
             return true

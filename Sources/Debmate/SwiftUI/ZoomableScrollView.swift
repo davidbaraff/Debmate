@@ -241,7 +241,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         var scrollViewControl: ZoomableScrollViewControl!
         let offset: CGPoint
 
-        var scrollView = UIScrollView() // PenIgnoringScrollView()
+        var scrollView = UIScrollView()
         var view: UIView!
         var controlCancelKey: Cancellable?
         var rotationCancelKey: Cancellable?
@@ -254,6 +254,9 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             self.configureCallback = configureCallback
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
             super.init()
+            #if os(iOS)
+            scrollView.scrollsToTop = false
+            #endif
             scrollViewControl = Control(self)
             scrollViewState.recentTouchLocation = { [weak self] in
                 return self?.recentTouchLocation ?? .zero

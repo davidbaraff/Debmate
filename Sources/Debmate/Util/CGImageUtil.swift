@@ -28,7 +28,7 @@ extension Util {
         guard let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height),
                                       bitsPerComponent: image.bitsPerComponent, bytesPerRow: 0,
                                       space: image.colorSpace!,
-                                      bitmapInfo: image.bitmapInfo.rawValue) else {
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
                                         return nil
         }
         

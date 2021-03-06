@@ -5,15 +5,17 @@
 //  Created by David Baraff on 1/24/21.
 //
 
-import Combine
-
-
 /// Class holding a mutable value.
 ///
 /// This class is useful for SwiftUI View classes that need mutable state.
 public class MutableValue<T> {
     private var value: T?
     
+    /// True if no value has been set.
+    public var isNull : Bool {
+        value == nil
+    }
+
     /// Class is initialized to hold nil.
     /// Attempts to access the value will cause a fatal error until update() is called.
     public init() {

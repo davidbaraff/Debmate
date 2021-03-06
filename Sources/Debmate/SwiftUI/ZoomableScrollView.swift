@@ -182,7 +182,12 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         coordinator.scrollView.delegate = coordinator
         coordinator.scrollView.isDirectionalLockEnabled = false
         coordinator.scrollView.zoomScale = 1.0
+
+        #if os(tvOS)
+        coordinator.scrollView.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.indirect.rawValue)]
+        #else
         coordinator.scrollView.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+        #endif
         
         coordinator.scrollView.showsVerticalScrollIndicator = true
         coordinator.scrollView.showsHorizontalScrollIndicator = true
@@ -286,11 +291,44 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             return view
         }
 
+        var previousVisibleRect: CGRect?
+        
         func computeVisibleRect() -> CGRect {
             let invZoom = 1.0 / scrollView.zoomScale
             let origin = scrollView.contentOffset * invZoom
             let size = scrollView.bounds.size * invZoom
-            return CGRect(origin: origin, size: size)
+
+            var x0 = origin.x
+            var x1 = origin.x + size.width
+            var y0 = origin.y
+            var y1 = origin.y + size.height
+            
+            if isAnimating {
+                if let previousVisibleRect = previousVisibleRect {
+                    if previousVisibleRect.minX < x0 {
+                        x0 -= 0.2 * size.width
+                    }
+                    if previousVisibleRect.maxX > x1 {
+                        x1 += 0.2 * size.width
+                    }
+                    if previousVisibleRect.minY < y0 {
+                        y0 -= 0.2 * size.height
+                    }
+                    if previousVisibleRect.maxY > y1 {
+                        y1 += 0.2 * size.height
+                    }
+                }
+                else {
+                    x0 -= 0.2 * size.width
+                    x1 += 0.2 * size.width
+                    y0 -= 0.2 * size.height
+                    y1 += 0.2 * size.height
+                }
+                return CGRect(x: x0, y: y0, width: x1 - x0, height: y1 - y0)
+            }
+            else {
+                return CGRect(origin: origin, size: size)
+            }
         }
  
         func scrollViewStateChanged(treatAsExternal: Bool = false) {
@@ -330,21 +368,35 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         }
         
         private var inExternalControl = false
+        private var isAnimating = false
         
         func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false) {
             let z = max(min(zoom ?? scrollView.zoomScale, scrollView.maximumZoomScale), scrollView.minimumZoomScale)
             let p = z * position - 0.5 * CGPoint(fromSize: scrollView.bounds.size)
             
             inExternalControl = externalControl
-
-            UIView.animate(withDuration: (animated && !externalControl) ? 0.2 : 0.0) {
+            if animated {
+                isAnimating = true
+                previousVisibleRect = nil
+                UIView.animate(withDuration: animated ? 0.2 : 0.0) {
+                    if let zoom = zoom {
+                        self.scrollView.zoomScale = zoom
+                    }
+                    self.scrollView.contentOffset = p
+                } completion: { finished in
+                    if finished {
+                        self.inExternalControl = false
+                        self.isAnimating = false
+                    }
+                }
+            }
+            else {
                 if let zoom = zoom {
                     self.scrollView.zoomScale = zoom
                 }
                 self.scrollView.contentOffset = p
+                inExternalControl = false
             }
-
-            inExternalControl = false
         }
    }
 }

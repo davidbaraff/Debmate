@@ -24,8 +24,8 @@ import Foundation
 ///              dismiss()
 ///           }
 ///
-/// Somewhere else in the UI, a notice of computation would appear,
-/// and user activity disabled, as guiExecutionBlocker.visible and
+/// Somewhere else in the UI, a notice of computation appears,
+/// and user activity is disabled, as guiExecutionBlocker.visible and
 /// guiExecutionBlocker.active become true, respectively.
 public class GUIExecutionBlocker : ObservableObject {
     /// True if the work computation is running
@@ -45,7 +45,6 @@ public class GUIExecutionBlocker : ObservableObject {
         let requestID: Int
         let completion: (T) -> ()
     }
-    
     
     /// Returns an initialized instance of GUIExecutionBlocker.
     /// - Parameter queue: default queue for calls to begin().

@@ -9,23 +9,44 @@ import Foundation
 import Compression
 
 public extension Data {
-    func withCompression(algorithm: compression_algorithm, _ handler: (Data, Bool) -> ()) {
+    @discardableResult
+    func withCompression<T>(algorithm: compression_algorithm, forceCompression: Bool = false, _ handler: (Data, Bool) throws -> (T)) throws -> T? {
         let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.count)
         defer { destinationBuffer.deallocate() }
-        self.withUnsafeBytes {
+        return try self.withUnsafeBytes {
             if let bytes = $0.bindMemory(to: UInt8.self).baseAddress {
                 let compressedSize = compression_encode_buffer(destinationBuffer, self.count, bytes,
                                                                self.count, nil, algorithm)
-                if compressedSize > 0 && compressedSize < self.count {
-                    handler(Data(bytesNoCopy: destinationBuffer, count: compressedSize, deallocator: Data.Deallocator.none), true)
+                if forceCompression || (compressedSize > 0 && compressedSize < self.count) {
+                    return try handler(Data(bytesNoCopy: destinationBuffer, count: compressedSize, deallocator: Data.Deallocator.none), true)
                 }
                 else {
-                    handler(self, false)
+                    return try handler(self, false)
                 }
             }
+            return nil
         }
     }
-    
+
+    @discardableResult
+    func withCompression<T>(algorithm: compression_algorithm, forceCompression: Bool = false, _ handler: (Data, Bool) -> (T)) -> T? {
+        let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.count)
+        defer { destinationBuffer.deallocate() }
+        return self.withUnsafeBytes {
+            if let bytes = $0.bindMemory(to: UInt8.self).baseAddress {
+                let compressedSize = compression_encode_buffer(destinationBuffer, self.count, bytes,
+                                                               self.count, nil, algorithm)
+                if forceCompression || (compressedSize > 0 && compressedSize < self.count) {
+                    return handler(Data(bytesNoCopy: destinationBuffer, count: compressedSize, deallocator: Data.Deallocator.none), true)
+                }
+                else {
+                    return handler(self, false)
+                }
+            }
+            return nil
+        }
+    }
+
     func withDecompression(algorithm: compression_algorithm, nbytes: Int, _ handler: (Data) -> ()) {
         let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: nbytes)
         defer { destinationBuffer.deallocate() }

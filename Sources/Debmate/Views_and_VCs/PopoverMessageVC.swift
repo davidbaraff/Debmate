@@ -6,7 +6,7 @@
 //  Copyright © 2018 David Baraff. All rights reserved.
 //
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 
 import Foundation
 import UIKit
@@ -84,7 +84,9 @@ public class PopoverMessageVC : UIViewController {
     ///
     /// - Parameter view: anchoring view
     public func setAnchoringView(_ view: UIView) {
+        #if os(iOS)
         self.modalPresentationStyle = .popover
+        #endif
         self.popoverPresentationController?.sourceView = view
         self.popoverPresentationController?.sourceRect = view.bounds
     }

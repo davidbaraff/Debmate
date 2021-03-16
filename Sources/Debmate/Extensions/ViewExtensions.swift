@@ -49,6 +49,39 @@ public extension View {
     func frame(size: CGSize) -> some View {
         self.frame(width: size.width, height: size.height)
     }
+    
+    #if os(iOS) || os(tvOS)
+    func cgImageSnapshot() -> CGImage? {
+        let controller = UIHostingController(rootView: self)
+        let view = controller.view
+        let targetSize = controller.view.intrinsicContentSize
+        view?.bounds = CGRect(origin: .zero, size: targetSize)
+        view?.backgroundColor = .clear
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }.cgImage
+    }
+    #elseif os(macOS)
+    func cgImageSnapshot() -> CGImage? {
+        let controller = NSHostingController(rootView: self)
+        let targetSize = controller.view.intrinsicContentSize
+        let contentRect = NSRect(origin: .zero, size: targetSize)
+        
+        let w = NSWindow(contentRect: contentRect, styleMask: [.borderless],
+                         backing: .buffered, defer: false)
+        w.contentView = controller.view
+        
+        guard let bitmapRep = controller.view.bitmapImageRepForCachingDisplay(in: contentRect) else {
+            return nil
+        }
+        
+        controller.view.cacheDisplay(in: contentRect, to: bitmapRep)
+        let image = NSImage(size: bitmapRep.size)
+        image.addRepresentation(bitmapRep)
+        return image.cgImage(forProposedRect: nil, context: nil, hints: [:])
+    }
+    #endif
 }
 
 public extension View {
@@ -72,4 +105,6 @@ public extension View {
     }
     #endif
 }
+
+
 

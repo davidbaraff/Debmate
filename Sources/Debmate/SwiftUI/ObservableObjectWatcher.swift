@@ -39,6 +39,52 @@ public struct ObservableObjectWatcher<T : ObservableObject> : View {
     }
 }
 
+
+/// Hold a view which is rebuilt when either an observed object changes or a publisher publishes.
+///
+/// This construct is useful to avoid needing to extract a view simply to make it hold an observable
+/// object so that the view is reconstructed when the observable object changes.
+public struct PublisherWatcherView<P : Publisher, Content : View> : View where P.Failure == Never {
+    class WatcherHelper : ObservableObject {
+        let publisher: P
+        var cancellable: Cancellable!
+        
+        init(_ publisher: P) {
+            self.publisher = publisher
+            cancellable = publisher.sink { [weak self] _ in self?.objectWillChange.send() }
+        }
+    }
+    
+    @ObservedObject var helper: WatcherHelper
+    let content: () -> Content
+    
+    /// Watch a publisher.
+    /// - Parameters:
+    ///   - publisher: publisher being watched
+    ///   - content: view content
+    /// The view is rebuilt whenever the publisher publishes.
+    public init(_ publisher: P, @ViewBuilder content: @escaping () -> Content) {
+        helper = WatcherHelper(publisher)
+        self.content = content
+
+    }
+    
+    /// Watch an observable object
+    /// - Parameters:
+    ///   - observed: objecting being watched
+    ///   - content: view content
+    /// The view is rebuilt whenever the observed object changes.
+    public init<O : ObservableObject>(_ observed: O, @ViewBuilder content: @escaping () -> Content) where O.ObjectWillChangePublisher == P {
+        helper = WatcherHelper(observed.objectWillChange)
+        self.content = content
+
+    }
+
+    public var body: some View {
+        content()
+    }
+}
+
 public class FutureObservable<T> : ObservableObject {
     public private(set) var  hasUpdated = false
 

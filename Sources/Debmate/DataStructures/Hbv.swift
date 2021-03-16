@@ -62,23 +62,27 @@ extension CGPoint {
     }
 }
 
+
+
 /// 2-D Hierarchical Bounding Volume
 public class Hbv {
+    // MARK: - Public API
+
     /// Tree root
-    public private (set) var root = HbvNode(contents: .nonleaf([]))
+    public private(set) var root = HbvNode(contents: .nonleaf([]))
     
     /// Depth of current tree.
-    public private (set) var nlevels = 0
+    public private(set) var nlevels = 0
 
     
     /// The array of rectangles used to form the tree.
     ///
     /// Leaf nodes of the tree have an index which corresponds with
     /// the rectangle stored in this array.
-    public private (set) var rects = [CGRect]()
+    public private(set) var rects = [CGRect]()
 
     /// The parents of all leaf nodes.
-    public internal (set) var leafParents = [HbvNode]()
+    public internal(set) var leafParents = [HbvNode]()
     
     
     /// Construct an empty hierarchy.
@@ -98,7 +102,7 @@ public class Hbv {
     public func update(rects: [CGRect]) {
         if self.rects.count != rects.count {
             (self.root, self.nlevels, self.leafParents) = Self.build(rects: rects)
-            _ = allNodeDepths()
+            // _ = allNodeDepths()
         }
 
         self.rects = rects
@@ -156,6 +160,8 @@ public class Hbv {
         return depths
     }
 
+    // MARK: - Private
+    
     private static func build(rects: [CGRect]) -> (HbvNode, Int, [HbvNode]) {
         let bt = BoxTree(rects: rects)
 
@@ -163,32 +169,22 @@ public class Hbv {
         var most = 0
         var leafParents = [HbvNode]()
         
-        print("Beginning hbv build...")
         _ = bt.makeGroup(lim: 2, fewest: &fewest, most: &most, level: 0)
         let (root, nlevels) = HbvNode.buildTree(boxTree: bt, leafParents: &leafParents)
 
-        print("Build complete: \(nlevels) levels, fewest = \(fewest), most = \(most), \(root.nodeCount()) nodes")
+        // print("Build complete: \(nlevels) levels, fewest = \(fewest), most = \(most), \(root.nodeCount()) nodes")
         return (root, nlevels, leafParents)
     }
 }
 
 /// Tree structure used by Hbv.
 public class HbvNode : ClassIdentityBase {
+    // MARK: - Public API
+    
     /// Each node is either a leaf or an internal (nonleaf) node with children.
     public enum Contents {
         case leaf (Int)
         case nonleaf ([HbvNode])
-    }
-    
-    func findDepths(depths: inout [Int], depth: Int) {
-        switch contents {
-        case .leaf:
-            depths.append(1 + depth)
-        case .nonleaf(let children):
-            for child in children {
-                child.findDepths(depths: &depths, depth: depth + 1)
-            }
-        }
     }
     
     /// The contents of the node.
@@ -199,6 +195,9 @@ public class HbvNode : ClassIdentityBase {
     /// by the Hbv which constructed this node.
     public internal (set) var range = Range2d()
     
+    /// The bounding box as a CGRect.
+    public var cgRect: CGRect { range.cgRect }
+
     /// The parent of this node.
     public weak var parent: HbvNode?
     
@@ -215,6 +214,15 @@ public class HbvNode : ClassIdentityBase {
         }
         return nil
     }
+    
+    /// True if this node is a leaf.
+    public var isLeaf: Bool {
+        if case .leaf = contents {
+            return true
+        }
+        return false
+    }
+    
     /// The children of a node if it is not a leaf.
     public var children: [HbvNode]? {
         if case .nonleaf(let children) = contents {
@@ -223,16 +231,6 @@ public class HbvNode : ClassIdentityBase {
         return nil
     }
 
-    init(contents: Contents) {
-        self.contents = contents
-        super.init()
-        if case let .nonleaf(children) = contents {
-            for child in children {
-                child.parent = self
-            }
-        }
-    }
-    
     /// Computes the number of nodes in the tree.
     /// - Returns: total node count for the tree.
     public func nodeCount() -> Int {
@@ -244,58 +242,12 @@ public class HbvNode : ClassIdentityBase {
         }
     }
     
-    // debuging
-    func gatherNodes(atLevel level: Int, curLevel: Int, result: inout [HbvNode]) {
-        if level == curLevel {
-            result.append(self)
-        }
-        else if case let .nonleaf(children) = contents {
-            for child in children {
-                child.gatherNodes(atLevel: level, curLevel: curLevel + 1, result: &result)
-            }
-        }
-    }
-    
-    func findIntersections(range: Range2d, callback: (Int) -> ()) {
-        guard !self.range.isOutside(of: range) else {
-            return
-        }
-
-        switch contents {
-        case .leaf(let index):
-            callback(index)
-        case .nonleaf(let children):
-            for child in children {
-                child.findIntersections(range: range, callback: callback)
-            }
-        }
-    }
-
-    func findIntersections(range: Range2d, callback: (HbvNode) -> Bool) {
-        guard !self.range.isOutside(of: range) else {
-            return
-        }
-
-        if !callback(self) {
-            return
-        }
-
-        switch contents {
-        case .leaf:
-            ()
-        case .nonleaf(let children):
-            for child in children {
-                child.findIntersections(range: range, callback: callback)
-            }
-        }
-    }
-    
     
     /// Runs a callback for each leaf containing point.
     /// - Parameters:
     ///   - point: point in space
     ///   - callback: callback to be run
-    public func findLeavesContaining(point: CGPoint, callback: (Int) ->()) {
+    public func findLeafIndicesContaining(point: CGPoint, callback: (Int) ->()) {
         guard range.contains(point: point) else {
             return
         }
@@ -305,11 +257,26 @@ public class HbvNode : ClassIdentityBase {
             callback(index)
         case .nonleaf(let children):
             for child in children {
+                child.findLeafIndicesContaining(point: point, callback: callback)
+            }
+        }
+    }
+
+    public func findLeavesContaining(point: CGPoint, callback: (HbvNode) ->()) {
+        guard range.contains(point: point) else {
+            return
+        }
+
+        switch contents {
+        case .leaf:
+            callback(self)
+        case .nonleaf(let children):
+            for child in children {
                 child.findLeavesContaining(point: point, callback: callback)
             }
         }
     }
-    
+
     /// Return the lowest ancestor matching a predicate.
     /// - Parameter predicate: predicate function
     /// - Returns: The closest ancestor matching predicate, or nil.
@@ -380,6 +347,106 @@ public class HbvNode : ClassIdentityBase {
         }
     }
 
+    /// Run a callback on ancestors of a node.
+    /// - Parameters:
+    ///   - includeSelf: If the callback should be invoked on self.
+    ///   - callback: Callback to be run on ancestors.
+    ///
+    /// The callback is invoked until the root is reached or the callback returns false.
+    /// If includeSelf is true (the default) the callback is run on the node the
+    /// walk is started from.
+    public func walkUp(includeSelf: Bool = true, callback: (HbvNode) -> (Bool)) {
+        var curNode: HbvNode? = includeSelf ? self : parent
+        while let node = curNode,
+              callback(node) {
+            curNode = node.parent
+        }
+    }
+
+    /// Run a callback on ancestors of a node.
+    /// - Parameters:
+    ///   - includeSelf: If the callback should be invoked on self.
+    ///   - callback: Callback to be run on ancestors.
+    ///
+    /// The callback is invoked until the root is reached.
+    public func walkToRoot(includeSelf: Bool = true, callback: (HbvNode) -> ()) {
+        var curNode: HbvNode? = includeSelf ? self : parent
+        while let node = curNode {
+            callback(node)
+            curNode = node.parent
+        }
+    }
+
+    // MARK: - Private
+
+    init(contents: Contents) {
+         self.contents = contents
+         super.init()
+         if case let .nonleaf(children) = contents {
+             for child in children {
+                 child.parent = self
+             }
+         }
+     }
+     
+   // debuging
+    func gatherNodes(atLevel level: Int, curLevel: Int, result: inout [HbvNode]) {
+        if level == curLevel {
+            result.append(self)
+        }
+        else if case let .nonleaf(children) = contents {
+            for child in children {
+                child.gatherNodes(atLevel: level, curLevel: curLevel + 1, result: &result)
+            }
+        }
+    }
+    
+    func findIntersections(range: Range2d, callback: (Int) -> ()) {
+        guard !self.range.isOutside(of: range) else {
+            return
+        }
+
+        switch contents {
+        case .leaf(let index):
+            callback(index)
+        case .nonleaf(let children):
+            for child in children {
+                child.findIntersections(range: range, callback: callback)
+            }
+        }
+    }
+
+    func findIntersections(range: Range2d, callback: (HbvNode) -> Bool) {
+        guard !self.range.isOutside(of: range) else {
+            return
+        }
+
+        if !callback(self) {
+            return
+        }
+
+        switch contents {
+        case .leaf:
+            ()
+        case .nonleaf(let children):
+            for child in children {
+                child.findIntersections(range: range, callback: callback)
+            }
+        }
+    }
+    
+
+    func findDepths(depths: inout [Int], depth: Int) {
+        switch contents {
+        case .leaf:
+            depths.append(1 + depth)
+        case .nonleaf(let children):
+            for child in children {
+                child.findDepths(depths: &depths, depth: depth + 1)
+            }
+        }
+    }
+    
     func update(ranges: [Range2d]) {
         switch contents {
         case .leaf(let index):

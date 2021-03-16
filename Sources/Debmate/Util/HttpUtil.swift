@@ -19,10 +19,12 @@ extension Util {
     /// The returned object can be listened to (see Lnotice) for changes in reachability
     /// of the host.  The reachability status is specified by the passed bool argument
     /// to the watching function.
+    /*
     static public func monitorHostReachability(_ host: String, initialState: Bool, _ connectionTestPublisher: @escaping (() -> AnyPublisher<Bool, Error>)) -> Lnotice<Bool> {
         return Reachability.lnoticeForHost(host, initialState: initialState, connectionTestPublisher)
-    }
+    }*/
     
+
     // This accounts for the fact that URLQueryItem doesn't encode ';'
     // chars, which is flat-out broken!
     // + is also broken, but we have to wait till later to encode that,

@@ -9,6 +9,7 @@ import SystemConfiguration
 import Foundation
 import Combine
 
+
 fileprivate func callback(reachability :SCNetworkReachability, flags: SCNetworkReachabilityFlags, info: UnsafeMutableRawPointer?) {
     guard let info = info else { return }
     
@@ -16,31 +17,37 @@ fileprivate func callback(reachability :SCNetworkReachability, flags: SCNetworkR
     reachability.reachabilityChanged()
 }
 
-internal class Reachability {
-    static func lnoticeForHost(_ host: String, initialState: Bool, _ connectionTestPublisher: @escaping (() -> AnyPublisher<Bool, Error>)) -> Lnotice<Bool> {
-        let lnotice = Lnotice<Bool>()
-        guard let reachability = Reachability(host, lnotice, initialState, connectionTestPublisher) else {
-            debugPrint("Failed to create reachability object")
-            return lnotice
-        }
-        
-        lnotice.keepAlive(reachability)
-        return lnotice
+/// A class containing a publisher that monitors changes in network reachability for a particular host.
+public class Reachability {
+    /// Name of the host being monitored.
+    public let hostName: String
+
+    /// A publisher whose current value indicates if the host is reachable or not.
+    public let publisher: CurrentValueSubject<Bool, Never>
+
+    /// Current connection status.
+    public var connected: Bool {
+        publisher.value
     }
-    
-    weak var lnotice:Lnotice<Bool>!
-    var lastConnectedState: Bool
+
     let connectionTestPublisher: (() -> AnyPublisher<Bool, Error>)
     var reachabilityRef: SCNetworkReachability!
     let reachabilitySerialQueue = DispatchQueue(label: "com.debmate.reachability")
     var recheckScheduled = false
 
-    init?(_ hostname: String, _ lnotice: Lnotice<Bool>, _ initialState: Bool, _ connectionTestPublisher:  @escaping (() -> AnyPublisher<Bool, Error>))  {
-        self.lnotice = lnotice
+    
+    /// Construct a new instance.
+    /// - Parameters:
+    ///   - hostName: host to be contacted
+    ///   - initialState: if the starting state (before it is actually known) is deemed connected or not
+    ///   - connectionTestPublisher: a publisher that yields if the host can be contacted or not
+    public init(hostName: String, initialState: Bool, connectionTestPublisher:  @escaping (() -> AnyPublisher<Bool, Error>))  {
+        self.hostName = hostName
         self.connectionTestPublisher = connectionTestPublisher
-        lastConnectedState = initialState
-        guard let rref = SCNetworkReachabilityCreateWithName(nil, hostname) else {
-            return nil
+        self.publisher = CurrentValueSubject(initialState)
+        
+        guard let rref = SCNetworkReachabilityCreateWithName(nil, hostName) else {
+            fatalErrorForCrashReport("Failed to start reachability service for \(hostName)")
         }
         
         reachabilityRef = rref
@@ -49,8 +56,7 @@ internal class Reachability {
         
         if !SCNetworkReachabilitySetCallback(reachabilityRef, callback, &context) ||
             !SCNetworkReachabilitySetDispatchQueue(reachabilityRef, reachabilitySerialQueue) {
-            debugPrint("Failed to start reachability service")
-            return nil
+            fatalErrorForCrashReport("Failed to start reachability service")
         }
         
         reachabilitySerialQueue.async {
@@ -69,6 +75,7 @@ internal class Reachability {
         guard !recheckScheduled else { return }
         
         recheckScheduled = true
+        let publisher = self.publisher
         reachabilitySerialQueue.asyncAfter(deadline: .now() + 2.0) {
             self.recheckScheduled = false
 
@@ -79,11 +86,8 @@ internal class Reachability {
                 case  .failure: connected = false
                 }
 
-                if self.lastConnectedState != connected {
-                    self.lastConnectedState = connected
-                    DispatchQueue.main.async {
-                        self.lnotice.broadcast(connected)
-                    }
+                if publisher.value != connected {
+                    publisher.send(connected)
                 }
             }, receiveValue: { _ in () })
         }

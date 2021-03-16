@@ -41,6 +41,14 @@ extension Util {
         }.joined()
     }
 
+    
+    /// Return a random string of hex digits.
+    /// - Parameter length: Number of digits in string.
+    /// Note: length is capped at 32 internally.
+    public static func randomHexDigits(length: Int = 16) -> String {
+        UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(length).lowercased()
+    }
+    
     fileprivate static func wordToWordList(_ word: String) -> [String] {
         var wordList = splitIntoWords(word)
         wordList.append("")

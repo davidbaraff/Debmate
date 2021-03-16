@@ -28,6 +28,10 @@ public class ZoomableScrollViewState : ObservableObject{
     public internal (set) var valid = false
     
     public  internal (set) var recentTouchLocation: (() -> CGPoint)!
+    
+    public init() {
+        
+    }
 }
 
 /// Class for controlling a ZoomableScrollView.

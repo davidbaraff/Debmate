@@ -17,10 +17,15 @@ public extension String {
     var trimmed: String {
         return self.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     }
+
+    /// Return the string with leading whitespace trimmed off.
+    var leadingTrimmed: String {
+        self.replacingOccurrences(of: "^\\s+", with: "", options: .regularExpression)
+    }
     
     /// Return an ascii-safe version of self
     var asciiSafe: String {
-        return String(self.unicodeScalars.filter { $0.isASCII })
+        return String(self.unicodeScalars.filter { $0.value >= 32 && $0.value <= 126 })
     }
     
     /// Returns a utf8 contiguous version of a string

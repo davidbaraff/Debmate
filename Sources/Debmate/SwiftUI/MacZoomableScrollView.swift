@@ -154,6 +154,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         scrollView.frame = view.frame
         innerView.frame = view.frame
         coordinator.scrollView.drawsBackground = false
+        coordinator.mouseHitView = mouseHitView
 
         DispatchQueue.main.async {
             scrollView.contentView.window?.makeFirstResponder(mouseHitView)
@@ -206,6 +207,7 @@ fileprivate class Coordinator: NSObject {
     let maxMagnification: CGFloat
     let scrollViewState =  ZoomableScrollViewState()
     var scrollViewControl: Control!
+    weak var mouseHitView: MouseHitView!
     let offset: CGPoint
 
     let scrollView = NSScrollView()
@@ -283,6 +285,7 @@ fileprivate class Coordinator: NSObject {
             inConfigureCallback = true
             self.configureCallback?(self.scrollViewControl)
             inConfigureCallback = false
+            mouseHitView.becomeFirstResponder()
         }
     }
     
@@ -348,6 +351,8 @@ fileprivate class Coordinator: NSObject {
 
 @objc fileprivate class MouseHitView : NSView {
     weak var clipView: DraggableClipView!
+    
+    override var acceptsFirstResponder: Bool { true }
     
     override func keyDown(with event: NSEvent) {
         if event.charactersIgnoringModifiers?.contains(" ") ?? false {

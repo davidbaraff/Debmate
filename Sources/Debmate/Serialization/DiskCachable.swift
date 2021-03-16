@@ -11,6 +11,14 @@ import CoreGraphics
 public protocol DiskCachable {
     func toCachableAny() -> Any
     static func fromCachableAny(_ cachableAny: Any) -> Self?
+    static func fromCachableAny(_ cachableAny: Any?) -> Self?
+}
+
+public extension DiskCachable {
+    static func fromCachableAny(_ cachableAny: Any?) -> Self? {
+        guard let a = cachableAny else { return nil }
+        return Self.fromCachableAny(a)
+    }
 }
 
 public extension DiskCachable where Self : RawRepresentable {
@@ -140,6 +148,24 @@ extension CGSize : DiskCachable {
             let w = array[0] as? Float,
             let h = array[1] as? Float {
             return CGSize(width: CGFloat(w), height: CGFloat(h))
+        }
+        return nil
+    }
+}
+
+extension CGRect : DiskCachable {
+    public func toCachableAny() -> Any {
+        return [Float(self.origin.x), Float(self.origin.y), Float(self.size.width), Float(self.size.height)]
+    }
+    
+    public static func fromCachableAny(_ cachableAny: Any) -> CGRect? {
+        if let array = cachableAny as? [Any],
+            array.count == 4,
+            let x = array[0] as? Float,
+            let y = array[1] as? Float,
+            let w = array[2] as? Float,
+            let h = array[3] as? Float {
+            return CGRect(x: CGFloat(x), y: CGFloat(y), width: CGFloat(w), height: CGFloat(h))
         }
         return nil
     }

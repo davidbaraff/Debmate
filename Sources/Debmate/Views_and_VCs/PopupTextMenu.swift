@@ -5,7 +5,7 @@
 //  Copyright © 2018 David Baraff. All rights reserved.
 //
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 
 import Foundation
 import UIKit
@@ -60,7 +60,9 @@ public class PopupTextMenuVC : UITableViewController {
         menuVC.completionHandler = completionHandler
         menuVC.tracePaperEnabled = textAndCallbacks.map { $0.1 != nil }
         
+        #if os(iOS)
         menuVC.modalPresentationStyle = .popover
+        #endif
         menuVC.popoverPresentationController?.permittedArrowDirections = arrowDirections
         menuVC.popoverPresentationController?.sourceView = sourceView
         menuVC.popoverPresentationController?.sourceRect = sourceRect ?? sourceView.bounds
@@ -103,7 +105,9 @@ public class PopupTextMenuVC : UITableViewController {
         menuVC.completionHandler = completionHandler
         menuVC.treeTitle = treeTitle
         
+        #if os(iOS)
         menuVC.modalPresentationStyle = .popover
+        #endif
         menuVC.popoverPresentationController?.permittedArrowDirections = arrowDirections
         menuVC.popoverPresentationController?.sourceView = sourceView
         menuVC.popoverPresentationController?.sourceRect = sourceRect ?? sourceView.bounds
@@ -150,7 +154,9 @@ public class PopupTextMenuVC : UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         if !indentations.isEmpty {
             // cell.indentationLevel = indentations[indexPath.row]
+            #if os(iOS)
             cell.separatorInset = UIEdgeInsets(top: 0, left: 1.5 * cell.indentationWidth * CGFloat(indentations[indexPath.row]), bottom: 0, right: 0)
+            #endif
             cell.textLabel?.textAlignment = .left
             cell.imageView?.image = images[indexPath.row]
             cell.textLabel?.alpha = tracePaperEnabled[indexPath.row] ? 1 : 0.5

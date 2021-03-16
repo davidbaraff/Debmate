@@ -12,11 +12,15 @@ import SwiftUI
 
 /// Helper class used in conjunction with ScopedValue.
 public class ScopedValuePrefix : ObservableObject {
-    fileprivate let prefix: String
+    /// Prefix string
+    public let prefix: String
 
-    /// Construact a new instance
+    /// True if the prefix is empty.
+    public var isEmpty: Bool { prefix.isEmpty }
+
+    /// Construct a new instance
     /// - Parameter prefix: prefix string
-    public init(prefix: String) {
+    public init(prefix: String = "") {
         self.prefix = prefix
     }
     

@@ -152,9 +152,9 @@ extension Util {
     ///   - pathSuffix: optional path suffix
     ///   - pathExtension: optional path extension
     ///
-    /// Returns a path of the form d[0]/d[1]d[2]/d[3:] + <pathSuffix>.<pathExtension> where d is
-    /// a (presumed) 16 byte md5 hex digest.  At any rate, d must be at least length
-    /// three or greater.
+    /// Returns a path of the form d[0]/d[1]d[2]/d[3:16] + <pathSuffix>.<pathExtension> where d is
+    /// presumed to be at least a 16 byte length md5 hex digest.  (At any rate, d must be at least length
+    /// three or greater.)
     ///
     /// If directory is supplied, directory is prepended.
     public static func md5FileCacheLocation(hexDigest digest: String, directory: URL? = nil,
@@ -181,6 +181,35 @@ extension Util {
         else {
             return URL(fileURLWithPath: cacheFile)
         }
+    }
+    
+    /// Relative cache file location for a given md5 hex digest.
+    ///
+    /// - Parameters:
+    ///   - md5Digest: A hex md5 digest.
+    ///   - pathSuffix: optional path suffix
+    ///   - pathExtension: optional path extension
+    ///
+    /// Returns a path of the form d[0]/d[1]d[2]/d[3:] + <pathSuffix>.<pathExtension> where d is
+    /// presumed to be an md5 hex digest of length three or greater.
+    public static func relativeMD5FileCacheLocation(hexDigest digest: String,
+                                                    pathSuffix: String? = nil,
+                                                    pathExtension: String? = nil) -> String {
+        var startIndex = digest.startIndex
+        
+        let d0 = digest[startIndex]
+        startIndex = digest.index(after: startIndex)
+        
+        let d1 = digest[startIndex]
+        startIndex = digest.index(after: startIndex)
+        let d2 = digest[startIndex]
+        
+        var suffix = pathSuffix ?? ""
+        if let pathExtension = pathExtension {
+            suffix = "\(suffix).\(pathExtension)"
+        }
+        
+        return "\(d0)/\(d1)\(d2)/\(digest.dropFirst(3))" + suffix
     }
     
     /// Write a value as a json string to a file.

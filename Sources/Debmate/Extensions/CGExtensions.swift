@@ -182,3 +182,39 @@ public func / (lhs: CGSize, scale: Double) -> CGSize {
     return lhs * (1.0 / scale)
 }
 
+public extension CGColor {
+    static func fromString(hex: String) -> CGColor {
+        var hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        if hex.hasPrefix("#") {
+            hex.remove(at: hex.startIndex)
+        }
+
+        var int64 = UInt64()
+        Scanner(string: hex).scanHexInt64(&int64)
+        let int = UInt32(int64)
+        let a, b, g, r: UInt32
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, b, g, r) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, b, g, r) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, b, g, r) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, b, g, r) = (255, 0, 0, 0)
+        }
+        return CGColor(srgbRed: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
+    }
+
+    var hex: String {
+        if let components = self.components,
+           components.count == 4 {
+            return String(format: "#%02lX%02lX%02lX%02lX", Int((255 * components[3]).rounded()), Int((255 * components[2]).rounded()),
+                          Int((255 * components[1]).rounded()), Int((255 * components[0]).rounded()))
+        }
+        else {
+            return "0xff888888"
+        }
+    }
+}
+

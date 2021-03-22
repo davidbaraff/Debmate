@@ -88,6 +88,33 @@ public class GUIExecutionBlocker : ObservableObject {
         }
     }
 
+    
+    /// Request display of gui elements without providing a computation.
+    /// - Parameters:
+    ///   - message: optional display message for operation
+    ///   - showAfter:  how long to wait to show blocking activity
+    ///   - minimumDisplayTime: nce shown, blocking activity indicator
+    ///     persists for at least this long, to avoid annoying fast UI flickers
+    /// - Returns: A closure which must be called to end the GUI blocking.
+    public func manualBegin(message: String? = nil,
+                            showAfter: Double = 0.2,
+                            minimumDisplayTime: Double = 0.5) -> (() -> ()) {
+        requestID += 1
+        active = true
+        self.message = message
+        let state = State(showAfter: showAfter, minimumDisplayTime: minimumDisplayTime,
+                          requestID: requestID, completion: { })
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + showAfter) {
+            if state.requestID == self.requestID && self.active {
+                self.visible = true
+            }
+        }
+
+        return {  self.end(state: state, result: ()) }
+    }
+    
+
     private func end<T>(state: State<T>, result: T) {
         guard state.requestID == requestID else {
             state.completion(result)

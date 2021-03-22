@@ -104,11 +104,13 @@ public struct ZoomableScrollView<Content : View> : View {
     ///   - contentSize: size of the content held
     ///   - minZoom: minimum allowed magnification
     ///   - maxZoom: maximum allowed magnification
+    ///   - editDelegate: this parameter is ignored
     ///   - configureCallback: optional callback shortly after initialization
     ///   - content: held content
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
+         editDelegate: Any? = nil,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.contentSize = contentSize

@@ -34,4 +34,9 @@ public extension String {
         s.makeContiguousUTF8()
         return s
     }
+    
+    /// String without path extension.
+    var deletingPathExtension: String {
+        (self as NSString).deletingPathExtension
+    }
 }

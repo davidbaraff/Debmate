@@ -18,6 +18,19 @@ import AppKit
 import Combine
 import CoreGraphics
 
+/// A delegate for the cut/copy/paste/selectAll/delete edit menu functionality.
+/// If queryOnly is true, the function should not do anything but return true or false
+/// to indicate if the corresponding edit menu entry should be enabled or not.
+///
+/// If queryOnly is false, an actual edit operation should be performed.
+public protocol ZoomableScrollViewEditDelegate : AnyObject {
+    func copy(queryOnly: Bool) -> Bool
+    func paste(queryOnly: Bool) -> Bool
+    func cut(queryOnly: Bool) -> Bool
+    func selectAll(queryOnly: Bool) -> Bool
+    func delete(queryOnly: Bool) -> Bool
+}
+
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
 /// feature-poor version of ScrollView exposed by SwiftUI.
 ///
@@ -38,6 +51,7 @@ public struct ZoomableScrollView<Content : View> : View {
     let contentSize: CGSize
     let minZoom: CGFloat
     let maxZoom: CGFloat
+    let editDelegate: ZoomableScrollViewEditDelegate?
     let configureCallback: ((ZoomableScrollViewControl) ->())?
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
     
@@ -51,17 +65,20 @@ public struct ZoomableScrollView<Content : View> : View {
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
+         editDelegate: ZoomableScrollViewEditDelegate? = nil,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.contentSize = contentSize
         self.minZoom = minZoom
         self.maxZoom = maxZoom
+        self.editDelegate = editDelegate
         self.configureCallback = configureCallback
         self.content = content
     }
         
     public var body: some View {
-        InternalZoomableScrollView(contentSize: contentSize, minZoom: minZoom, maxZoom: maxZoom, configureCallback: configureCallback) {
+        InternalZoomableScrollView(contentSize: contentSize, minZoom: minZoom, maxZoom: maxZoom,
+                                   editDelegate: editDelegate, configureCallback: configureCallback) {
             (scrollViewState, scrollViewControl) in
             ScaledContentView(scrollViewState: scrollViewState) {
                 self.content(scrollViewState, scrollViewControl)
@@ -94,11 +111,12 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
     init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
+         editDelegate: ZoomableScrollViewEditDelegate?,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.content = content
 
-        coordinator = Coordinator(contentSize, minZoom, maxZoom, configureCallback)
+        coordinator = Coordinator(contentSize, minZoom, maxZoom, configureCallback, editDelegate)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -115,6 +133,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         let clipView = coordinator.clipView
 
         mouseHitView.clipView = clipView
+        mouseHitView.editDelegate = coordinator.editDelegate
         clipView.scrollView = scrollView
         clipView.coordinator = coordinator
 
@@ -213,13 +232,16 @@ fileprivate class Coordinator: NSObject {
     let scrollView = NSScrollView()
     var clipView = DraggableClipView()
 
+    let editDelegate: ZoomableScrollViewEditDelegate?
     let configureCallback: ((ZoomableScrollViewControl) ->())?
     var inConfigureCallback = false
 
-    init(_ contentSize: CGSize, _ minZoom: CGFloat, _ maxZoom: CGFloat, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
+    init(_ contentSize: CGSize, _ minZoom: CGFloat, _ maxZoom: CGFloat, _ configureCallback: ((ZoomableScrollViewControl) -> ())?,
+         _ editDelegate: ZoomableScrollViewEditDelegate?) {
         self.contentSize = contentSize
         self.minMagnification = minZoom
         self.maxMagnification = maxZoom
+        self.editDelegate = editDelegate
         self.configureCallback = configureCallback
         self.offset = 0.5 * CGPoint(fromSize: contentSize)
         super.init()
@@ -351,6 +373,7 @@ fileprivate class Coordinator: NSObject {
 
 @objc fileprivate class MouseHitView : NSView {
     weak var clipView: DraggableClipView!
+    weak var editDelegate: ZoomableScrollViewEditDelegate?
     
     override var acceptsFirstResponder: Bool { true }
     
@@ -363,6 +386,55 @@ fileprivate class Coordinator: NSObject {
         }
     }
 
+    @objc
+    override func selectAll(_ sender: Any?) {
+        editDelegate?.selectAll(queryOnly: false)
+    }
+
+    @objc
+    func delete(_ sender: Any?) {
+        editDelegate?.delete(queryOnly: false)
+    }
+
+
+    @objc
+    func paste(_ sender: Any?) {
+        editDelegate?.paste(queryOnly: false)
+    }
+
+    @objc
+    func copy(_ sender: Any?) {
+        editDelegate?.copy(queryOnly: false)
+    }
+
+    @objc
+    func cut(_ sender: Any?) {
+        editDelegate?.cut(queryOnly: false)
+    }
+
+    override func responds(to aSelector: Selector!) -> Bool {
+        if aSelector == #selector(paste) {
+            return editDelegate?.paste(queryOnly: true) ?? false
+        }
+
+        if aSelector == #selector(copy(_:)) {
+            return editDelegate?.copy(queryOnly: true) ?? false
+        }
+
+        if aSelector == #selector(cut) {
+            return editDelegate?.cut(queryOnly: true) ?? false
+        }
+
+        if aSelector == #selector(selectAll) {
+            return editDelegate?.selectAll(queryOnly: true) ?? false
+        }
+
+        if aSelector == #selector(delete) {
+            return editDelegate?.selectAll(queryOnly: true) ?? false
+        }
+        return super.responds(to: aSelector)
+    }
+        
     override func keyUp(with event: NSEvent) {
         if event.charactersIgnoringModifiers?.contains(" ") ?? false {
             clipView.spaceDown = false

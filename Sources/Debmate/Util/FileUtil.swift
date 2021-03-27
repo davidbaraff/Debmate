@@ -35,30 +35,39 @@ extension Util {
         var isDir: ObjCBool = false
         return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
     }
+    
+    /// Returns a resolved path
+    /// - Parameter url: path to resolve
+    /// Returns the path with symlinks resolved.
+    public static func realpath(url: URL) -> URL {
+        return (try? URL(fileURLWithPath: FileManager.default.destinationOfSymbolicLink(atPath: url.path))) ??
+            (url as NSURL).resolvingSymlinksInPath ?? url
+    }
+    
+    /// Creates a directory as necessary.
+    ///
+    /// - Parameter url: directory location
+    /// - Returns: true if the directory exists or was succesfully created
+    @discardableResult
+    public static func ensureDirectoryExists(url: URL) -> Bool {
+        if isDirectory(url: url) {
+            return true
+        }
+        
+        let rp = realpath(url: url)
+        return isDirectory(url: rp) ||
+            (try? FileManager.default.createDirectory(atPath: rp.path,
+                                                      withIntermediateDirectories: true, attributes: nil)) != nil
+    }
 
-   /// Returns a resolved path
-      /// - Parameter url: path to resolve
-      /// Returns the path with symlinks resolved.
-      public static func realpath(url: URL) -> URL {
-          return (try? URL(fileURLWithPath: FileManager.default.destinationOfSymbolicLink(atPath: url.path))) ??
-                  (url as NSURL).resolvingSymlinksInPath ?? url
-      }
-      
-      /// Creates a directory as necessary.
-      ///
-      /// - Parameter url: directory location
-      /// - Returns: true if the directory exists or was succesfully created
-      @discardableResult
-      public static func ensureDirectoryExists(url: URL) -> Bool {
-          if isDirectory(url: url) {
-              return true
-          }
-
-          let rp = realpath(url: url)
-          return isDirectory(url: rp) ||
-              (try? FileManager.default.createDirectory(atPath: rp.path,
-                                                        withIntermediateDirectories: true, attributes: nil)) != nil
-      }
+    /// Creates a directory as necessary.
+    ///
+    /// - Parameter url: file location requiring directory
+    /// - Returns: true if the directory exists or was succesfully created
+    @discardableResult
+    public static func ensureDirectoryExists(forFile fileURL: URL) -> Bool {
+        ensureDirectoryExists(url: fileURL.deletingLastPathComponent())
+    }
     
     /// Compute a file relative path
     /// - Parameters:
@@ -209,7 +218,7 @@ extension Util {
             suffix = "\(suffix).\(pathExtension)"
         }
         
-        return "\(d0)/\(d1)\(d2)/\(digest.dropFirst(3))" + suffix
+        return "\(d0)\(d1)/\(d2)/\(digest.dropFirst(3))" + suffix
     }
     
     /// Write a value as a json string to a file.

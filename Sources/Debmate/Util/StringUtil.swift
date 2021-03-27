@@ -49,6 +49,35 @@ extension Util {
         UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(length).lowercased()
     }
     
+    
+    /// Return a name not found in names.
+    /// - Parameters:
+    ///   - from: set of existing names
+    ///   - name: requested name
+    ///   - separator: separator
+    ///
+    /// - Returns: name if not found in from, otherwise returns
+    ///                  name<seperator><number>
+    ///            where number is the smallest positive integer such that
+    ///                  name<seperator><number-1>
+    ///            isn't found.
+    public static func nextNumberedName(from names: Set<String>, name: String = "Untitled",  separator: String = "-") -> String {
+        if !names.contains(name) {
+            return name
+        }
+        
+        let prefix = name + separator
+        var largest = 0
+        for candidate in names {
+            if candidate.hasPrefix(prefix),
+               let n = Int(candidate.dropFirst(prefix.count)) {
+                largest = max(largest, n)
+            }
+        }
+        
+        return "\(name)\(separator)\(largest+1)"
+    }
+
     fileprivate static func wordToWordList(_ word: String) -> [String] {
         var wordList = splitIntoWords(word)
         wordList.append("")

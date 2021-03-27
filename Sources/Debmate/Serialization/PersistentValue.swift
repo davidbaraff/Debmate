@@ -7,23 +7,28 @@
 
 import Foundation
 import DebmateC
+import SwiftUI
 
 /// Wrap a value that stores itself persistently in UserDefaults.
 @propertyWrapper
-public class PersistentValue<T : Equatable> {
-    let key: String
+public class PersistentValue<T : Equatable> : ObservableObject {
+    public let key: String
     var refreshHelper: RefreshHelper!
 
-    public var value: T
+    public var value: T {
+        didSet { refreshHelper.updateNeeded() }
+    }
 
     public var wrappedValue: T {
         get { value }
-        set {
-            value = newValue
-            refreshHelper.updateNeeded()
-        }
+        set { value = newValue }
     }
     
+    public var binding: Binding<T> {
+        Binding(get: { self.value },
+                set: { self.value = $0 })
+    }
+
     public var projectedValue: PersistentValue {
         get { self }
     }
@@ -49,7 +54,10 @@ public class PersistentValue<T : Equatable> {
             value = defaultValue
         }
 
-        refreshHelper = RefreshHelper {  [weak self] in self?.flush() }
+        refreshHelper = RefreshHelper {  [weak self] in
+            self?.flush()
+            self?.objectWillChange.send()
+        }
     }
     
     /// Write value to UserDefaults immediately.

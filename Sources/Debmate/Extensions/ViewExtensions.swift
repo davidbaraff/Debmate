@@ -60,7 +60,7 @@ public extension View {
         let renderer = UIGraphicsImageRenderer(size: targetSize)
         return renderer.image { _ in
             view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
-        }.cgImage
+        }.cgImage?.copy(colorSpace: CGColorSpaceCreateDeviceRGB())
     }
     #elseif os(macOS)
     func cgImageSnapshot() -> CGImage? {
@@ -104,6 +104,35 @@ public extension View {
         self
     }
     #endif
+
+    #if os(iOS)
+    func iOS_blur(radius: CGFloat) -> some View {
+        self.blur(radius: radius)
+    }
+    #else
+    func iOS_blur(radius: CGFloat) -> some View {
+        self
+    }
+    #endif
+    
+    #if os(iOS)
+    var platform_iOS: Bool { true }
+    var platform_macOS: Bool { false }
+    var platform_tcOS: Bool { false }
+    #endif
+
+    #if os(macOS)
+    var platform_iOS: Bool { false }
+    var platform_macOS: Bool { true }
+    var platform_tvOS: Bool { false }
+    #endif
+
+    #if os(tvOS)
+    var platform_iOS: Bool { false }
+    var platform_macOS: Bool { false }
+    var platform_tvOS: Bool { true }
+    #endif
+
 }
 
 

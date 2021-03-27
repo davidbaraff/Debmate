@@ -191,7 +191,7 @@ public extension CGColor {
 
         var int64 = UInt64()
         Scanner(string: hex).scanHexInt64(&int64)
-        let int = UInt32(int64)
+        let int = UInt32(int64 & 0xffffffff)
         let a, b, g, r: UInt32
         switch hex.count {
         case 3: // RGB (12-bit)

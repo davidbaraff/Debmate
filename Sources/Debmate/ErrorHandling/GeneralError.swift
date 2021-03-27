@@ -7,6 +7,8 @@
 
 import Foundation
 
+
+/// General error type that simply holds a string description.
 public struct GeneralError : Error, CustomStringConvertible {
     private let details: String
     

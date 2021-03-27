@@ -30,9 +30,8 @@ public class GUIAsyncTaskWatcher : ObservableObject {
     @Published public var progress: Float?
     
     /// Access to the underlying async task if necessary.
-    public let asyncTask = AsyncTask("anonymous-GUIAsyncTaskWatcher")
+    public let asyncTask: AsyncTask
     
-    let queue: DispatchQueue
     var requestID = 0
     
     struct State {
@@ -45,16 +44,14 @@ public class GUIAsyncTaskWatcher : ObservableObject {
     }
     
     /// Returns an initialized instance of GUIAsyncTaskWatcher.
-    /// - Parameter queue: default queue for calls to begin().
-    public init(queue: DispatchQueue) {
-        self.queue = queue
+    /// - Parameter qos: quality of service for computations.
+    public init(qos: DispatchQoS = .userInitiated) {
+        self.asyncTask = AsyncTask("anonymous-GUIAsyncTaskWatcher", qos: qos)
     }
     
     /// Begin watching an AsyncTask instance
     /// - Parameters:
     ///   - message: optional display message for operation
-    ///   - queue: queue for computation to be performed on (if nil
-    ///            the queue passed to init is used).
     ///   - showAfter: how long to wait to show blocking activity
     ///   - showCancelAfter: how long to wait to show a cancellation button;
     ///     zero indicates immediately, while nil indicates never
@@ -68,7 +65,6 @@ public class GUIAsyncTaskWatcher : ObservableObject {
     /// If both are supplied, it is guaranteed that exactly one will be called.
     
     public func begin<T>(message: String? = nil,
-                         queue: DispatchQueue? = nil,
                          showAfter: Double = 0.2,
                          showCancelAfter: Double?,
                          minimumDisplayTime: Double = 0.5,

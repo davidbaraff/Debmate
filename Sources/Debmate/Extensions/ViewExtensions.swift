@@ -118,7 +118,7 @@ public extension View {
     #if os(iOS)
     var platform_iOS: Bool { true }
     var platform_macOS: Bool { false }
-    var platform_tcOS: Bool { false }
+    var platform_tvOS: Bool { false }
     #endif
 
     #if os(macOS)

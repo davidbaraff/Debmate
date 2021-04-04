@@ -20,8 +20,9 @@ private func fileForFatalErrorCrashReport() -> URL {
 ///  `fatalErrorForCrashReportMessage()`.
 ///
 ///  - parameter msg: failure message
-///  - parameter file:    file the fatal error was issued from
-///  - parameter line:    line number the fatal error was issued from
+///  - parameter file: file the fatal error was issued from
+///  - parameter line: line number the fatal error was issued from
+///  - parameter function: function the fatal error was issued from
 public func fatalErrorForCrashReport(_ msg: String, file: StaticString = #file,  line: UInt = #line, function: StaticString = #function) -> Never  {
     let fullMsg = "Fatal error: \(msg) [\(function), \(file):\(line)]"
     
@@ -38,6 +39,7 @@ public func fatalErrorForCrashReport(_ msg: String, file: StaticString = #file, 
     
     fatalError(msg, file: file, line: line)
 }
+
 
 /// Return the message last written by a call to fatalErrorForCrashReport().
 /// - parameter deleteOnRead: if true, deletes the backing file storing the message

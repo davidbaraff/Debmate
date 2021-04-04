@@ -115,6 +115,14 @@ public extension View {
     }
     #endif
     
+    func iOS_preferredColorScheme(_ scheme: ColorScheme?) -> some View {
+        #if os(iOS)
+        return self.preferredColorScheme(scheme)
+        #else
+        return self
+        #endif
+    }
+    
     #if os(iOS)
     var platform_iOS: Bool { true }
     var platform_macOS: Bool { false }

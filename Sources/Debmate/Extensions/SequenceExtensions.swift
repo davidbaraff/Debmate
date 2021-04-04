@@ -15,4 +15,11 @@ public extension Sequence {
     func count_members(where predicate: (Self.Element) -> Bool) -> Int {
         return self.reduce(0) { predicate($1) ? $0 + 1 : $0 }
     }
+    
+    
+    /// Return an enumerated array.
+    /// - Returns: an array of elements [(0, self[0]), (1, self[1]), ...]
+    func enumeratedArray() -> [(Int, Self.Element)] {
+        self.enumerated().map { $0 }
+    }
 }

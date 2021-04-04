@@ -85,6 +85,7 @@ public struct PublisherWatcherView<P : Publisher, Content : View> : View where P
     }
 }
 
+/*
 public class FutureObservable<T> : ObservableObject {
     public private(set) var  hasUpdated = false
 
@@ -99,6 +100,7 @@ public class FutureObservable<T> : ObservableObject {
         currentValue = placeholderValue
     }
 }
+*/
 
 public class PublisherWatcher<T> : ObservableObject {
     private var cancellable: Cancellable?

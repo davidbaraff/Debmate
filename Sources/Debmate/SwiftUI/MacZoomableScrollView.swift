@@ -29,6 +29,7 @@ public protocol ZoomableScrollViewEditDelegate : AnyObject {
     func cut(queryOnly: Bool) -> Bool
     func selectAll(queryOnly: Bool) -> Bool
     func delete(queryOnly: Bool) -> Bool
+    func currentModifiers(modifierFlags: NSEvent.ModifierFlags)
 }
 
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
@@ -451,6 +452,8 @@ fileprivate class Coordinator: NSObject {
             clipView.optionDown = false
             NSCursor.pop()
         }
+        
+        editDelegate?.currentModifiers(modifierFlags: event.modifierFlags)
     }
     
     override func otherMouseDown(with event: NSEvent) {

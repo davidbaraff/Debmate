@@ -36,6 +36,10 @@ public extension CGSize {
     init(fromPoint point: CGPoint) {
         self.init(width: point.x, height: point.y)
     }
+
+    func rounded() -> CGSize {
+        return CGSize(width: width.rounded(), height: height.rounded())
+    }
 }
 
 public extension CGPoint {
@@ -63,6 +67,10 @@ public extension CGPoint {
     
     func distance(to p: CGPoint) -> CGFloat {
         return sqrt(distanceSquared(to: p))
+    }
+    
+    func rounded() -> CGPoint {
+        return CGPoint(x: x.rounded(), y: y.rounded())
     }
 }
 

@@ -27,6 +27,7 @@ public class GUIAlertWatcher : ObservableObject {
     
     public enum PopupType {
         case okPopup
+        case warningPopup
     }
     
     /// A grouping structure for the various attributes of an alert.
@@ -81,7 +82,7 @@ public class GUIAlertWatcher : ObservableObject {
     public private(set) var popupMessage = ""
     
     /// Popup duration
-    public private(set) var popupDuration = 2.0
+    public private(set) var popupDuration: Double? = 2.0
 
     public private(set) var popupUniqueID = 0
 
@@ -151,5 +152,44 @@ public class GUIAlertWatcher : ObservableObject {
             }
         }
         objectWillChange.send()
+    }
+    
+    /// Create a warning popup.
+    /// - Parameters:
+    ///   - title: Short message
+    ///   - duration: Duration before fading out
+    ///
+    /// This function should be used for non-modal warning that doesn't require a response.
+    public func warningPopup(_ title: String, duration: Double? = 2.0) {
+        popupUniqueID += 1
+        popupVisible = true
+        popupMessage = title
+        popupDuration = duration
+        popupType = .warningPopup
+        
+        let popupID = popupUniqueID
+        if let duration = duration {
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [self] in
+                if popupID == popupUniqueID {
+                    popupVisible = false
+                    objectWillChange.send()
+                }
+            }
+        }
+        objectWillChange.send()
+    }
+    
+    
+    /// Hides any popup currently visible.
+    public func hidePopup() {
+        popupUniqueID += 1
+        if popupVisible {
+            popupDuration = 0.0
+            objectWillChange.send()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [self] in
+                popupVisible = false
+                objectWillChange.send()
+            }
+        }
     }
 }

@@ -318,9 +318,17 @@ fileprivate class Coordinator: NSObject {
     }
 
     func computeVisibleRect() -> CGRect {
+        let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
+        let scrollerWidth = scrollView.verticalScroller?.bounds.width ?? 0
+        var delta = CGSize.zero
+        if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
+            delta = CGSize(width: scrollerWidth,
+                           height: clipView.bounds.height - (actualWindowHeight - scrollerHeight))
+        }
+
         let invZoom = 1.0 / clipView.currentMagnification
-        let origin = scrollView.documentVisibleRect.origin * invZoom
-        let size = scrollView.bounds.size * invZoom
+        let origin = (scrollView.documentVisibleRect.origin + CGPoint(x: 0, y: delta.height)) * invZoom
+        let size = (scrollView.bounds.size - delta) * invZoom
         return CGRect(origin: origin, size: size)
     }
 
@@ -372,21 +380,18 @@ fileprivate class Coordinator: NSObject {
     }
 }
 
+extension NSEvent {
+    static var leftButtonDown: Bool { (NSEvent.pressedMouseButtons & 01) == 01 }
+    static var middleButtonDown: Bool { (NSEvent.pressedMouseButtons & 04) == 04 }
+    static var rightButtonDown: Bool { (NSEvent.pressedMouseButtons & 02) == 02 }
+}
+
 @objc fileprivate class MouseHitView : NSView {
     weak var clipView: DraggableClipView!
     weak var editDelegate: ZoomableScrollViewEditDelegate?
     
     override var acceptsFirstResponder: Bool { true }
     
-    override func keyDown(with event: NSEvent) {
-        if event.charactersIgnoringModifiers?.contains(" ") ?? false {
-            if !clipView.spaceDown {
-                clipView.spaceDown = true
-                NSCursor.openHand.push()
-            }
-        }
-    }
-
     @objc
     override func selectAll(_ sender: Any?) {
         editDelegate?.selectAll(queryOnly: false)
@@ -436,34 +441,74 @@ fileprivate class Coordinator: NSObject {
         return super.responds(to: aSelector)
     }
         
+    private func updateCursor() {
+        if clipView.spaceDown {
+            if NSEvent.rightButtonDown {
+                clipView.setCursor(to: clipView.plusCursor)
+            }
+            else {
+                clipView.setCursor(to: .openHand)
+            }
+        }
+        else if clipView.optionDown {
+            if NSEvent.middleButtonDown {
+                clipView.setCursor(to: .openHand)
+            }
+            else if NSEvent.rightButtonDown {
+                clipView.setCursor(to: clipView.plusCursor)
+            }
+        }
+        else {
+            clipView.setCursor(to: nil)
+        }
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.charactersIgnoringModifiers?.contains(" ") ?? false {
+            clipView.spaceDown = true
+            updateCursor()
+        }
+    }
+
     override func keyUp(with event: NSEvent) {
         if event.charactersIgnoringModifiers?.contains(" ") ?? false {
             clipView.spaceDown = false
-            NSCursor.pop()
+            updateCursor()
         }
     }
 
     override func flagsChanged(with event: NSEvent) {
-        if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .option {
-            clipView.optionDown = true
-            clipView.plusCursor.push()
-        }
-        else {
-            clipView.optionDown = false
-            NSCursor.pop()
-        }
-        
+        clipView.optionDown = event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .option
+        updateCursor()
         editDelegate?.currentModifiers(modifierFlags: event.modifierFlags)
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        clipView.capturedDown = true
+        clipView.rightMouseDown(with: event)
+        updateCursor()
+    }
+
+    override func rightMouseUp(with event: NSEvent) {
+        clipView.rightMouseUp(with: event)
+        clipView.capturedDown = false
+        updateCursor()
+    }
+
+    override func rightMouseDragged(with event: NSEvent) {
+        clipView.rightMouseDragged(with: event)
     }
     
     override func otherMouseDown(with event: NSEvent) {
         clipView.capturedDown = true
         clipView.otherMouseDown(with: event)
+        updateCursor()
     }
 
     override func otherMouseUp(with event: NSEvent) {
         clipView.otherMouseUp(with: event)
         clipView.capturedDown = false
+        updateCursor()
     }
 
     override func otherMouseDragged(with event: NSEvent) {
@@ -471,7 +516,7 @@ fileprivate class Coordinator: NSObject {
     }
 
     override func mouseDown(with event: NSEvent) {
-        if clipView.optionDown || clipView.spaceDown {
+        if clipView.spaceDown {
             clipView.capturedDown = true
             clipView.mouseDown(with: event)
         }
@@ -514,17 +559,19 @@ fileprivate class DraggableClipView: NSClipView {
     private var lastZoomPoint = CGPoint.zero
     private var zoomAnchorPoint = CGPoint.zero
     
+    private var pushedCursor = false
     var spaceDown = false
     var optionDown = false
     var capturedDown = false
     private var middleButtonDown = false
+    private var rightButtonDown = false
     private var mouseDown: Bool { clickPoint != nil }
 
     let plusCursor: NSCursor
     let minusCursor: NSCursor
 
     @objc dynamic var currentMagnification = CGFloat(1)
-    
+
     override init(frame: NSRect) {
         guard let plusCursorURL = Bundle.module.url(forResource: "plus.magnifyingglass", withExtension: "png") else {
             fatalErrorForCrashReport("DragableClipView failed to locate resource file for plus magnifying glass cursor image")
@@ -562,18 +609,38 @@ fileprivate class DraggableClipView: NSClipView {
         }
     }
     
+    func setCursor(to cursor: NSCursor?) {
+        if pushedCursor {
+            NSCursor.pop()
+        }
+        if let cursor = cursor {
+            pushedCursor = true
+            cursor.push()
+        }
+    }
+
     private func zoomAnchorPoint(contentViewPoint: CGPoint) -> CGPoint {
         return contentViewPoint * (1 / currentMagnification)
     }
     
+    override func rightMouseDown(with event: NSEvent) {
+        mouseDown(with: event)
+    }
+
+    override func rightMouseUp(with event: NSEvent) {
+        mouseUp(with: event)
+    }
+
+    override func rightMouseDragged(with event: NSEvent) {
+        mouseDragged(with: event)
+    }
+
     override func otherMouseDown(with event: NSEvent) {
-        NSCursor.openHand.push()
         mouseDown(with: event)
     }
 
     override func otherMouseUp(with event: NSEvent) {
         mouseUp(with: event)
-        NSCursor.pop()
     }
 
     override func otherMouseDragged(with event: NSEvent) {
@@ -582,7 +649,9 @@ fileprivate class DraggableClipView: NSClipView {
 
     override func mouseDown(with event: NSEvent) {
         guard capturedDown else { return }
-        middleButtonDown = event.buttonNumber == (1<<1)
+        middleButtonDown = (NSEvent.pressedMouseButtons & 04) != 0
+        rightButtonDown = (NSEvent.pressedMouseButtons & 02) != 0
+
         lastZoomPoint = convert(event.locationInWindow, from: nil)
         clickPoint = event.locationInWindow
         originalOrigin = coordinator.currentOrigin()
@@ -592,6 +661,7 @@ fileprivate class DraggableClipView: NSClipView {
     override func mouseUp(with event: NSEvent) {
         guard capturedDown else { return }
         middleButtonDown = false
+        rightButtonDown = false
         clickPoint = nil
         originalOrigin = nil
     }
@@ -616,17 +686,17 @@ fileprivate class DraggableClipView: NSClipView {
         let p = zoomAnchorPoint(contentViewPoint:  convert(event.locationInWindow, from: nil))
         
         if event.scrollingDeltaY > 0 {
-            plusCursor.push()
+            setCursor(to: plusCursor)
             modifyMagnification(event.scrollingDeltaY / 50, zoomIn: true, centeredAt: p)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                NSCursor.pop()
+                self.setCursor(to: nil)
             }
         }
         else {
-            minusCursor.push()
+            setCursor(to: minusCursor)
             modifyMagnification(-event.scrollingDeltaY / 50, zoomIn: false, centeredAt: p)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                NSCursor.pop()
+                self.setCursor(to: nil)
             }
         }
     }
@@ -643,24 +713,24 @@ fileprivate class DraggableClipView: NSClipView {
             return
         }
 
-        if !spaceDown && !middleButtonDown {
-            if optionDown {
+        if rightButtonDown {
+            if spaceDown || optionDown {
                 let xDelta = event.locationInWindow.x - clickPoint.x
                 self.clickPoint = event.locationInWindow
 
                 if xDelta > 0 {
-                    plusCursor.set()
+                    setCursor(to: plusCursor)
                     modifyMagnification(min(xDelta, 50)/200.0, zoomIn: true, centeredAt: zoomAnchorPoint)
                 }
                 else {
-                    minusCursor.set()
+                    setCursor(to: minusCursor)
                     modifyMagnification(min(-xDelta, 50)/200.0, zoomIn: false, centeredAt: zoomAnchorPoint)
                 }
             }
             return
         }
 
-        NSCursor.openHand.set()
+        setCursor(to: .openHand)
 
         // window delta to content space delta (also, window space Y axis is flipped):
         let delta = (event.locationInWindow - clickPoint) * (1 / coordinator.clipView.currentMagnification)

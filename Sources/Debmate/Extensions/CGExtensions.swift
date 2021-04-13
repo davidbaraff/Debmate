@@ -72,6 +72,14 @@ public extension CGPoint {
     func rounded() -> CGPoint {
         return CGPoint(x: x.rounded(), y: y.rounded())
     }
+    
+    var normalizedDirection: CGPoint {
+        return self * (1 / sqrt(x*x + y*y))
+    }
+    
+    func dotProduct(_ p: CGPoint) -> CGFloat {
+        return x * p.x + y * p.y
+    }
 }
 
 public extension CGRect {

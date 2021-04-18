@@ -66,19 +66,23 @@ public extension CGPoint {
     }
     
     func distance(to p: CGPoint) -> CGFloat {
-        return sqrt(distanceSquared(to: p))
+        sqrt(distanceSquared(to: p))
     }
     
     func rounded() -> CGPoint {
-        return CGPoint(x: x.rounded(), y: y.rounded())
+        CGPoint(x: x.rounded(), y: y.rounded())
     }
     
     var normalizedDirection: CGPoint {
-        return self * (1 / sqrt(x*x + y*y))
+        self * (1 / sqrt(x*x + y*y))
     }
     
+    var magnitude: CGFloat {
+        sqrt(x*x + y*y)
+    }
+
     func dotProduct(_ p: CGPoint) -> CGFloat {
-        return x * p.x + y * p.y
+        x * p.x + y * p.y
     }
 }
 

@@ -87,12 +87,6 @@ public extension CGPoint {
 }
 
 public extension CGRect {
-    init(origin o: CGPoint, safelySized s: CGSize) {
-        let x1 = o.x + s.width
-        let y1 = o.y + s.height
-        self.init(x: Swift.min(o.x, x1), y: Swift.min(o.y, y1), width: abs(s.width), height: abs(s.height))
-    }
-
     var center: CGPoint {
         origin + 0.5 * CGPoint(fromSize: size)
     }
@@ -102,13 +96,19 @@ public extension CGRect {
     }
     
     func offset(by size: CGSize) -> CGRect {
-        self.offsetBy(dx: size.width, dy: size.height)
+        offsetBy(dx: size.width, dy: size.height)
     }
 
     func offset(by p: CGPoint) -> CGRect {
-        self.offsetBy(dx: p.x, dy: p.y)
+        offsetBy(dx: p.x, dy: p.y)
     }
 
+    /// Return a rectangle expanded by delta on all sides.
+    func expanded(by delta: CGFloat) -> CGRect {
+        CGRect(x: origin.x - delta, y: origin.y - delta,
+                  width: size.width + 2*delta, height: size.height + 2*delta)
+    }
+    
     /// Return a rectangle fitting within self.
     /// - Parameter size: The aspect ratio of the rectangle
     /// - Returns: A centered and scaled CGRect.

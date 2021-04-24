@@ -44,6 +44,9 @@ public class GUIAlertWatcher : ObservableObject {
         /// Label for primary button (for askYesNo alerts).
         public var yesButtonText = ""
         
+        /// If the action (for askYesNo alerts) needs extra emaphasis.
+        public var destructive = false
+        
         /// Callback for an yesOrCancel alert.
         public var yesOrCancelAction: ((Bool) -> ())? = nil
         
@@ -68,7 +71,7 @@ public class GUIAlertWatcher : ObservableObject {
     /// Dismiss the current warning/qustion.  (Do not call this for popups!)
     @discardableResult
     public func dismissCurrent() -> Attributes? {
-        objectWillChange.send()
+        defer { objectWillChange.send() }
         return attributesStack.popLast()
     }
     
@@ -96,6 +99,7 @@ public class GUIAlertWatcher : ObservableObject {
     ///   - onDismiss: callback when alert is dismissed
     public func showWarning(_ title: String, details: String? = nil, onDismiss: (() ->())? = nil) {
         uniqueIDCounter += 1
+        print("Show new warning with title", title)
         attributesStack.append(Attributes(alertType: .warning, title: title,
                                           details: details, onDismissAction: onDismiss,
                                           uniqueID: uniqueIDCounter))
@@ -121,11 +125,14 @@ public class GUIAlertWatcher : ObservableObject {
     ///   - title: title for question
     ///   - details: more detailed message
     ///   - yesText: label for "yes" button
+    ///   - destructive: if true, adds extra emphasis to the yes button
     ///   - onDismiss: called with true/false when alert is dismissed
     public func yesOrCancel(_ title: String, details: String? = nil, yesText: String,
+                            destructive: Bool = false,
                             onDismiss: @escaping ((Bool) ->())) {
         uniqueIDCounter += 1
         attributesStack.append(Attributes(alertType: .yesOrCancel, title: title, details: details, yesButtonText: yesText,
+                                          destructive: destructive,
                                           yesOrCancelAction: onDismiss, uniqueID: uniqueIDCounter))
         objectWillChange.send()
     }

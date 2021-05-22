@@ -7,14 +7,25 @@
 
 import SwiftUI
 
+public extension String {
+    var asHexColor: Color {
+        Color(hex: self)
+    }
+    
+    var asHexCGColor: CGColor {
+        CGColor.fromString(hex: self)
+    }
+}
+
 public extension Color {
     #if os(macOS)
     static let systemBackground = Color(.windowBackgroundColor)
-    #else
+    #elseif os(iOS)
     static let systemBackground = Color(.secondarySystemBackground)
+    #else
+    static let systemBackground = Color(white: 0.3, opacity: 1)
     #endif
 }
-
 
 public extension Color {
     /// Iniialize color from a hex string

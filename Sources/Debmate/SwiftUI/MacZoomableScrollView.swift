@@ -30,6 +30,7 @@ public protocol ZoomableScrollViewEditDelegate : AnyObject {
     func selectAll(queryOnly: Bool) -> Bool
     func delete(queryOnly: Bool) -> Bool
     func currentModifiers(modifierFlags: NSEvent.ModifierFlags)
+    func keyPress(unicodeScalarValue: UInt32)
 }
 
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
@@ -204,11 +205,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
 fileprivate class Coordinator: NSObject {
     class Control : ZoomableScrollViewControl {
         var windowSize: CGSize {
-            if let visibleRect = coordinator?.scrollView.documentVisibleRect {
-                return CGSize(visibleRect.size.width, visibleRect.size.height - 22)
-            }
-
-            return CGSize(1,1)
+            return coordinator?.actualScrollViewSize ?? CGSize(1,1)
         }
         
         weak var coordinator: Coordinator?
@@ -232,7 +229,28 @@ fileprivate class Coordinator: NSObject {
 
     let scrollView = NSScrollView()
     var clipView = DraggableClipView()
-
+    var cachedScrollViewSize: CGSize?
+    
+    var actualScrollViewSize: CGSize {
+        if let cachedScrollViewSize = cachedScrollViewSize {
+            return cachedScrollViewSize
+        }
+        
+        let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
+        let scrollerWidth = scrollView.verticalScroller?.bounds.width ?? 0
+        if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
+            let delta = CGSize(width: scrollerWidth,
+                           height: clipView.bounds.height - (actualWindowHeight - scrollerHeight))
+            let s = scrollView.bounds.size - delta
+            cachedScrollViewSize = s
+            return s
+        }
+        else {
+            cachedScrollViewSize = scrollView.bounds.size
+            return scrollView.bounds.size
+        }
+    }
+    
     let editDelegate: ZoomableScrollViewEditDelegate?
     let configureCallback: ((ZoomableScrollViewControl) ->())?
     var inConfigureCallback = false
@@ -354,8 +372,14 @@ fileprivate class Coordinator: NSObject {
     
     func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false) {
         let zoomScale = max(min(zoom ?? clipView.currentMagnification, maxMagnification), minMagnification)
-        let p = zoomScale * position - 0.5 * CGPoint(fromSize: scrollView.bounds.size)
+        var p = zoomScale * position - 0.5 * CGPoint(fromSize: actualScrollViewSize)
 
+        if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
+            let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
+            let ydelta = clipView.bounds.height - (actualWindowHeight - scrollerHeight)
+            p = CGPoint(p.x, p.y - (ydelta+7))
+        }
+        
         if (animated && !externalControl) || inConfigureCallback {
             NSAnimationContext.runAnimationGroup {
                 $0.duration = inConfigureCallback ? 0.01 : animationDuration
@@ -392,6 +416,7 @@ extension NSEvent {
     
     override var acceptsFirstResponder: Bool { true }
     
+    /*
     @objc
     override func selectAll(_ sender: Any?) {
         editDelegate?.selectAll(queryOnly: false)
@@ -439,7 +464,7 @@ extension NSEvent {
             return editDelegate?.selectAll(queryOnly: true) ?? false
         }
         return super.responds(to: aSelector)
-    }
+    }*/
         
     private func updateCursor() {
         if clipView.spaceDown {
@@ -467,6 +492,10 @@ extension NSEvent {
         if event.charactersIgnoringModifiers?.contains(" ") ?? false {
             clipView.spaceDown = true
             updateCursor()
+        }
+
+        if let v = event.characters?.first?.unicodeScalars.first?.value {
+            editDelegate?.keyPress(unicodeScalarValue: v)
         }
     }
 

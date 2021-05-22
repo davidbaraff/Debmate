@@ -25,9 +25,15 @@ public class ZoomableScrollViewState : ObservableObject{
         CGPoint(visibleRect.midX, visibleRect.midY)
     }
     
+    public func viewSpaceLocation(_ p: CGPoint) -> CGPoint {
+        CGPoint(x: (p.x - visibleRect.origin.x) * zoomScale,
+                y: (p.y - visibleRect.origin.y) * zoomScale)
+    }
+
+
     public internal (set) var valid = false
     
-    public  internal (set) var recentTouchLocation: (() -> CGPoint)!
+    public internal (set) var recentTouchLocation: (() -> CGPoint)!
     
     public init() {
         

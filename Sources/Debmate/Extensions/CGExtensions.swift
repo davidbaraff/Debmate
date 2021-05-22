@@ -8,6 +8,18 @@
 import Foundation
 import CoreGraphics
 
+public extension CGFloat {
+    var roundedInt: Int {
+        Int(self.rounded())
+    }
+}
+
+public extension Double {
+    var roundedInt: Int {
+        Int(self.rounded())
+    }
+}
+
 public extension CGImage {
     var size: CGSize {
         CGSize(self.width, self.height)
@@ -233,7 +245,7 @@ public extension CGColor {
                           Int((255 * components[1]).rounded()), Int((255 * components[0]).rounded()))
         }
         else {
-            return "0xff888888"
+            return "#ff888888"
         }
     }
 }

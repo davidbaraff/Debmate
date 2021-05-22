@@ -53,13 +53,13 @@ public extension View {
     #if os(iOS) || os(tvOS)
     func cgImageSnapshot() -> CGImage? {
         let controller = UIHostingController(rootView: self)
-        let view = controller.view
+        let view: UIView = controller.view
         let targetSize = controller.view.intrinsicContentSize
-        view?.bounds = CGRect(origin: .zero, size: targetSize)
-        view?.backgroundColor = .clear
+        view.bounds = CGRect(origin: .zero, size: targetSize)
+        view.backgroundColor = .clear
         let renderer = UIGraphicsImageRenderer(size: targetSize)
         return renderer.image { _ in
-            view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+            view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
         }.cgImage?.copy(colorSpace: CGColorSpaceCreateDeviceRGB())
     }
     #elseif os(macOS)
@@ -114,7 +114,9 @@ public extension View {
         self
     }
     #endif
-    
+
+   
+
     func iOS_preferredColorScheme(_ scheme: ColorScheme?) -> some View {
         #if os(iOS)
         return self.preferredColorScheme(scheme)

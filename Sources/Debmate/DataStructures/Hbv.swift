@@ -89,6 +89,13 @@ public class Hbv {
     public init() {
     }
         
+    deinit {
+        root.walk {
+            $0.userData = nil
+            return true
+        }
+    }
+
     /// Construct a hierarchy for a given set of rectangles.
     public init(rects: [CGRect]) {
         self.update(rects: rects)

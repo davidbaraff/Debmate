@@ -6,11 +6,20 @@
 //
 
 import Foundation
+import SwiftUI
 
 public extension String {
     /// Return an NSRange that full encompasses the string
     var fullRange: NSRange {
         return NSRange(location: 0, length: count)
+    }
+
+    /// Return a range of the string.
+    func substring(withRange range: NSRange) -> String {
+        if let swiftRange = Range(range, in: self) {
+            return String(self[swiftRange])
+        }
+        return ""
     }
     
     /// Return the string with leading and trailing whitespace trimmed off.
@@ -39,4 +48,37 @@ public extension String {
     var deletingPathExtension: String {
         (self as NSString).deletingPathExtension
     }
+    
+    func attributedString(withFont font: PlatformFont, color: CGColor? = nil,
+                          alignment: NSTextAlignment? = nil) -> NSAttributedString {
+        var attrs: [NSAttributedString.Key : Any] = [.font : font]
+        #if os(macOS)
+        if let color = color,
+           let nsColor = NSColor(cgColor: color) {
+            attrs[.foregroundColor] = nsColor
+        }
+        #else
+        if let color = color {
+            attrs[.foregroundColor] = UIColor(cgColor: color)
+        }
+        #endif
+
+        if let alignment = alignment {
+            let ps = NSMutableParagraphStyle()
+            ps.setParagraphStyle(.default)
+            ps.alignment = alignment
+            attrs[.paragraphStyle] = ps
+        }
+
+        let ma = NSMutableAttributedString(string: self)
+        ma.setAttributes(attrs, range: ma.fullRange)
+        return ma
+    }
 }
+
+public extension NSAttributedString {
+    var fullRange: NSRange {
+        return NSRange(location: 0, length: length)
+    }
+}
+

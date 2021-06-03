@@ -351,6 +351,7 @@ fileprivate class Coordinator: NSObject {
     }
 
     @objc func boundsDidChange(_ notification: Notification) {
+        cachedScrollViewSize = nil
         scrollViewStateChanged()
     }
 

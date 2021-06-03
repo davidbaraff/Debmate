@@ -23,3 +23,19 @@ public extension Sequence {
         self.enumerated().map { $0 }
     }
 }
+
+public extension Array where Element : Equatable {
+    
+    /// Add an item to the front of array and remove duplicates of that item.
+    /// - Parameters:
+    ///   - element: element to be added
+    ///   - maxCount: maximum length of resulting array
+    /// - Returns: A new array with element at the front, and of maximum length maxCount.
+    mutating func addToFrontRemovingDuplicates(_ element: Element, maxCount: Int? = nil) {
+        self = [element] + self.filter { $0 != element }
+        if let maxCount = maxCount,
+           count > maxCount  {
+           removeLast(count - maxCount)
+        }
+    }
+}

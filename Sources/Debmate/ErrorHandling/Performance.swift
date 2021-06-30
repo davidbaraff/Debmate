@@ -36,6 +36,23 @@ public func timed_execution<T>(_ msg: String, debug: Bool = true, block: () -> T
     return result
 }
 
+/// Time a block of code.
+///
+/// - Parameters:
+///   - msg: Descriptive message printed after block completes.
+///   - block: code to be timed
+/// - Returns: return value of block
+public func timed_execution<T>(_ msg: String, debug: Bool = true, block: () throws -> T) throws -> T {
+    if !debug {
+        return try block()
+    }
+
+    let now = Date()
+    let result = try block()
+    print("\(msg): \(now.elapsedTime) seconds")
+    return result
+}
+
 /// Returns the current time in seconds modulo 100 seconds.
 public func debugging_date_stamp() -> Double {
     let seconds = Date.timeIntervalSinceReferenceDate

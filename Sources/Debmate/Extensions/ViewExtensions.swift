@@ -30,6 +30,11 @@ public extension View {
         self.disabled(hidden).opacity(hidden ? 0 : 1)
     }
     
+    func dimAndDisable(when disabled: Bool) -> some View {
+        self.disabled(disabled)
+            .opacity(disabled ? 0.5 : 1)
+    }
+    
     func hideStatusBar() -> some View {
         #if os(iOS)
         return self.statusBar(hidden: true)

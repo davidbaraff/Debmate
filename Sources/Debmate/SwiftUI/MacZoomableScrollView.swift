@@ -241,7 +241,8 @@ fileprivate class Coordinator: NSObject {
         if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
             let delta = CGSize(width: scrollerWidth,
                            height: clipView.bounds.height - (actualWindowHeight - scrollerHeight))
-            let s = scrollView.bounds.size - delta
+            var s = scrollView.bounds.size - delta
+            s.height = actualWindowHeight - scrollerHeight
             cachedScrollViewSize = s
             return s
         }
@@ -378,7 +379,7 @@ fileprivate class Coordinator: NSObject {
         if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
             let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
             let ydelta = clipView.bounds.height - (actualWindowHeight - scrollerHeight)
-            p = CGPoint(p.x, p.y - (ydelta+7))
+            p = CGPoint(p.x, p.y - ydelta)
         }
         
         if (animated && !externalControl) || inConfigureCallback {

@@ -8,12 +8,12 @@
 import Foundation
 
 extension Util {
-    
     /// Returns date in a readable form.
     ///
     /// - Parameter date: the date
+    /// - Parameter omitTime: if true, the time in the data is omitted
     /// - Returns: textual description
-    static public func textualDate(_ date: Date) -> String {
+    static public func textualDate(_ date: Date, omitTime: Bool = false) -> String {
         let calendar = NSCalendar.current
         let now = Date()
         
@@ -34,20 +34,31 @@ extension Util {
             let hour = calendar.component(.hour, from: date)
             let minute = String(format: "%02d", calendar.component(.minute, from: date))
             let hhour = (hour % 12) == 0 ? 12 : (hour % 12)
-            let timeStr = "\(hhour):\(minute)\(hour > 11 ? "PM" : "AM")"
-            
+            let timeStr = omitTime ? "" : "\(hhour):\(minute)\(hour > 11 ? "PM" : "AM")"
+
             if daysBetween <= 1 {
                 let day = (daysBetween == 0) ? "Today" : "Yesterday"
-                return "\(day) \(timeStr)"
+                return "\(day)\(timeStr)"
             }
             else {
                 let weekday = calendar.component(.weekday, from: date)
                 let dayStr = calendar.shortStandaloneWeekdaySymbols[weekday-1]
                 let monthStr = calendar.shortMonthSymbols[month-1]
                 let dayNo = String(format: "%02d", day)
-                return "\(dayStr), \(monthStr) \(dayNo) \(timeStr)"
+                return "\(dayStr), \(monthStr) \(dayNo)\(timeStr)"
             }
         }
+    }
+
+    /// Returns the time of a date in readable form.
+    /// - Parameter date: the date
+    /// - Returns: textual description
+    static public func textualTime(_ date: Date) -> String {
+        let calendar = NSCalendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minute = String(format: "%02d", calendar.component(.minute, from: date))
+        let hhour = (hour % 12) == 0 ? 12 : (hour % 12)
+        return "\(hhour):\(minute)\(hour > 11 ? "PM" : "AM")"
     }
 
     /// Returns a string of the form <month>-<day> where <month> is a string and <day> is a number

@@ -38,14 +38,14 @@ extension Util {
 
             if daysBetween <= 1 {
                 let day = (daysBetween == 0) ? "Today" : "Yesterday"
-                return "\(day)\(timeStr)"
+                return "\(day) \(timeStr)"
             }
             else {
                 let weekday = calendar.component(.weekday, from: date)
                 let dayStr = calendar.shortStandaloneWeekdaySymbols[weekday-1]
                 let monthStr = calendar.shortMonthSymbols[month-1]
                 let dayNo = String(format: "%02d", day)
-                return "\(dayStr), \(monthStr) \(dayNo)\(timeStr)"
+                return "\(dayStr), \(monthStr) \(dayNo) \(timeStr)"
             }
         }
     }

@@ -315,7 +315,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             var y0 = origin.y
             var y1 = origin.y + size.height
             
-            if isAnimating {
+            if inExternalControl && isAnimating {
                 if let previousVisibleRect = previousVisibleRect {
                     if previousVisibleRect.minX < x0 {
                         x0 -= 0.2 * size.width

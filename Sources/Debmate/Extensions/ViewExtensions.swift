@@ -131,21 +131,21 @@ public extension View {
     }
     
     #if os(iOS)
-    var platform_iOS: Bool { true }
-    var platform_macOS: Bool { false }
-    var platform_tvOS: Bool { false }
+    static var platform_iOS: Bool { true }
+    static var platform_macOS: Bool { false }
+    static var platform_tvOS: Bool { false }
     #endif
 
     #if os(macOS)
-    var platform_iOS: Bool { false }
-    var platform_macOS: Bool { true }
-    var platform_tvOS: Bool { false }
+    static var platform_iOS: Bool { false }
+    static var platform_macOS: Bool { true }
+    static var platform_tvOS: Bool { false }
     #endif
 
     #if os(tvOS)
-    var platform_iOS: Bool { false }
-    var platform_macOS: Bool { false }
-    var platform_tvOS: Bool { true }
+    static var platform_iOS: Bool { false }
+    static var platform_macOS: Bool { false }
+    static var platform_tvOS: Bool { true }
     #endif
 
 }

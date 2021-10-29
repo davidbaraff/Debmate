@@ -99,7 +99,6 @@ public class GUIAlertWatcher : ObservableObject {
     ///   - onDismiss: callback when alert is dismissed
     public func showWarning(_ title: String, details: String? = nil, onDismiss: (() ->())? = nil) {
         uniqueIDCounter += 1
-        print("Show new warning with title", title)
         attributesStack.append(Attributes(alertType: .warning, title: title,
                                           details: details, onDismissAction: onDismiss,
                                           uniqueID: uniqueIDCounter))

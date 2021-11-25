@@ -25,6 +25,9 @@ public class Reachability {
     /// A publisher whose current value indicates if the host is reachable or not.
     public let publisher: CurrentValueSubject<Bool, Never>
 
+    /// Same as publisher except it doesn't fire initially.
+    public let onChangePublisher: PassthroughSubject<Bool, Never>
+    
     /// Current connection status.
     public var connected: Bool {
         publisher.value
@@ -45,7 +48,8 @@ public class Reachability {
         self.hostName = hostName
         self.connectionTestPublisher = connectionTestPublisher
         self.publisher = CurrentValueSubject(initialState)
-        
+        self.onChangePublisher = PassthroughSubject()
+
         guard let rref = SCNetworkReachabilityCreateWithName(nil, hostName) else {
             fatalErrorForCrashReport("Failed to start reachability service for \(hostName)")
         }
@@ -76,6 +80,8 @@ public class Reachability {
         
         recheckScheduled = true
         let publisher = self.publisher
+        let onChangePublisher = self.onChangePublisher
+        
         reachabilitySerialQueue.asyncAfter(deadline: .now() + 2.0) {
             self.recheckScheduled = false
 
@@ -88,6 +94,7 @@ public class Reachability {
 
                 if publisher.value != connected {
                     publisher.send(connected)
+                    onChangePublisher.send(connected)
                 }
             }, receiveValue: { _ in () })
         }

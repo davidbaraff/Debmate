@@ -53,6 +53,10 @@ public protocol ZoomableScrollViewControl : AnyObject {
 
     func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool)
     var windowSize: CGSize { get }
+    
+    #if os(macOS)
+    func setCursor(_ cursor: NSCursor?)
+    #endif
 }
 
 public extension ZoomableScrollViewControl {

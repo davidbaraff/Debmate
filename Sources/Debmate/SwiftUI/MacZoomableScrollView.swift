@@ -31,6 +31,7 @@ public protocol ZoomableScrollViewEditDelegate : AnyObject {
     func delete(queryOnly: Bool) -> Bool
     func currentModifiers(modifierFlags: NSEvent.ModifierFlags)
     func keyPress(unicodeScalarValue: UInt32)
+    func mouseMoved(_ pt: CGPoint)
 }
 
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
@@ -217,6 +218,10 @@ fileprivate class Coordinator: NSObject {
         func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool) {
             coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated, externalControl: externalControl)
         }
+        
+        func setCursor(_ cursor: NSCursor?) {
+            coordinator?.clipView.setCursor(to: cursor)
+        }
     }
     
     let contentSize: CGSize
@@ -284,6 +289,13 @@ fileprivate class Coordinator: NSObject {
         return origin + p * invZoom
     }
 
+    func scrollViewLocation(windowPoint: CGPoint) -> CGPoint {
+        let p = scrollView.convert(windowPoint, from: nil)
+        let invZoom = 1.0 / clipView.currentMagnification
+        let origin = scrollView.documentVisibleRect.origin * invZoom
+        return origin + p * invZoom
+    }
+    
     func magnifyBy(factor: CGFloat, centeredAt cp: CGPoint) {
         /*
          wl = window location
@@ -643,6 +655,7 @@ fileprivate class DraggableClipView: NSClipView {
     func setCursor(to cursor: NSCursor?) {
         if pushedCursor {
             NSCursor.pop()
+            pushedCursor = false
         }
         if let cursor = cursor {
             pushedCursor = true
@@ -783,6 +796,22 @@ fileprivate class DraggableClipView: NSClipView {
             rect.origin.y = (documentView.frame.height - rect.height) / 2
         }
         return rect
+    }
+    
+    var trackingArea : NSTrackingArea?
+    override func mouseMoved(with event: NSEvent) {
+        let pt = coordinator.scrollViewLocation(windowPoint: event.locationInWindow)
+        coordinator.editDelegate?.mouseMoved(pt)
+    }
+
+    override func updateTrackingAreas() {
+        if trackingArea != nil {
+            removeTrackingArea(trackingArea!)
+        }
+        trackingArea = NSTrackingArea(rect: bounds,
+                                      options: [.mouseMoved, .activeInKeyWindow],
+                                      owner: self, userInfo: nil)
+        addTrackingArea(trackingArea!)
     }
 }
 #endif

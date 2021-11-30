@@ -723,6 +723,27 @@ fileprivate class DraggableClipView: NSClipView {
     
     override func scrollWheel(with event: NSEvent) {
         guard event.subtype == .mouseEvent else {
+            if event.modifierFlags.contains(.shift),
+               let cgEvent = event.cgEvent?.copy() {
+
+                var dx = event.scrollingDeltaX
+                var dy = event.scrollingDeltaY
+                
+                if abs(dx) > abs(dy) {
+                    dy = 0
+                }
+                else {
+                    dx = 0
+                }
+
+                cgEvent.setDoubleValueField(.scrollWheelEventDeltaAxis1, value: dy/2)
+                cgEvent.setDoubleValueField(.scrollWheelEventDeltaAxis2, value: dx/2)
+                if let nsEvent = NSEvent(cgEvent: cgEvent) {
+                    super.scrollWheel(with: nsEvent)
+                    return
+                }
+            }
+
             super.scrollWheel(with: event)
             return
         }
@@ -777,9 +798,25 @@ fileprivate class DraggableClipView: NSClipView {
         setCursor(to: .openHand)
 
         // window delta to content space delta (also, window space Y axis is flipped):
-        let delta = (event.locationInWindow - clickPoint) * (1 / coordinator.clipView.currentMagnification)
-        coordinator.scrollOrigin(to: CGPoint(x: originalOrigin.x - delta.x,
-                                             y: originalOrigin.y + delta.y))
+        let mag = coordinator.clipView.currentMagnification
+        var delta = (event.locationInWindow - clickPoint) * (1 / mag)
+
+        if abs(delta.x) > abs(delta.y) {
+            if 3 * abs(delta.y) < abs(delta.x) {
+                delta.y = 0
+            }
+        }
+        else {
+            if 3 * abs(delta.x) < abs(delta.y) {
+                delta.x = 0
+            }
+        }
+        
+        self.clickPoint = event.locationInWindow
+        let newOrigin = CGPoint(x: originalOrigin.x - delta.x,
+                                y: originalOrigin.y + delta.y)
+        coordinator.scrollOrigin(to: newOrigin)
+        self.originalOrigin = newOrigin
 
         superview?.reflectScrolledClipView(self)
     }

@@ -160,9 +160,24 @@ fileprivate struct UpdatableContentView<Content : View> : View {
 
 fileprivate class TouchSpyingView : UIView {
     var registerTouchLocation: ((CGPoint) -> ())!
-
+    weak var scrollView: UIScrollView!
+    
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         registerTouchLocation(point - superview!.bounds.origin)
+        let touchType = event?.allTouches?.first?.type
+        if #available(iOS 14.0, *) {
+            if touchType != .indirectPointer && touchType != .pencil {
+                let location = point - superview!.bounds.origin
+                let edgeTouch = location.x <= 0.1 * UIScreen.main.bounds.width ||
+                        location.x >= 0.9 * UIScreen.main.bounds.width ||
+                        location.y <= 0.1 * UIScreen.main.bounds.height ||
+                            location.y >= 0.85 * UIScreen.main.bounds.height
+                scrollView.isDirectionalLockEnabled = edgeTouch
+            }
+            else {
+                scrollView.isDirectionalLockEnabled = false
+            }
+        }
         return nil
     }
 }
@@ -227,6 +242,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             let origin = coordinator.scrollView.contentOffset * invZoom
             coordinator.recentTouchLocation = origin + invZoom * location
         }
+        touchSpyingView.scrollView = coordinator.scrollView
         
         return coordinator.scrollView
     }

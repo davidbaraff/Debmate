@@ -94,6 +94,13 @@ public class GUIExecutionBlocker : ObservableObject {
         }
     }
 
+    /// Block until all queued work has completed.
+    /// - Parameters:
+    ///   - queue: queue for computation to be performed on (if nil
+    ///            the queue passed to init is used)
+    public func drainExistingWork(queue: DispatchQueue? = nil) {
+        (queue ?? self.queue).sync { }
+    }
     
     /// Request display of gui elements without providing a computation.
     /// - Parameters:

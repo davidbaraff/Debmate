@@ -50,6 +50,7 @@ public extension String {
     }
     
     func attributedString(withFont font: PlatformFont, color: CGColor? = nil,
+                          underLine: Bool = false,
                           alignment: NSTextAlignment? = nil) -> NSAttributedString {
         var attrs: [NSAttributedString.Key : Any] = [.font : font]
         #if os(macOS)
@@ -62,6 +63,11 @@ public extension String {
             attrs[.foregroundColor] = UIColor(cgColor: color)
         }
         #endif
+
+        if underLine {
+            attrs[.underlineStyle] = 1
+            attrs[.expansion] = -0.001
+        }
 
         if let alignment = alignment {
             let ps = NSMutableParagraphStyle()

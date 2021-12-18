@@ -188,6 +188,12 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
                                                name: NSView.boundsDidChangeNotification,
                                                object: scrollView.contentView)
 
+        scrollView.postsFrameChangedNotifications = true
+        NotificationCenter.default.addObserver(coordinator,
+                                               selector: #selector(Coordinator.boundsDidChangeNSView),
+                                               name: NSView.frameDidChangeNotification,
+                                               object: scrollView)
+        
         NotificationCenter.default.addObserver(coordinator,
                                                selector: #selector(Coordinator.boundsDidChange),
                                                name: NSWindow.didResizeNotification,
@@ -350,17 +356,20 @@ fileprivate class Coordinator: NSObject {
 
     func computeVisibleRect() -> CGRect {
         let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
-        let scrollerWidth = scrollView.verticalScroller?.bounds.width ?? 0
-        var delta = CGSize.zero
+        var yDelta: Double = 0
         if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
-            delta = CGSize(width: scrollerWidth,
-                           height: clipView.bounds.height - (actualWindowHeight - scrollerHeight))
+            yDelta = clipView.bounds.height - (actualWindowHeight - scrollerHeight)
         }
 
         let invZoom = 1.0 / clipView.currentMagnification
-        let origin = (scrollView.documentVisibleRect.origin + CGPoint(x: 0, y: delta.height)) * invZoom
-        let size = (scrollView.bounds.size - delta) * invZoom
+        let origin = (scrollView.documentVisibleRect.origin + CGPoint(x: 0, y: yDelta)) * invZoom
+        let size = actualScrollViewSize * invZoom
         return CGRect(origin: origin, size: size)
+    }
+
+    @objc func boundsDidChangeNSView(_ notification: Notification) {
+        cachedScrollViewSize = nil
+        scrollViewStateChanged()
     }
 
     @objc func boundsDidChange(_ notification: Notification) {

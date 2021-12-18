@@ -81,6 +81,7 @@ public extension ZoomableScrollViewControl {
 
     func scrollAndZoom(around rect: CGRect, undershoot: CGFloat = 0.90, horizontalFit: Bool = false,
                        animated: Bool = true, externalControl: Bool = false) {
+        let windowSize = windowSize
         let scale = horizontalFit ? windowSize.width / rect.width :
                     min(windowSize.width / rect.width, windowSize.height / rect.height)
         scrollCenter(to: rect.center, zoom: undershoot * scale,
@@ -280,7 +281,6 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
 
         var scrollView = UIScrollView()
         var view: UIView!
-        var controlCancelKey: Cancellable?
         var rotationCancelKey: Cancellable?
         var refreshHelper: RefreshHelper!
         let configureCallback: ((ZoomableScrollViewControl) ->())?

@@ -11,6 +11,10 @@ public extension Date {
     init(secondsSince1970 seconds: Int) {
         self.init(timeIntervalSince1970: Double(seconds))
     }
+    
+    var secondsSince1970: Int {
+        timeIntervalSince1970.roundedInt
+    }
 }
 
 public extension Int {

@@ -78,6 +78,21 @@ extension Util {
         return "\(name)\(separator)\(largest+1)"
     }
 
+    /// Returns name without a numbered extension.
+    /// - Parameters:
+    ///   - name: name
+    ///   - separator: separator.
+    ///
+    /// - Returns: root if name is  of the form <root><separator><number> and otherwise name.
+    ///
+    public static func nameWithoutNumberedSeparator(name: String, separator: String = "-") -> String {
+        if let range = name.range(of: separator, options: .backwards),
+           Int(name[range.upperBound...]) != nil {
+            return String(name[..<range.lowerBound])
+        }
+        return name
+    }
+    
     fileprivate static func wordToWordList(_ word: String) -> [String] {
         var wordList = splitIntoWords(word)
         wordList.append("")

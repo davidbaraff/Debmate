@@ -138,6 +138,14 @@ extension Util {
         return nil
     }
     
+    /// Return the creation time of a file, in seconds.
+    public static func fileCreationTime(url: URL) -> Double? {
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary {
+            return attrs.fileCreationDate()?.timeIntervalSince1970
+        }
+        return nil
+    }
+    
     /// Compute cache file location for an asset based on md5 checksum.
     ///
     /// - Parameters:

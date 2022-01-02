@@ -221,8 +221,9 @@ fileprivate class Coordinator: NSObject {
             self.coordinator = coordinator
         }
 
-        func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool) {
-            coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated, externalControl: externalControl)
+        func scrollCenter(to location: CGPoint, zoom: CGFloat?, animated: Bool, externalControl: Bool, completion: (() -> ())? = nil) {
+            coordinator?.scrollCenter(to: location, zoom: zoom, animated: animated, externalControl: externalControl,
+                                      completion: completion)
         }
         
         func setCursor(_ cursor: NSCursor?) {
@@ -393,7 +394,8 @@ fileprivate class Coordinator: NSObject {
 
     private var inExternalControl = false
     
-    func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false) {
+    func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false,
+                      completion: (() -> ())?) {
         let zoomScale = max(min(zoom ?? clipView.currentMagnification, maxMagnification), minMagnification)
         var p = zoomScale * position - 0.5 * CGPoint(fromSize: actualScrollViewSize)
 
@@ -412,6 +414,8 @@ fileprivate class Coordinator: NSObject {
                     clipView.animator().currentMagnification = zoomScale
                 }
                 scrollView.contentView.animator().setBoundsOrigin(p)
+            } completionHandler: {
+                completion?()
             }
         }
         else {
@@ -419,6 +423,7 @@ fileprivate class Coordinator: NSObject {
                 clipView.currentMagnification = zoomScale
             }
             scrollView.contentView.setBoundsOrigin(p)
+            completion?()
         }
         
         inExternalControl = externalControl

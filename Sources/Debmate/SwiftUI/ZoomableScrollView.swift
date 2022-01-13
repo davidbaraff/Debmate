@@ -227,8 +227,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         coordinator.scrollView.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
         #endif
         
-        coordinator.scrollView.showsVerticalScrollIndicator = true
-        coordinator.scrollView.showsHorizontalScrollIndicator = true
+        coordinator.scrollView.showsVerticalScrollIndicator = false
+        coordinator.scrollView.showsHorizontalScrollIndicator = false
         coordinator.scrollView.translatesAutoresizingMaskIntoConstraints = false
         coordinator.scrollView.backgroundColor = .clear
         coordinator.scrollView.addSubview(view)

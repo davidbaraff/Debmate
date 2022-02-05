@@ -34,6 +34,9 @@ public class Timer {
         self.queue = queue
     }
 
+    deinit {
+        stop()
+    }
     
     /// Start the timer running repetitively.
     ///
@@ -60,7 +63,6 @@ public class Timer {
         t.resume()
         timer = t
     }
-    
     
     /// Prevents a timer from firing any more.
     ///

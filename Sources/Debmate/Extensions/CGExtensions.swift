@@ -52,6 +52,10 @@ public extension CGSize {
     func rounded() -> CGSize {
         return CGSize(width: width.rounded(), height: height.rounded())
     }
+    
+    var aspectRatio: Double {
+        height == 0 ? 1 : width / height
+    }
 }
 
 public extension CGPoint {
@@ -131,6 +135,10 @@ public extension CGRect {
         return CGRect(x: origin.x + (width - newWidth)/2,
                       y: origin.y + (height - newHeight)/2,
                       width: newWidth, height: newHeight)
+    }
+    
+    var aspectRatio: Double {
+        size.aspectRatio
     }
 }
 

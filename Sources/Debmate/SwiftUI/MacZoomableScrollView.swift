@@ -850,9 +850,14 @@ fileprivate class DraggableClipView: NSClipView {
     }
     
     var trackingArea : NSTrackingArea?
+
     override func mouseMoved(with event: NSEvent) {
         let pt = coordinator.scrollViewLocation(windowPoint: event.locationInWindow)
         coordinator.editDelegate?.mouseMoved(pt)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        setCursor(to: nil)
     }
 
     override func updateTrackingAreas() {
@@ -860,7 +865,7 @@ fileprivate class DraggableClipView: NSClipView {
             removeTrackingArea(trackingArea!)
         }
         trackingArea = NSTrackingArea(rect: bounds,
-                                      options: [.mouseMoved, .activeInKeyWindow],
+                                      options: [.mouseMoved, .activeInKeyWindow, .mouseEnteredAndExited],
                                       owner: self, userInfo: nil)
         addTrackingArea(trackingArea!)
     }

@@ -13,6 +13,8 @@ public class Timer {
     private let timeoutHandler: () -> ()
     private let queue: DispatchQueue
     
+    public var running: Bool { timer != nil }
+
     /// The supplied handler is called whenever the timer fires.
     ///
     /// - Parameter handler: callback handler

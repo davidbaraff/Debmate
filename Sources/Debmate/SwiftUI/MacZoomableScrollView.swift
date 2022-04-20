@@ -145,6 +145,14 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
         scrollView.backgroundColor = NSColor.clear
         scrollView.hasHorizontalScroller = true
         scrollView.hasVerticalScroller = true
+        scrollView.horizontalScroller?.scrollerStyle = .overlay
+        scrollView.horizontalScroller?.alphaValue = 0
+        scrollView.verticalScroller?.scrollerStyle = .overlay
+        scrollView.verticalScroller?.alphaValue = 0
+        
+        // grr...
+        scrollView.scrollerInsets.right = -999999
+        scrollView.scrollerInsets.bottom = -999999
 
         scrollView.allowsMagnification = false
         scrollView.usesPredominantAxisScrolling = false
@@ -248,8 +256,11 @@ fileprivate class Coordinator: NSObject {
             return cachedScrollViewSize
         }
         
-        let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
-        let scrollerWidth = scrollView.verticalScroller?.bounds.width ?? 0
+        // We're hiding the scrollbars, but the system still thinks they exist, so
+        // using their actual height/width is wrong now; we need to treat them as zero.
+        
+        let scrollerHeight: Double = /* (scrollView.horizontalScroller?.bounds.height ?? 0) */ 0
+        let scrollerWidth: Double = /* (scrollView.verticalScroller?.bounds.width ?? 0) */ 0
         if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
             let delta = CGSize(width: scrollerWidth,
                            height: clipView.bounds.height - (actualWindowHeight - scrollerHeight))
@@ -356,7 +367,8 @@ fileprivate class Coordinator: NSObject {
     }
 
     func computeVisibleRect() -> CGRect {
-        let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
+        // See note in definition of actualScrollViewSize:
+        let scrollerHeight: Double = /*(scrollView.horizontalScroller?.bounds.height ?? 0) */ 0
         var yDelta: Double = 0
         if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
             yDelta = clipView.bounds.height - (actualWindowHeight - scrollerHeight)
@@ -400,7 +412,8 @@ fileprivate class Coordinator: NSObject {
         var p = zoomScale * position - 0.5 * CGPoint(fromSize: actualScrollViewSize)
 
         if let actualWindowHeight = clipView.window?.contentLayoutRect.height {
-            let scrollerHeight = scrollView.horizontalScroller?.bounds.height ?? 0
+            // See note in definition of actualScrollViewSize:
+            let scrollerHeight: Double = /* (scrollView.horizontalScroller?.bounds.height ?? 0) */ 0
             let ydelta = clipView.bounds.height - (actualWindowHeight - scrollerHeight)
             p = CGPoint(p.x, p.y - ydelta)
         }

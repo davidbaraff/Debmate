@@ -380,14 +380,24 @@ fileprivate class Coordinator: NSObject {
         return CGRect(origin: origin, size: size)
     }
 
-    @objc func boundsDidChangeNSView(_ notification: Notification) {
+    private func boundsChanged() {
+        let previousSize = cachedScrollViewSize
         cachedScrollViewSize = nil
+        let curSize = actualScrollViewSize
+        
+        if curSize != previousSize {
+            let zoom = curSize.width / scrollViewState.visibleRect.width
+            scrollCenter(to: scrollViewState.visibleRect.center, zoom: zoom, animated: false, externalControl: true) { }
+        }
         scrollViewStateChanged()
     }
 
+    @objc func boundsDidChangeNSView(_ notification: Notification) {
+        boundsChanged()
+    }
+    
     @objc func boundsDidChange(_ notification: Notification) {
-        cachedScrollViewSize = nil
-        scrollViewStateChanged()
+        boundsChanged()
     }
 
     func scrollViewStateChanged(treatAsExternalControl: Bool = false) {

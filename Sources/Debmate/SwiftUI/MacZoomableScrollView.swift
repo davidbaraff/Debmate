@@ -32,6 +32,7 @@ public protocol ZoomableScrollViewEditDelegate : AnyObject {
     func currentModifiers(modifierFlags: NSEvent.ModifierFlags)
     func keyPress(unicodeScalarValue: UInt32)
     func mouseMoved(_ pt: CGPoint)
+    var viewLocked: Bool { get }
 }
 
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
@@ -748,6 +749,7 @@ fileprivate class DraggableClipView: NSClipView {
     }
 
     override func magnify(with event: NSEvent) {
+        guard !(coordinator.editDelegate?.viewLocked ?? false) else { return }
         let p = zoomAnchorPoint(contentViewPoint:  convert(event.locationInWindow, from: nil))
 
         if event.magnification > 0 {
@@ -759,6 +761,7 @@ fileprivate class DraggableClipView: NSClipView {
     }
     
     override func scrollWheel(with event: NSEvent) {
+        guard !(coordinator.editDelegate?.viewLocked ?? false) else { return }
         guard event.subtype == .mouseEvent else {
             if event.modifierFlags.contains(.shift),
                let cgEvent = event.cgEvent?.copy() {
@@ -804,11 +807,13 @@ fileprivate class DraggableClipView: NSClipView {
     }
     
     func modifyMagnification(_ delta: CGFloat, zoomIn: Bool, centeredAt p: CGPoint) {
+        guard !(coordinator.editDelegate?.viewLocked ?? false) else { return }
         let factor = zoomIn ? (1 + delta) : 1 / (1 + delta)
         coordinator.magnifyBy(factor: factor, centeredAt: p)
     }
     
     override func mouseDragged(with event: NSEvent) {
+        guard !(coordinator.editDelegate?.viewLocked ?? false) else { return }
         guard capturedDown else { return }
         guard let clickPoint = clickPoint,
               let originalOrigin = originalOrigin else {

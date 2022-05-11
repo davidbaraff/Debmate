@@ -96,6 +96,10 @@ public extension ZoomableScrollViewControl {
 }
 
 #if os(iOS) || os(tvOS)
+public protocol ZoomableScrollViewEditDelegate : AnyObject {
+    var viewLocked: Bool { get }
+}
+
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
 /// feature-poor version of ScrollView exposed by SwiftUI.
 ///
@@ -115,6 +119,7 @@ public struct ZoomableScrollView<Content : View> : View {
     let maxZoom: CGFloat
     let configureCallback: ((ZoomableScrollViewControl) ->())?
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
+    let editDelegate: ZoomableScrollViewEditDelegate?
     
     /// Construct a ZoomableScrollView
     /// - Parameters:
@@ -127,18 +132,21 @@ public struct ZoomableScrollView<Content : View> : View {
     public init(contentSize: CGSize,
          minZoom: CGFloat = 1/250,
          maxZoom: CGFloat = 4,
-         editDelegate: Any? = nil,
+         editDelegate: ZoomableScrollViewEditDelegate? = nil,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.contentSize = contentSize
         self.minZoom = minZoom
         self.maxZoom = maxZoom
+        self.editDelegate = editDelegate
         self.configureCallback = configureCallback
         self.content = content
     }
         
     public var body: some View {
-        InternalZoomableScrollView(contentSize: contentSize, minMagnification: minZoom, maxMagnification: maxZoom, configureCallback: configureCallback) {
+        InternalZoomableScrollView(contentSize: contentSize, minMagnification: minZoom, maxMagnification: maxZoom,
+                                   editDelegate: editDelegate,
+                                   configureCallback: configureCallback) {
             (scrollViewState, scrollViewControl) in
             UpdatableContentView(scrollViewState: scrollViewState) {
                self.content(scrollViewState, scrollViewControl)
@@ -189,18 +197,51 @@ fileprivate class TouchSpyingView : UIView {
     }
 }
 
+fileprivate class LockableUIScrollView : UIScrollView, UIGestureRecognizerDelegate {
+    var editDelegate: ZoomableScrollViewEditDelegate?
+
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        !(editDelegate?.viewLocked ?? false)
+    }
+
+
+    /*
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if !(editDelegate?.viewLocked ?? false) {
+            super.touchesBegan(touches, with: event)
+        }
+    }*/
+
+    /*
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+     if editDelegate?.viewLocked ?? false {
+         return nil
+     }
+        return super.hitTest(point, with: event)
+    }*/
+        
+    /*
+    override func touchesShouldBegin(_ touches: Set<UITouch>, with event: UIEvent?, in view: UIView) -> Bool {
+        if editDelegate?.viewLocked ?? false {
+            return false
+        }
+        return super.touchesShouldBegin(touches, with: event, in: view)
+    }*/
+}
+
 fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresentable {
     let content: (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content
     let coordinator: Coordinator
-
+    
     init(contentSize: CGSize,
          minMagnification: CGFloat = 1/250,
          maxMagnification: CGFloat = 4,
+         editDelegate: ZoomableScrollViewEditDelegate?,
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.content = content
 
-        coordinator = Coordinator(contentSize, configureCallback)
+        coordinator = Coordinator(contentSize, configureCallback, editDelegate: editDelegate)
         coordinator.scrollView.minimumZoomScale = minMagnification
         coordinator.scrollView.maximumZoomScale = maxMagnification
     }
@@ -263,7 +304,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         }
     }
     
-    class Coordinator: NSObject, UIScrollViewDelegate {
+    class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
         class Control : ZoomableScrollViewControl {
             weak var coordinator: Coordinator?
 
@@ -282,21 +323,26 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         }
 
         let contentSize: CGSize
+        let editDelegate: ZoomableScrollViewEditDelegate?
         let scrollViewState = ZoomableScrollViewState()
         var scrollViewControl: ZoomableScrollViewControl!
         let offset: CGPoint
 
-        var scrollView = UIScrollView()
+        let scrollView: LockableUIScrollView
         var view: UIView!
         var rotationCancelKey: Cancellable?
         var refreshHelper: RefreshHelper!
         let configureCallback: ((ZoomableScrollViewControl) ->())?
         var recentTouchLocation = CGPoint.zero
         
-        init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?) {
+        
+        init(_ contentSize: CGSize, _ configureCallback: ((ZoomableScrollViewControl) -> ())?, editDelegate: ZoomableScrollViewEditDelegate?) {
             self.contentSize = contentSize
             self.configureCallback = configureCallback
+            self.editDelegate = editDelegate
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
+            self.scrollView = LockableUIScrollView()
+            self.scrollView.editDelegate = editDelegate
             super.init()
             #if os(iOS)
             scrollView.scrollsToTop = false

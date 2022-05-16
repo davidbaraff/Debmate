@@ -5,6 +5,8 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 import Compression
 
@@ -58,4 +60,5 @@ public extension Data {
         }
     }
 }
+#endif
 

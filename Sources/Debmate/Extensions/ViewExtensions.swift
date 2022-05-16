@@ -5,6 +5,7 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
 import SwiftUI
 
 public extension View {
@@ -149,6 +150,4 @@ public extension View {
     #endif
 
 }
-
-
-
+#endif

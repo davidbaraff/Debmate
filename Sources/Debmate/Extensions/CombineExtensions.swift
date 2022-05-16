@@ -5,6 +5,8 @@
 //   Copyright © 2021 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Combine
 import Foundation
 
@@ -74,3 +76,5 @@ public extension Publisher where Failure == Never {
         return self.sink(receiveValue: receiveValue)
     }
 }
+#endif
+

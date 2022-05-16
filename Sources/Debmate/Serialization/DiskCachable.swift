@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !os(Linux)
 import CoreGraphics
+#endif
 
 public protocol DiskCachable {
     func toCachableAny() -> Any

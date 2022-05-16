@@ -5,10 +5,11 @@
 //  Copyright © 2021 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 import DebmateC
 import SwiftUI
-
 
 /// Helper class used in conjunction with ScopedValue.
 public class ScopedValuePrefix : ObservableObject {
@@ -102,3 +103,5 @@ public class ScopedValue<T : Equatable> {
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }
+#endif
+

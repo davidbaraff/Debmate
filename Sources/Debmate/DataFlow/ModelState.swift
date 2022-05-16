@@ -5,6 +5,8 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 import DebmateC
 import Combine
@@ -74,3 +76,5 @@ public class ModelState<T : ObservableObject> {
         primaryCancellable = value.objectWillChange.sink { [weak self] _ in self?.refreshHelper.updateNeeded() }
     }
 }
+#endif
+

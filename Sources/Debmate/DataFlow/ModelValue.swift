@@ -5,6 +5,7 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 import DebmateC
 import Combine
@@ -48,3 +49,5 @@ public class ModelValue<T : Equatable> : ObservableObject {
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }
+#endif
+

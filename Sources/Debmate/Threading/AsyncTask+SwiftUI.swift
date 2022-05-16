@@ -5,6 +5,7 @@
 //  Copyright © 2021 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 import Combine
 import SwiftUI
@@ -142,4 +143,4 @@ public class GUIAsyncTaskWatcher : ObservableObject {
         }
     }
 }
-
+#endif

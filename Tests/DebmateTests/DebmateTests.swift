@@ -1,8 +1,11 @@
 import XCTest
 @testable import Debmate
+#if !os(Linux)
 @testable import DebmateC
+#endif
 
 final class DebmateTests: XCTestCase {
+    #if !os(Linux)
     func testMD5() {
         XCTAssertEqual(Util.md5Digest(""), "d41d8cd98f00b204e9800998ecf8427e")
         XCTAssertEqual(Util.md5Digest("deb"), "38db7ce1861ee11b6a231c764662b68a")
@@ -10,12 +13,15 @@ final class DebmateTests: XCTestCase {
         XCTAssertEqual(Util.md5Digest(Data()), "d41d8cd98f00b204e9800998ecf8427e")
         XCTAssertEqual(Util.md5Digest("deb".data(using: .utf8)!), "38db7ce1861ee11b6a231c764662b68a")
     }
+    #endif
 
+    #if !os(Linux)
     func testExceptionCatching() {
         var setMe = ""
         XCTAssert(Debmate_CatchException( {  setMe = "xyzzy" }))
         XCTAssertEqual(setMe, "xyzzy")
     }
+    #endif
     
     func testStringExtensions() {
         XCTAssert(" abc ".trimmed == "abc")
@@ -58,6 +64,7 @@ final class DebmateTests: XCTestCase {
         XCTAssertEqual(v2, 18)
     }
     
+    #if !os(Linux)
     func testModelData() {
         let m1 = ModelData(UUID().uuidString, defaultValue: 13)
         XCTAssert(m1.value == 13)
@@ -118,11 +125,13 @@ final class DebmateTests: XCTestCase {
         m1.value = 22
         XCTAssert(nvalue == 21)
     }
+    #endif
 
-    /*
     static var allTests = [
-        ("testMD5", testMD5),
-        ("testStringExtensions", testStringExtensions),        ("testExceptionCatching", testExceptionCatching)
-    ]*/
+        ("testLnotices", testLnotices),
+        //("testMD5", testMD5),
+        //("testStringExtensions", testStringExtensions),
+        //("testExceptionCatching", testExceptionCatching)
+    ]
     
 }

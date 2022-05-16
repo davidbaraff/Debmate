@@ -5,17 +5,23 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
-import SystemConfiguration
 import Foundation
+
+#if os(Linux)
+import OpenCombineShim
+#else
+import SystemConfiguration
 import Combine
+#endif
 
-
+#if !os(Linux)
 fileprivate func callback(reachability :SCNetworkReachability, flags: SCNetworkReachabilityFlags, info: UnsafeMutableRawPointer?) {
     guard let info = info else { return }
     
     let reachability = Unmanaged<Reachability>.fromOpaque(info).takeUnretainedValue()
     reachability.reachabilityChanged()
 }
+#endif
 
 /// A class containing a publisher that monitors changes in network reachability for a particular host.
 public class Reachability {
@@ -33,12 +39,13 @@ public class Reachability {
         publisher.value
     }
 
+    #if !os(Linux)
     let connectionTestPublisher: (() -> AnyPublisher<Bool, Error>)
     var reachabilityRef: SCNetworkReachability!
-    let reachabilitySerialQueue = DispatchQueue(label: "com.debmate.reachability")
     var recheckScheduled = false
+    let reachabilitySerialQueue = DispatchQueue(label: "com.debmate.reachability")
+    #endif
 
-    
     /// Construct a new instance.
     /// - Parameters:
     ///   - hostName: host to be contacted
@@ -46,10 +53,13 @@ public class Reachability {
     ///   - connectionTestPublisher: a publisher that yields if the host can be contacted or not
     public init(hostName: String, initialState: Bool, connectionTestPublisher:  @escaping (() -> AnyPublisher<Bool, Error>))  {
         self.hostName = hostName
+        #if !os(Linux)
         self.connectionTestPublisher = connectionTestPublisher
+        #endif
         self.publisher = CurrentValueSubject(initialState)
         self.onChangePublisher = PassthroughSubject()
 
+        #if !os(Linux)
         guard let rref = SCNetworkReachabilityCreateWithName(nil, hostName) else {
             fatalErrorForCrashReport("Failed to start reachability service for \(hostName)")
         }
@@ -62,12 +72,15 @@ public class Reachability {
             !SCNetworkReachabilitySetDispatchQueue(reachabilityRef, reachabilitySerialQueue) {
             fatalErrorForCrashReport("Failed to start reachability service")
         }
-        
+
         reachabilitySerialQueue.async {
             self.reachabilityChanged()
         }
+
+        #endif
     }
 
+    #if !os(Linux)
     deinit {
         SCNetworkReachabilitySetCallback(reachabilityRef, nil, nil)
         SCNetworkReachabilitySetDispatchQueue(reachabilityRef, nil)
@@ -99,4 +112,5 @@ public class Reachability {
             }, receiveValue: { _ in () })
         }
     }
+    #endif
 }

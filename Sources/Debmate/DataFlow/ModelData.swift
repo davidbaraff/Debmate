@@ -5,6 +5,8 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 import DebmateC
 
@@ -198,3 +200,5 @@ public class ModelData<T : Equatable> {
         }
     }
 }
+#endif
+

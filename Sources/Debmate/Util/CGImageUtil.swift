@@ -5,6 +5,8 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 import CoreGraphics
 import ImageIO
@@ -234,6 +236,4 @@ extension Util {
         #endif
     }
 }
-
-
-
+#endif

@@ -3,5 +3,6 @@ import XCTest
 import DebmateTests
 
 var tests = [XCTestCaseEntry]()
-tests += DebmateTests.allTests()
+tests += DebmateTests.__allTests()
+
 XCTMain(tests)

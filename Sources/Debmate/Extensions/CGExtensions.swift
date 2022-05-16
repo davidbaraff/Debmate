@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !os(Linux)
 import CoreGraphics
+#endif
 
 public extension CGFloat {
     var roundedInt: Int {
@@ -20,11 +22,13 @@ public extension Double {
     }
 }
 
+#if !os(Linux)
 public extension CGImage {
     var size: CGSize {
         CGSize(self.width, self.height)
     }
 }
+#endif
 
 #if os(iOS) || os(tvOS)
 public extension CGColor {
@@ -222,6 +226,7 @@ public func / (lhs: CGSize, scale: Double) -> CGSize {
     return lhs * (1.0 / scale)
 }
 
+#if !os(Linux)
 public extension CGColor {
     static func fromString(hex: String) -> CGColor {
         var hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -257,4 +262,5 @@ public extension CGColor {
         }
     }
 }
+#endif
 

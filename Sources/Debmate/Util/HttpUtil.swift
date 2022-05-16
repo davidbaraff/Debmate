@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if os(Linux)
+import OpenCombineShim
+#else
 import Combine
+#endif
 
 extension Util {
     /// Watch for a changes in reachability.
@@ -112,6 +116,7 @@ extension Util {
         return nil
     }
     
+    #if !os(Linux)
     /// Make an http request.
     ///
     /// - Parameters:
@@ -142,6 +147,7 @@ extension Util {
             .mapError { $0 }
             .eraseToAnyPublisher()
     }
+    #endif
     
     /*
     static public func makeHttpRequest(host: String, port:Int? = nil, command: String? = nil,
@@ -181,6 +187,7 @@ extension Util {
         return data ?? Data()
   }
  */
+    #if !os(Linux)
     /// Make an http request (DEPRECATED).
     ///
     /// - Parameters:
@@ -223,4 +230,5 @@ extension Util {
         }
         return data
     }
+    #endif
 }

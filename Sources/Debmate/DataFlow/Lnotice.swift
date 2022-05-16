@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if os(Linux)
+import OpenCombineShim
+#else
 import Combine
+#endif
 
 /// Class for holding a set of LnoticeKey<T> objects.
 ///

@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !os(Linux)
 import SwiftUI
+#endif
 
 public extension String {
     /// Return an NSRange that full encompasses the string
@@ -49,6 +51,7 @@ public extension String {
         (self as NSString).deletingPathExtension
     }
     
+    #if !os(Linux)
     func attributedString(withFont font: PlatformFont, color: CGColor? = nil,
                           underLine: Bool = false,
                           alignment: NSTextAlignment? = nil) -> NSAttributedString {
@@ -80,11 +83,14 @@ public extension String {
         ma.setAttributes(attrs, range: ma.fullRange)
         return ma
     }
+    #endif
 }
 
+#if !os(Linux)
 public extension NSAttributedString {
     var fullRange: NSRange {
         return NSRange(location: 0, length: length)
     }
 }
+#endif
 

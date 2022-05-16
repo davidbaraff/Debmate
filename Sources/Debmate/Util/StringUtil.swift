@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if !os(Linux)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 fileprivate let regex = try! NSRegularExpression(pattern: "([0-9]+)|([^0-9]+)")
 fileprivate func splitIntoWords(_ s: String) -> [String] {

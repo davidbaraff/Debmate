@@ -5,6 +5,7 @@
 //  Copyright © 2021 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 import CoreGraphics
 import SwiftUI
@@ -18,3 +19,5 @@ public extension Image {
     #endif
     }
 }
+#endif
+

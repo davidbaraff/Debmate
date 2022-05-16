@@ -5,6 +5,8 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
+
 import Foundation
 import CoreGraphics
 import AVKit
@@ -75,3 +77,5 @@ extension Util {
         }
     }
 }
+#endif
+

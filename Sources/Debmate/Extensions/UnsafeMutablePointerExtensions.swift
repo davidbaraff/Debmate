@@ -5,6 +5,7 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 import Compression
 
@@ -22,3 +23,5 @@ extension UnsafeMutablePointer where Pointee == UInt8 {
         }
     }
 }
+#endif
+

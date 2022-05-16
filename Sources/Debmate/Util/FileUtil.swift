@@ -130,6 +130,7 @@ extension Util {
         return false
     }
     
+    #if !os(Linux)
     /// Return size of file.
     public static func fileSize(url: URL) -> UInt64? {
         if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary {
@@ -137,7 +138,9 @@ extension Util {
         }
         return nil
     }
+    #endif
     
+    #if !os(Linux)
     /// Return the creation time of a file, in seconds.
     public static func fileCreationTime(url: URL) -> Double? {
         if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary {
@@ -145,6 +148,7 @@ extension Util {
         }
         return nil
     }
+    #endif
     
     /// Compute cache file location for an asset based on md5 checksum.
     ///
@@ -242,7 +246,7 @@ extension Util {
                                  errorHandler: ((String) -> ())? = nil) -> Bool where T : Encodable {
         do {
             ensureDirectoryExists(url: url.deletingLastPathComponent())
-            try JSONEncoder().encode(value).write(to: url, options: .atomicWrite)
+            try JSONEncoder().encode(value).write(to: url, options: .atomic)
             return true
         }
         catch {

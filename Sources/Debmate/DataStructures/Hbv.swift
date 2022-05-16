@@ -5,7 +5,10 @@
 //  Copyright © 2021 David Baraff. All rights reserved.
 //
 
+import Foundation
+#if !os(Linux)
 import CoreGraphics
+#endif
 
 public struct Range2d {
     public let min: CGPoint

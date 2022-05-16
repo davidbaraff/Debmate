@@ -5,9 +5,8 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
-
+#if !os(Linux)
 import Foundation
-
 
 /// Manage a pool of n workers all doing the same thing.
 public class WorkerPool {
@@ -133,6 +132,4 @@ public class WorkerPool {
         }
     }
 }
-
-
-
+#endif

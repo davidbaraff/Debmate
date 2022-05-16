@@ -5,6 +5,7 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 import DebmateC
 import Combine
@@ -73,3 +74,5 @@ public class ModelObjects<SequenceType : Sequence> : ObservableObject where Sequ
         objectWillChange.send()
     }
 }
+#endif
+

@@ -3,11 +3,6 @@
 
 import PackageDescription
 
-let openCombine = Package.Dependency.package(url: "https://github.com/OpenCombine/OpenCombine.git",
-                                           from: "0.13.0")
-let swiftCrypto = Package.Dependency.package(url: "https://github.com/apple/swift-crypto.git",
-                                            "1.0.0" ..< "3.0.0")
-
 let testProgTarget = Target.executableTarget(name: "testProg",
                                             dependencies: ["Debmate"],
                                             path: "Sources/testProg")
@@ -30,6 +25,10 @@ let targets: [Target] = [
         dependencies: ["Debmate"])
 ]
 #else
+let openCombine = Package.Dependency.package(url: "https://github.com/OpenCombine/OpenCombine.git",
+                                           from: "0.13.0")
+let swiftCrypto = Package.Dependency.package(url: "https://github.com/apple/swift-crypto.git",
+                                            "1.0.0" ..< "3.0.0")
 let packageDependencies: [Package.Dependency] = [openCombine, swiftCrypto]
 let libraryTargets = ["Debmate"]
 let targets: [Target] = [
@@ -62,5 +61,5 @@ let package = Package(
             targets: libraryTargets),
     ],
     dependencies: packageDependencies,
-    targets: targets + [testProgTarget]
+    targets: targets /* + [testProgTarget] */
 )

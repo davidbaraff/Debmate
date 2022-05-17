@@ -5,14 +5,17 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
-#if !os(Linux)
-
 import Foundation
+#if !os(Linux)
 import CoreGraphics
 import ImageIO
+#endif
+
 #if os(iOS) || os(tvOS)
 import UIKit
-#else
+#endif
+
+#if os(macOS)
 import AppKit
 #endif
 
@@ -27,6 +30,7 @@ extension Util {
        /// than 12K pixels, consider using the function below (which requires reading the data
        /// from a file).
     static public func resizeCGImage(_ image: CGImage, toSize size: CGSize) -> CGImage? {
+        #if !os(Linux)
         guard let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height),
                                       bitsPerComponent: image.bitsPerComponent, bytesPerRow: 0,
                                       space: image.colorSpace!,
@@ -38,8 +42,12 @@ extension Util {
         context.interpolationQuality = .high
         context.draw(image, in: destRect)
         return context.makeImage()
+        #else
+        return image.resized(toSize: size)
+        #endif
     }
     
+    #if !os(Linux)
     /// Resize an image.
     /// - Parameters:
     ///   - fileURL: a file URL containing the image
@@ -58,7 +66,9 @@ extension Util {
         guard let imageSource = CGImageSourceCreateWithURL(url as NSURL, nil) else { return nil }
         return CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary)
     }
+    #endif
     
+    #if !os(Linux)
     /// Returns an image read from an app's asset catalog.
     /// - Parameter named: The name of the image asset or file.
     /// - Returns: an image
@@ -71,10 +81,12 @@ extension Util {
         return NSImage(named: named)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
         #endif
     }
+    #endif
     
+    #if !os(Linux)
     static let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
     static let colorSpace = CGColorSpaceCreateDeviceRGB()
-
+    #endif
     
     /// Create a standard 32-bit ARGB context.
     /// - Parameters:
@@ -82,6 +94,7 @@ extension Util {
     ///   - height: height in pixels
     ///   - fillColor: optional fill color to fill context upon creation
     static public func createStandardARGBContext(width: Int, height: Int, fillColor: CGColor? = nil) -> CGContext {
+        #if !os(Linux)
         guard let cgContext = CGContext(data: nil, width: width, height: height,
                                         bitsPerComponent: 8, bytesPerRow: 0,
                                         space: colorSpace,
@@ -94,6 +107,9 @@ extension Util {
             cgContext.fill(CGRect(x: 0, y: 0, width: width, height: height))
         }
         return cgContext
+        #else
+        return CGContext()
+        #endif
     }
     
     /// Create a standard 32-bit ARGB context.
@@ -111,6 +127,7 @@ extension Util {
     ///   - size: image size
     /// - Returns: image
     static public func createEmptyImage(width: Int, height: Int, fillColor: CGColor = .clear) -> CGImage {
+        #if !os(Linux)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
         
@@ -133,6 +150,9 @@ extension Util {
         }
 
         return finalImage
+        #else
+        return CGImage(width: width, height: height, fillColor: fillColor)
+        #endif
     }
    
     /// Returns an image scaled to fit within the given size.
@@ -152,6 +172,7 @@ extension Util {
         return resizeCGImage(image, toSize: scale * CGSize(image.width, image.height))
     }
 
+    #if !os(Linux)
     /// Recolor an image
     ///
     /// - Parameters:
@@ -185,7 +206,7 @@ extension Util {
         context.fill(destRect)
         return context.makeImage()
     }
-    
+    #endif
     
     /// Construct a CGImage from Data
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
@@ -193,8 +214,10 @@ extension Util {
     static public func cgImage(from data: Data) -> CGImage? {
         #if os(iOS) || os(tvOS)
         return UIImage(data: data)?.cgImage
-        #else
+        #elseif os(macOS)
         return NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
+        #else
+        return CGImage(from: data)
         #endif
     }
 
@@ -204,8 +227,13 @@ extension Util {
     static public func cgImage(from url: URL) -> CGImage? {
         #if os(iOS) || os(tvOS)
         return UIImage(contentsOfFile: url.path)?.cgImage
-        #else
+        #elseif os(macOS)
         return NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
+        #else
+        if let data = try? Data(contentsOf: url) {
+            return CGImage(from: data)
+        }
+        return nil
         #endif
     }
     
@@ -217,9 +245,11 @@ extension Util {
     static public func jpegData(from cgImage: CGImage, compressionQuality: CGFloat = 1) -> Data? {
         #if os(iOS) || os(tvOS)
         return UIImage(cgImage: cgImage).jpegData(compressionQuality: compressionQuality)
-        #else
+        #elseif os(macOS)
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
         return bitmapRep.representation(using: NSBitmapImageRep.FileType.jpeg, properties: [:])
+        #else
+        return cgImage.jpegData()
         #endif
     }
 
@@ -230,10 +260,11 @@ extension Util {
     static public func pngData(from cgImage: CGImage) -> Data? {
         #if os(iOS) || os(tvOS)
         return UIImage(cgImage: cgImage).pngData()
-        #else
+        #elseif os(macOS)
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
         return bitmapRep.representation(using: NSBitmapImageRep.FileType.png, properties: [:])
+        #else
+        return cgImage.pngData()
         #endif
     }
 }
-#endif

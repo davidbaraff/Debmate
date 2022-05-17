@@ -8,6 +8,7 @@
 import Foundation
 #if os(Linux)
 import OpenCombineShim
+import FoundationNetworking
 #else
 import Combine
 #endif
@@ -100,7 +101,6 @@ extension Util {
         return nil
     }
     
-    #if !os(Linux)
     /// Make an http request.
     ///
     /// - Parameters:
@@ -131,5 +131,4 @@ extension Util {
             .mapError { $0 }
             .eraseToAnyPublisher()
     }
-    #endif
 }

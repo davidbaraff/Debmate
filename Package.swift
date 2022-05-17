@@ -62,5 +62,5 @@ let package = Package(
             targets: libraryTargets),
     ],
     dependencies: packageDependencies,
-    targets: targets /*  + [testProgTarget] */
+    targets: targets + [testProgTarget]
 )

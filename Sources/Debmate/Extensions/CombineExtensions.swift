@@ -5,9 +5,12 @@
 //   Copyright © 2021 David Baraff. All rights reserved.
 //
 
-#if !os(Linux)
-
+#if os(Linux)
+import OpenCombineShim
+#else
 import Combine
+#endif
+
 import Foundation
 
 fileprivate var keepAlives = [Cancellable]()
@@ -76,5 +79,3 @@ public extension Publisher where Failure == Never {
         return self.sink(receiveValue: receiveValue)
     }
 }
-#endif
-

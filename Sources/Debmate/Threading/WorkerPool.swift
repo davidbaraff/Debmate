@@ -5,7 +5,6 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
-#if !os(Linux)
 import Foundation
 
 /// Manage a pool of n workers all doing the same thing.
@@ -85,6 +84,7 @@ public class WorkerPool {
     var upToDate = false
     var upToDateWorkerRunning = false
     
+    #if false
     /// Don't use this API.
     public func ensureUpToDate() {
         lock.sync {
@@ -97,17 +97,20 @@ public class WorkerPool {
             }
         }
     }
+    #endif
     
+    #if false
     /// Don't use this API.
     func upToDateWorker() {
         while true {
             autoreleasepool {
                 if !doWork() {
-                    return
+                    return      // XXX this looks wrong: won't break loop...
                 }
             }
         }
     }
+    #endif
     
     // returns false to signal stopping the worker
     func doWork() -> Bool {
@@ -132,4 +135,3 @@ public class WorkerPool {
         }
     }
 }
-#endif

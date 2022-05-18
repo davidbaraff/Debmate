@@ -30,7 +30,7 @@ let openCombine = Package.Dependency.package(url: "https://github.com/OpenCombin
 let swiftCrypto = Package.Dependency.package(url: "https://github.com/apple/swift-crypto.git",
                                             "1.0.0" ..< "3.0.0")
 let packageDependencies: [Package.Dependency] = [openCombine, swiftCrypto]
-let libraryTargets = ["Debmate"]
+let libraryTargets = ["Debmate", "CoreGraphics"]
 let targets: [Target] = [
     .target(
         name: "Debmate",
@@ -43,6 +43,10 @@ let targets: [Target] = [
         exclude: ["Views_and_VCs",
                   "SwiftUI"],
         resources: [.process("Resources")]),
+    .target(
+	name: "CoreGraphics",
+	dependencies: [],
+	path: "Sources/CoreGraphics"),
     .testTarget(
         name: "DebmateTests",
         dependencies: ["Debmate"])

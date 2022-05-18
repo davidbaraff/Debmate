@@ -172,7 +172,6 @@ extension Util {
         return resizeCGImage(image, toSize: scale * CGSize(image.width, image.height))
     }
 
-    #if !os(Linux)
     /// Recolor an image
     ///
     /// - Parameters:
@@ -182,6 +181,7 @@ extension Util {
     ///
     /// If there is an issue, the original image is returned.
     static public func tintedImage(_ image: CGImage, tint: CGColor) -> CGImage? {
+        #if !os(Linux)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
         guard let context = CGContext(data: nil, width: image.width, height: image.height,
@@ -205,8 +205,10 @@ extension Util {
         context.setFillColor(tint)
         context.fill(destRect)
         return context.makeImage()
+        #else
+        return image
+        #endif
     }
-    #endif
     
     /// Construct a CGImage from Data
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)

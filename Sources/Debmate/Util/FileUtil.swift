@@ -69,6 +69,24 @@ extension Util {
         ensureDirectoryExists(url: fileURL.deletingLastPathComponent())
     }
     
+    
+    /// Rename a file.
+    /// - Parameters:
+    ///   - fromURL: original location
+    ///   - toURL: new location
+    ///
+    ///   On non-linux systems, this is atomic. On linux, this call does (possibly) a delete of srcURL followed by an atomic rename.
+    public static func renameFile(fromURL: URL, toURL: URL) throws {
+        #if !os(Linux)
+       _ = try FileManager.default.replaceItemAt(toURL, withItemAt: fromURL)
+        #else
+        if FileManager.default.fileExists(atPath: toURL.path) {
+            _ = try FileManager.default.removeItem(at: toURL)
+            _ = try FileManager.default.moveItem(at: fromURL, to: toURL)
+        }
+        #endif
+    }
+    
     /// Compute a file relative path
     /// - Parameters:
     ///   - src: The source file.

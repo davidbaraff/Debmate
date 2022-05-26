@@ -28,6 +28,7 @@ public class GUIAlertWatcher : ObservableObject {
     public enum PopupType {
         case okPopup
         case warningPopup
+        case bottomInfoPopup
     }
     
     /// A grouping structure for the various attributes of an alert.
@@ -144,22 +145,9 @@ public class GUIAlertWatcher : ObservableObject {
     /// This function should be used for a general confirmation that
     /// something succeeded.
     public func okPopup(_ title: String, duration: Double = 2.0) {
-        popupUniqueID += 1
-        popupVisible = true
-        popupMessage = title
-        popupDuration = duration
-        popupType = .okPopup
-        
-        let popupID = popupUniqueID
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-            if popupID == self.popupUniqueID {
-                self.popupVisible = false
-                self.objectWillChange.send()
-            }
-        }
-        objectWillChange.send()
+        showPopup(.okPopup, title, duration)
     }
-    
+
     /// Create a warning popup.
     /// - Parameters:
     ///   - title: Short message
@@ -167,24 +155,20 @@ public class GUIAlertWatcher : ObservableObject {
     ///
     /// This function should be used for non-modal warning that doesn't require a response.
     public func warningPopup(_ title: String, duration: Double? = 2.0) {
-        popupUniqueID += 1
-        popupVisible = true
-        popupMessage = title
-        popupDuration = duration
-        popupType = .warningPopup
-        
-        let popupID = popupUniqueID
-        if let duration = duration {
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [self] in
-                if popupID == popupUniqueID {
-                    popupVisible = false
-                    objectWillChange.send()
-                }
-            }
-        }
-        objectWillChange.send()
+        showPopup(.warningPopup, title, duration)
     }
     
+    /// Create a popup which goes away on its own.
+    /// - Parameters:
+    ///   - title: Short message
+    ///   - duration: Duration before fading out
+    ///
+    /// This function should be used for a general confirmation that
+    /// something happened, in a low-keyish sort of way.
+    public func bottomInfoPopup(_ title: String, duration: Double = 2.0) {
+        showPopup(.bottomInfoPopup, title, duration)
+    }
+
     
     /// Hides any popup currently visible.
     public func hidePopup() {
@@ -197,5 +181,24 @@ public class GUIAlertWatcher : ObservableObject {
                 objectWillChange.send()
             }
         }
+    }
+    
+    private func showPopup(_ type: PopupType, _ title: String, _ duration: Double?) {
+        popupUniqueID += 1
+        popupVisible = true
+        popupMessage = title
+        popupDuration = duration
+        popupType = type
+        
+        let popupID = popupUniqueID
+        if let duration = duration {
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+                if popupID == self.popupUniqueID {
+                    self.popupVisible = false
+                    self.objectWillChange.send()
+                }
+            }
+        }
+        objectWillChange.send()
     }
 }

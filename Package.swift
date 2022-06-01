@@ -35,6 +35,8 @@ let targets: [Target] = [
     .target(
         name: "Debmate",
         dependencies:  ["OpenCombine",
+                        "DebmateLinuxQT",
+                        "DebmateLinuxC",
                         .product(name: "OpenCombineFoundation", package: "OpenCombine"),
                         .product(name: "OpenCombineShim", package: "OpenCombine"),
                         .product(name: "OpenCombineDispatch", package: "OpenCombine"),
@@ -44,9 +46,17 @@ let targets: [Target] = [
                   "SwiftUI"],
         resources: [.process("Resources")]),
     .target(
-	name: "CoreGraphics",
-	dependencies: [],
-	path: "Sources/CoreGraphics"),
+        name: "DebmateLinuxQT",
+        dependencies: [],
+        path: "Sources/LinuxQT"),
+    .target(
+        name: "DebmateLinuxC",
+        dependencies: [],
+        path: "Sources/DebmateLinuxC"),
+    .target(
+        name: "CoreGraphics",
+        dependencies: [],
+        path: "Sources/CoreGraphics"),
     .testTarget(
         name: "DebmateTests",
         dependencies: ["Debmate"])

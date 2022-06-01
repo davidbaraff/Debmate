@@ -12,10 +12,6 @@ public extension String {
     var asHexColor: Color {
         Color(hex: self)
     }
-    
-    var asHexCGColor: CGColor {
-        CGColor.fromString(hex: self)
-    }
 }
 
 public extension Color {

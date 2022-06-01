@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if os(Linux)
+import DebmateLinuxC
+#endif
 
 fileprivate func applicationURL(forDirectory dir: FileManager.SearchPathDirectory) -> URL {
     do {
@@ -147,26 +150,32 @@ extension Util {
         }
         return false
     }
-    
-    #if !os(Linux)
+
     /// Return size of file.
     public static func fileSize(url: URL) -> UInt64? {
+        #if !os(Linux)
         if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary {
             return attrs.fileSize()
         }
         return nil
+        #else
+        let nbytes = linux_file_size(url.path)
+        return nbytes >= 0 ? UInt64(nbytes) : nil
+        #endif
     }
-    #endif
     
-    #if !os(Linux)
     /// Return the creation time of a file, in seconds.
     public static func fileCreationTime(url: URL) -> Double? {
+        #if !os(Linux)
         if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary {
             return attrs.fileCreationDate()?.timeIntervalSince1970
         }
         return nil
+        #else
+        let mtime = linux_file_mtime(url.path)
+        return mtime > 0 ? Double(mtime) : nil
+        #endif
     }
-    #endif
     
     /// Compute cache file location for an asset based on md5 checksum.
     ///

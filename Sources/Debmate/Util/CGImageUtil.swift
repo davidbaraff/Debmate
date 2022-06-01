@@ -108,7 +108,7 @@ extension Util {
         }
         return cgContext
         #else
-        return CGContext()
+        return CGContext(width: width, height: height)
         #endif
     }
     
@@ -206,7 +206,7 @@ extension Util {
         context.fill(destRect)
         return context.makeImage()
         #else
-        return image
+        return image.tinted(tint)
         #endif
     }
     

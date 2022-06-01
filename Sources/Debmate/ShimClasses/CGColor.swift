@@ -9,6 +9,13 @@
 
 import Foundation
 final public class CGColor {
+    static public let red = CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1)
+    static public let blue = CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1)
+    static public let green = CGColor(srgbRed: 0, green: 1, blue: 0, alpha: 1)
+    static public let white = CGColor(gray: 1, alpha: 1)
+    static public let black = CGColor(gray: 0, alpha: 1)
+
+
     public init(srgbRed red: Double, green: Double, blue: Double, alpha: Double) {
         self.red = red
         self.green = green

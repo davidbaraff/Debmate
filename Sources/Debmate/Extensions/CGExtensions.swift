@@ -10,6 +10,12 @@ import Foundation
 import CoreGraphics
 #endif
 
+public extension String {
+    var asHexCGColor: CGColor {
+        CGColor.fromString(hex: self)
+    }
+}
+
 public extension CGFloat {
     var roundedInt: Int {
         Int(self.rounded())
@@ -259,3 +265,16 @@ public extension CGColor {
         }
     }
 }
+
+#if !os(Linux)
+public extension CGContext {
+    static let pi2 = 2 * Double.pi
+
+    func drawFilledCircle(center: CGPoint, radius: Double) {
+        self.beginPath()
+        self.addArc(center: center, radius: radius, startAngle: 0, endAngle: Self.pi2, clockwise: true)
+        self.fillPath()
+    }
+}
+#endif
+

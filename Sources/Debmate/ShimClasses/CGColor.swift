@@ -31,10 +31,10 @@ final public class CGColor {
         [red, green, blue, alpha]
     }
     
-    let red: Double
-    let green: Double
-    let blue: Double
-    let alpha: Double
+    public let red: Double
+    public let green: Double
+    public let blue: Double
+    public let alpha: Double
 }
 
 #endif

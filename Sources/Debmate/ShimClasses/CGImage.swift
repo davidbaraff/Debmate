@@ -11,7 +11,7 @@ import DebmateLinuxQT
 
 import Foundation
 final public class CGImage {
-    let qImagePtr: UnsafeRawPointer
+    public let qImagePtr: UnsafeRawPointer
 
     public init(width: Int, height: Int) {
         guard let imagePtr = linuxQT_empty_image(Int32(width), Int32(height)) else {

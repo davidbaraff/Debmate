@@ -54,7 +54,7 @@ final public class CGContext {
     public private(set) var fillColor = CGColor.clear
     public private(set) var alpha: Double = 1
     public private(set) var lineWidth: Double = 1
-    public private(set) var strokeColor = CGColor.red
+    public private(set) var strokeColor = CGColor.redColor
 
     public func setFillColor(_ color: CGColor) {
         fillColor = color

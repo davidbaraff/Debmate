@@ -3,9 +3,11 @@
 
 import PackageDescription
 
+/*
 let testProgTarget = Target.executableTarget(name: "testProg",
                                             dependencies: ["Debmate"],
                                             path: "Sources/testProg")
+*/
 
 #if !os(Linux)
 let packageDependencies: [Package.Dependency] = []
@@ -48,7 +50,7 @@ let targets: [Target] = [
     .target(
         name: "DebmateLinuxQT",
         dependencies: [],
-        path: "Sources/LinuxQT"),
+        path: "Sources/DebmateLinuxQT"),
     .target(
         name: "DebmateLinuxC",
         dependencies: [],

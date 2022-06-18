@@ -81,7 +81,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                     popupContent.padding([.leading, .trailing, .bottom], 8)
                 }.frame(width: parentWidthFraction * parentWidth)
                  .fixedSize().background(Color.white).cornerRadius(12)
-                 .shadow(color: shadowColor ?? .clear, radius: 5, x: 10, y: 10)
+                 .shadow(color: shadowColor ?? .clear, radius: 5, x: 0, y: 0)
                  .onAppear {
                      blurRadius = 0
                      withAnimation {

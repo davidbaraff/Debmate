@@ -3,6 +3,12 @@
 
 import PackageDescription
 
+#if os(watchOS)
+let guiExclusions = ["Views_and_VCs", "SwiftUI"]
+#else
+let guiExclusions: [String] = []
+#endif
+
 /*
 let testProgTarget = Target.executableTarget(name: "testProg",
                                             dependencies: ["Debmate"],
@@ -21,6 +27,7 @@ let targets: [Target] = [
         name: "Debmate",
         dependencies: ["DebmateC"],
         path: "Sources/Debmate",
+        exclude: guiExclusions,
         resources: [.process("Resources")]),
     .testTarget(
         name: "DebmateTests",
@@ -69,6 +76,7 @@ let package = Package(
     name: "Debmate",
     platforms: [.iOS(.v13),
                 .tvOS(.v14),
+                .watchOS(.v6),
                 .macOS(.v10_15)],
     products: [
         .library(

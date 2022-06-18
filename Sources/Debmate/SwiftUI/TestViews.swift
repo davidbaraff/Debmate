@@ -10,6 +10,7 @@ import SwiftUI
 
 fileprivate var ctr = 0
 
+#if !os(watchOS)
 public enum TestViews {
     static public func nextCtr(msg: String? = nil) -> String {
         ctr += 1
@@ -49,5 +50,6 @@ public enum TestViews {
             }
         }
     }
-
 }
+#endif
+

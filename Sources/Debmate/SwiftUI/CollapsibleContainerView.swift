@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 
+#if !os(watchOS)
+
 #if os(macOS)
 fileprivate let systemBlue = Color.primary
 #else
@@ -77,3 +79,6 @@ public struct CollapsibleContainerView<Label, Content> : View where Label : View
          }
     }
 }
+
+#endif
+

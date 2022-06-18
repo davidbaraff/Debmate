@@ -34,7 +34,7 @@ public extension CGImage {
     }
 }
 
-#if os(iOS) || os(tvOS) || os(Linux)
+#if os(iOS) || os(tvOS) || os(Linux) || os(watchOS)
 public extension CGColor {
     static let clear = CGColor(gray: 0, alpha: 0)
 }

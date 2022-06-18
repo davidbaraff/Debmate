@@ -10,11 +10,13 @@ import Foundation
 #if os(Linux)
 import OpenCombineShim
 #else
+#if !os(watchOS)
 import SystemConfiguration
+#endif
 import Combine
 #endif
 
-#if !os(Linux)
+#if !os(Linux) && !os(watchOS)
 fileprivate func callback(reachability :SCNetworkReachability, flags: SCNetworkReachabilityFlags, info: UnsafeMutableRawPointer?) {
     guard let info = info else { return }
     
@@ -39,7 +41,7 @@ public class Reachability {
         publisher.value
     }
 
-    #if !os(Linux)
+    #if !os(Linux) && !os(watchOS)
     let connectionTestPublisher: (() -> AnyPublisher<Bool, Error>)
     var reachabilityRef: SCNetworkReachability!
     var recheckScheduled = false
@@ -53,13 +55,13 @@ public class Reachability {
     ///   - connectionTestPublisher: a publisher that yields if the host can be contacted or not
     public init(hostName: String, initialState: Bool, connectionTestPublisher:  @escaping (() -> AnyPublisher<Bool, Error>))  {
         self.hostName = hostName
-        #if !os(Linux)
+        #if !os(Linux) && !os(watchOS)
         self.connectionTestPublisher = connectionTestPublisher
         #endif
         self.publisher = CurrentValueSubject(initialState)
         self.onChangePublisher = PassthroughSubject()
 
-        #if !os(Linux)
+        #if !os(Linux) && !os(watchOS)
         guard let rref = SCNetworkReachabilityCreateWithName(nil, hostName) else {
             fatalErrorForCrashReport("Failed to start reachability service for \(hostName)")
         }
@@ -80,7 +82,7 @@ public class Reachability {
         #endif
     }
 
-    #if !os(Linux)
+    #if !os(Linux) && !os(watchOS)
     deinit {
         SCNetworkReachabilitySetCallback(reachabilityRef, nil, nil)
         SCNetworkReachabilitySetDispatchQueue(reachabilityRef, nil)

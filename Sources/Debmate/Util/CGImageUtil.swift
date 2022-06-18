@@ -11,7 +11,7 @@ import CoreGraphics
 import ImageIO
 #endif
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(watchOS)
 import UIKit
 #endif
 
@@ -75,7 +75,7 @@ extension Util {
     ///
     /// See the documentation for UIImage(named: ) or NSImage(named: ) as appropriate.
     static public func cgImage(named: String) -> CGImage? {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS) || os(tvOS) || os(watchOS)
         return UIImage(named: named)?.cgImage
         #else
         return NSImage(named: named)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
@@ -214,7 +214,7 @@ extension Util {
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
     /// - Returns: cgImage on success
     static public func cgImage(from data: Data) -> CGImage? {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS) || os(tvOS) || os(watchOS)
         return UIImage(data: data)?.cgImage
         #elseif os(macOS)
         return NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
@@ -227,7 +227,7 @@ extension Util {
     /// - Parameter data: data in some supported format (e.g. jpeg, PNG)
     /// - Returns: cgImage on success
     static public func cgImage(from url: URL) -> CGImage? {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS) || os(tvOS) || os(watchOS)
         return UIImage(contentsOfFile: url.path)?.cgImage
         #elseif os(macOS)
         return NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: [:])
@@ -245,7 +245,7 @@ extension Util {
     ///   - compressionQuality: 0 is maximally compressed, 1 is maximum image quality
     /// - Returns: <#description#>
     static public func jpegData(from cgImage: CGImage, compressionQuality: CGFloat = 1) -> Data? {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS) || os(tvOS) || os(watchOS)
         return UIImage(cgImage: cgImage).jpegData(compressionQuality: compressionQuality)
         #elseif os(macOS)
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
@@ -260,7 +260,7 @@ extension Util {
     ///   - from: input cgImage
     /// - Returns: <#description#>
     static public func pngData(from cgImage: CGImage) -> Data? {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS) || os(tvOS) || os(watchOS)
         return UIImage(cgImage: cgImage).pngData()
         #elseif os(macOS)
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)

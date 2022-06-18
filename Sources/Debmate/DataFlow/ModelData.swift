@@ -5,7 +5,7 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
-#if !os(Linux)
+#if !os(Linux) && !os(watchOS)
 
 import Foundation
 import DebmateC

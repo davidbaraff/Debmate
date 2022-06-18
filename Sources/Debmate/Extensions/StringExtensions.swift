@@ -51,7 +51,7 @@ public extension String {
         (self as NSString).deletingPathExtension
     }
     
-    #if !os(Linux)
+    #if !os(Linux) && !os(watchOS)
     func attributedString(withFont font: PlatformFont, color: CGColor? = nil,
                           underLine: Bool = false,
                           alignment: NSTextAlignment? = nil) -> NSAttributedString {

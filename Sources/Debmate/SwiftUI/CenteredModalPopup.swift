@@ -68,12 +68,12 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                             Text(closeText)
                         }
                         Spacer()
-                        if acceptText != nil {
+                        if let acceptText = acceptText {
                             Button(action: {
                                 self.acceptAction?()
                                 self.isPresented = false
                             }) {
-                                Text(acceptText ?? "Done")
+                                Text(acceptText)
                             }
                         }
                     }.padding([.top], 8).padding([.leading, .trailing], 12)

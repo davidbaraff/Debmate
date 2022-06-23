@@ -79,6 +79,7 @@ public extension NSFont {
     /// of self so that the font rescales to pointSize.
     func standardlyScaled(to pointSize: Double) -> NSFont {
         if let familyName = self.familyName,
+           pointSize > 100 ||
            familyName.lowercased().contains("emoji") {
             return NSFont(descriptor: self.fontDescriptor, size: CGFloat(pointSize))!
         }

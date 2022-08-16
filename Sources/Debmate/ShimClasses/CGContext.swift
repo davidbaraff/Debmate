@@ -94,8 +94,12 @@ final public class CGContext {
     }
     
     public func stroke(_ rect: CGRect) {
+        stroke(rect, width: lineWidth)
+    }
+
+    public func stroke(_ rect: CGRect, width: Double) {
         let intRect = rect.intRect
-        linuxQT_image_stroke(cgImage.qImagePtr, lineWidth,
+        linuxQT_image_stroke(cgImage.qImagePtr, width,
                            strokeColor.redInt32, strokeColor.greenInt32, strokeColor.blueInt32, strokeColor.alphaInt32,
                            alpha,
                            intRect.x, intRect.y, intRect.width, intRect.height)

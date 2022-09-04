@@ -349,6 +349,9 @@ fileprivate class Coordinator: NSObject {
         let newContentOrigin = cp * (1 - invF) + currentOrigin() * invF
 
         clipView.currentMagnification = newMagnification
+        if newContentOrigin.x.isNaN || newContentOrigin.y.isNaN {
+            fatalErrorForCrashReport("found nans: factor = \(factor), cp = \(cp), curOrig = \(currentOrigin), curMag = \(clipView.currentMagnification)")
+        }
         scrollOrigin(to: newContentOrigin)
     }
 
@@ -386,6 +389,11 @@ fileprivate class Coordinator: NSObject {
         cachedScrollViewSize = nil
         let curSize = actualScrollViewSize
         
+        guard curSize != .zero,
+              scrollViewState.visibleRect.size != .zero else {
+            return
+        }
+        
         if curSize != previousSize {
             let zoom = curSize.width / scrollViewState.visibleRect.width
             scrollCenter(to: scrollViewState.visibleRect.center, zoom: zoom, animated: false, externalControl: true) { }
@@ -419,6 +427,10 @@ fileprivate class Coordinator: NSObject {
     
     func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false,
                       completion: (() -> ())?) {
+        if position.x.isNaN || position.y.isNaN || (zoom ?? 1).isNaN {
+            fatalErrorForCrashReport("found nans in position")
+        }
+
         let zoomScale = max(min(zoom ?? clipView.currentMagnification, maxMagnification), minMagnification)
         var p = zoomScale * position - 0.5 * CGPoint(fromSize: actualScrollViewSize)
 
@@ -429,6 +441,10 @@ fileprivate class Coordinator: NSObject {
             p = CGPoint(p.x, p.y - ydelta)
         }
         
+        if p.x.isNaN || p.y.isNaN {
+            fatalErrorForCrashReport("found p with nans, \(p)")
+        }
+
         if (animated && !externalControl) || inConfigureCallback {
             NSAnimationContext.runAnimationGroup {
                 $0.duration = inConfigureCallback ? 0.01 : animationDuration

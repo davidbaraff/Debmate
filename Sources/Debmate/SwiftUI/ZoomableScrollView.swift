@@ -19,6 +19,8 @@ public class ZoomableScrollViewState : ObservableObject{
     @Published public var zoomScale = CGFloat(1)
     @Published public var invZoomScale = CGFloat(1)
     @Published public var visibleRect = CGRect.zero
+    @Published public var trueVisibleRect = CGRect.zero
+    
     public var externalControl = false
 
     public var contentOffset: CGPoint {
@@ -378,7 +380,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
 
         var previousVisibleRect: CGRect?
         
-        func computeVisibleRect() -> CGRect {
+        func computeVisibleRect() -> (CGRect, CGRect) {
             let invZoom = 1.0 / scrollView.zoomScale
             let origin = scrollView.contentOffset * invZoom
             let size = scrollView.bounds.size * invZoom
@@ -388,6 +390,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             var y0 = origin.y
             var y1 = origin.y + size.height
             
+            let trueVisibleRect = CGRect(origin: origin, size: size)
+
             if inExternalControl && isAnimating {
                 if let previousVisibleRect = previousVisibleRect {
                     if previousVisibleRect.minX < x0 {
@@ -409,16 +413,16 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
                     y0 -= 0.2 * size.height
                     y1 += 0.2 * size.height
                 }
-                return CGRect(x: x0, y: y0, width: x1 - x0, height: y1 - y0)
+                return (CGRect(x: x0, y: y0, width: x1 - x0, height: y1 - y0), trueVisibleRect)
             }
             else {
-                return CGRect(origin: origin, size: size)
+                return (trueVisibleRect, trueVisibleRect)
             }
         }
  
         func scrollViewStateChanged(treatAsExternal: Bool = false) {
             guard scrollViewState.valid else { return }
-            scrollViewState.visibleRect = computeVisibleRect()
+            (scrollViewState.visibleRect, scrollViewState.trueVisibleRect) = computeVisibleRect()
             scrollViewState.zoomScale = scrollView.zoomScale
             scrollViewState.invZoomScale = 1.0 / scrollView.zoomScale
             scrollViewState.externalControl = inExternalControl || treatAsExternal

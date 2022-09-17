@@ -414,6 +414,7 @@ fileprivate class Coordinator: NSObject {
         
         guard scrollViewState.valid else { return }
         scrollViewState.visibleRect = computeVisibleRect()
+        scrollViewState.trueVisibleRect = scrollViewState.visibleRect
         scrollViewState.zoomScale = clipView.currentMagnification
         scrollViewState.invZoomScale = 1.0 / clipView.currentMagnification
         scrollViewState.externalControl = inExternalControl || treatAsExternalControl

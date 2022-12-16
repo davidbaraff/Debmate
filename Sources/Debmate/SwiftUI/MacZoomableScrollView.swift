@@ -33,6 +33,7 @@ public protocol ZoomableScrollViewEditDelegate : AnyObject {
     func keyPress(unicodeScalarValue: UInt32)
     func mouseMoved(_ pt: CGPoint)
     var viewLocked: Bool { get }
+    var rsiMode: Bool { get }
 }
 
 /// A ZoomableScrollView adds zoomability and fine-grain scrolling controls to the currently
@@ -484,6 +485,7 @@ extension NSEvent {
     weak var editDelegate: ZoomableScrollViewEditDelegate?
     
     override var acceptsFirstResponder: Bool { true }
+    var rsiMode: Bool { editDelegate?.rsiMode ?? false }
     
     /*
     @objc
@@ -537,7 +539,7 @@ extension NSEvent {
         
     private func updateCursor() {
         if clipView.spaceDown {
-            if NSEvent.rightButtonDown {
+            if NSEvent.rightButtonDown || (clipView.rsiMode && clipView.rsiZoomActive) {
                 clipView.setCursor(to: clipView.plusCursor)
             }
             else {
@@ -559,7 +561,17 @@ extension NSEvent {
 
     override func keyDown(with event: NSEvent) {
         if event.charactersIgnoringModifiers?.contains(" ") ?? false {
+            if clipView.spaceDown {
+                return
+            }
+
             clipView.spaceDown = true
+
+            if rsiMode {
+                clipView.capturedDown = true
+                clipView.mouseAutoDown(with: event)
+            }
+            
             updateCursor()
         }
 
@@ -577,6 +589,18 @@ extension NSEvent {
 
     override func flagsChanged(with event: NSEvent) {
         clipView.optionDown = event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .option
+        clipView.commandDown = event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command
+        
+        if rsiMode {
+            clipView.spaceDown = clipView.commandDown
+            clipView.rsiZoomActive = clipView.commandDown
+            clipView.capturedDown = clipView.commandDown
+
+            if clipView.commandDown {
+                clipView.mouseAutoDown(with: event)
+            }
+        }
+
         updateCursor()
         editDelegate?.currentModifiers(modifierFlags: event.modifierFlags)
     }
@@ -660,7 +684,9 @@ fileprivate class DraggableClipView: NSClipView {
     private var pushedCursor = false
     var spaceDown = false
     var optionDown = false
+    var commandDown = false
     var capturedDown = false
+    var rsiZoomActive = false
     private var middleButtonDown = false
     private var rightButtonDown = false
     private var mouseDown: Bool { clickPoint != nil }
@@ -744,6 +770,17 @@ fileprivate class DraggableClipView: NSClipView {
 
     override func otherMouseDragged(with event: NSEvent) {
         mouseDragged(with: event)
+    }
+
+    func mouseAutoDown(with event: NSEvent) {
+        guard capturedDown else { return }
+        middleButtonDown = false
+        rightButtonDown = false
+
+        lastZoomPoint = convert(event.locationInWindow, from: nil)
+        clickPoint = event.locationInWindow
+        originalOrigin = coordinator.currentOrigin()
+        zoomAnchorPoint = zoomAnchorPoint(contentViewPoint: lastZoomPoint)
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -837,7 +874,7 @@ fileprivate class DraggableClipView: NSClipView {
             return
         }
 
-        if rightButtonDown {
+        if rightButtonDown || (rsiMode && rsiZoomActive) {
             if spaceDown || optionDown {
                 let xDelta = event.locationInWindow.x - clickPoint.x
                 self.clickPoint = event.locationInWindow
@@ -895,8 +932,16 @@ fileprivate class DraggableClipView: NSClipView {
     }
     
     var trackingArea : NSTrackingArea?
+    var rsiMode: Bool {  coordinator.editDelegate?.rsiMode ?? false }
 
     override func mouseMoved(with event: NSEvent) {
+        if rsiMode {
+            if spaceDown {
+                mouseDragged(with: event)
+                return
+            }
+        }
+
         let pt = coordinator.scrollViewLocation(windowPoint: event.locationInWindow)
         coordinator.editDelegate?.mouseMoved(pt)
     }

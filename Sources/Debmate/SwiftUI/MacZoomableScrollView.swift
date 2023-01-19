@@ -486,6 +486,7 @@ extension NSEvent {
     
     override var acceptsFirstResponder: Bool { true }
     var rsiMode: Bool { editDelegate?.rsiMode ?? false }
+    var spaceDownTime: Date?
     
     /*
     @objc
@@ -568,6 +569,16 @@ extension NSEvent {
             clipView.spaceDown = true
 
             if rsiMode {
+                let now = Date()
+                if let spaceDownTime = spaceDownTime,
+                   now.timeIntervalSince(spaceDownTime) < 0.25 {
+                    clipView.rsiZoomActive = true
+                }
+                else {
+                    clipView.rsiZoomActive = false
+                }
+                
+                spaceDownTime = now
                 clipView.capturedDown = true
                 clipView.mouseAutoDown(with: event)
             }
@@ -593,7 +604,7 @@ extension NSEvent {
         
         if rsiMode {
             clipView.spaceDown = clipView.commandDown
-            clipView.rsiZoomActive = clipView.commandDown
+            // clipView.rsiZoomActive = clipView.commandDown
             clipView.capturedDown = clipView.commandDown
 
             if clipView.commandDown {

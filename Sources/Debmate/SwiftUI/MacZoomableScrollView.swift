@@ -486,7 +486,6 @@ extension NSEvent {
     
     override var acceptsFirstResponder: Bool { true }
     var rsiMode: Bool { editDelegate?.rsiMode ?? false }
-    var spaceDownTime: Date?
     
     /*
     @objc
@@ -567,18 +566,25 @@ extension NSEvent {
             }
 
             clipView.spaceDown = true
+            clipView.rsiZoomActive = false
 
             if rsiMode {
-                let now = Date()
-                if let spaceDownTime = spaceDownTime,
-                   now.timeIntervalSince(spaceDownTime) < 0.25 {
-                    clipView.rsiZoomActive = true
-                }
-                else {
-                    clipView.rsiZoomActive = false
-                }
-                
-                spaceDownTime = now
+                // clipView.rsiZoomActive = false
+                clipView.capturedDown = true
+                clipView.mouseAutoDown(with: event)
+            }
+            
+            updateCursor()
+        }
+        if rsiMode && event.charactersIgnoringModifiers?.contains("z") ?? false {
+            if clipView.zoomDown {
+                return
+            }
+
+            clipView.zoomDown = true
+            clipView.rsiZoomActive.toggle()
+
+            if clipView.spaceDown {
                 clipView.capturedDown = true
                 clipView.mouseAutoDown(with: event)
             }
@@ -596,12 +602,22 @@ extension NSEvent {
             clipView.spaceDown = false
             updateCursor()
         }
+        if event.charactersIgnoringModifiers?.contains("z") ?? false {
+            clipView.zoomDown = false
+            /*
+            clipView.rsiZoomActive = false
+            if clipView.spaceDown {
+                clipView.mouseAutoDown(with: event)
+            }
+            updateCursor() */
+        }
     }
 
     override func flagsChanged(with event: NSEvent) {
         clipView.optionDown = event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .option
         clipView.commandDown = event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command
         
+        /*
         if rsiMode {
             clipView.spaceDown = clipView.commandDown
             // clipView.rsiZoomActive = clipView.commandDown
@@ -610,7 +626,7 @@ extension NSEvent {
             if clipView.commandDown {
                 clipView.mouseAutoDown(with: event)
             }
-        }
+        }*/
 
         updateCursor()
         editDelegate?.currentModifiers(modifierFlags: event.modifierFlags)
@@ -694,6 +710,7 @@ fileprivate class DraggableClipView: NSClipView {
     
     private var pushedCursor = false
     var spaceDown = false
+    var zoomDown = false
     var optionDown = false
     var commandDown = false
     var capturedDown = false

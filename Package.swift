@@ -16,6 +16,7 @@ let testProgTarget = Target.executableTarget(name: "testProg",
 */
 
 #if !os(Linux)
+let libraryType: Product.Library.LibraryType? = nil
 let packageDependencies: [Package.Dependency] = []
 let libraryTargets = ["Debmate", "DebmateC"]
 let targets: [Target] = [
@@ -34,6 +35,7 @@ let targets: [Target] = [
         dependencies: ["Debmate"])
 ]
 #else
+let libraryType: Product.Library.LibraryType = .dynamic
 let openCombine = Package.Dependency.package(url: "https://github.com/OpenCombine/OpenCombine.git",
                                            from: "0.13.0")
 let swiftCrypto = Package.Dependency.package(url: "https://github.com/apple/swift-crypto.git",
@@ -81,7 +83,7 @@ let package = Package(
     products: [
         .library(
             name: "Debmate",
-            type: .dynamic,
+            type: libraryType,
             targets: libraryTargets),
     ],
     dependencies: packageDependencies,

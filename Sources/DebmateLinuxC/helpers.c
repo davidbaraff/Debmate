@@ -29,18 +29,18 @@ int linux_update_mtime(const char* filename, int olderThan) {
     struct stat st;
 
     if (stat(filename, &st) != 0) {
-        return 0;
+        return -1;
     }
 
     int64_t m = st.st_mtime;
     time_t now = time(NULL);
 
     if (now - m < olderThan) {
-        return 1;
+        return 0;
     }
 
     struct utimbuf new_times;
     new_times.actime = st.st_atime;
     new_times.modtime = now;
-    return utime(filename, &new_times) == 0;
+    return utime(filename, &new_times) == 0 ? 1 : -1;
 }

@@ -177,6 +177,40 @@ extension Util {
         #endif
     }
     
+    /// Return the file modification time of a file, in seconds.
+    public static func fileModificationTime(url: URL) -> Double? {
+        #if !os(Linux)
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary {
+            return attrs.fileModificationDate()?.timeIntervalSince1970
+        }
+        return nil
+        #else
+        let mtime = linux_file_mtime(url.path)
+        return mtime > 0 ? Double(mtime) : nil
+        #endif
+    }
+    
+    /// Update the file modification time to the current time, if it is more than whenOlderThan seconds older than the current time.
+    @discardableResult
+    public static func updateFileModificationTime(url: URL, whenOlderThan delta: Int) -> Bool? {
+        #if !os(Linux)
+        guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) as NSDictionary,
+              let mtime = attrs.fileModificationDate()?.timeIntervalSince1970 else {
+            return nil
+        }
+        
+        let now = Date()
+        if (now.timeIntervalSince1970 - mtime).roundedInt < delta {
+            return false
+        }
+
+        return (try? FileManager.default.setAttributes([.modificationDate : now], ofItemAtPath: url.path)) != nil
+        #else
+        let result = linux_update_mtime(url.path, Int32(delta));
+        return result < 0 ? nil : (result > 0)
+        #endif
+    }
+
     /// Compute cache file location for an asset based on md5 checksum.
     ///
     /// - Parameters:

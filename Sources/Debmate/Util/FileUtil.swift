@@ -123,6 +123,21 @@ extension Util {
         return URL(fileURLWithPath: relativeComponents.joined(separator: "/"))
     }
     
+    public static func walkDirectory(url: URL, resourceKeys: [URLResourceKey], fileURLCallback: (URL, URLResourceValues) -> ()) {
+        let keys = Set<URLResourceKey>([.isDirectoryKey] + resourceKeys)
+        guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: Array(keys),
+                                                              options: []) else { return }
+        for case let childURL as URL in enumerator {
+            guard let resourceValues = try? childURL.resourceValues(forKeys: keys),
+                  resourceValues.isDirectory == false else {
+                continue
+            }
+                  
+            fileURLCallback(childURL, resourceValues)
+        }
+    }
+
+    
     /// List contents of directory, handling symlinks
     /// - Parameter url: directory URL
     public static func directoryContents(url: URL) throws -> [URL] {

@@ -10,6 +10,13 @@ import Foundation
 fileprivate var coalesceSet = Set<String>()
 fileprivate var namedTimers = [String : Timer]()
 
+
+/// Sleep (convenience call to Dispatch.usleep).
+/// - Parameter seconds: sleep duration
+public func sleep(seconds: Double) {
+    Dispatch.usleep(useconds_t(1e6 * seconds))
+}
+
 extension Util {
     /// Coalesce invocations of future work into a single execution.
     ///

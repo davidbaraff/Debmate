@@ -95,7 +95,9 @@ extension Util {
     ///   - fillColor: optional fill color to fill context upon creation
     static public func createStandardARGBContext(width: Int, height: Int, fillColor: CGColor? = nil) -> CGContext {
         #if !os(Linux)
-        guard let cgContext = CGContext(data: nil, width: width, height: height,
+        guard let cgContext = CGContext(data: nil,
+                                        width: max(width, 1),
+                                        height: max(height, 1),
                                         bitsPerComponent: 8, bytesPerRow: 0,
                                         space: colorSpace,
                                         bitmapInfo: bitmapInfo.rawValue) else {
@@ -143,7 +145,7 @@ extension Util {
         
         ctx.setBlendMode(.normal)
         ctx.setFillColor(fillColor)
-        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        ctx.fill(CGRect(x: 0, y: 0, width: ctx.width, height: ctx.height))
         
         guard let finalImage = ctx.makeImage() else {
             fatalErrorForCrashReport("ctx.makeImage() failed")

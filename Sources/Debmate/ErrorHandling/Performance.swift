@@ -25,6 +25,7 @@ internal extension Date {
 ///   - msg: Descriptive message printed after block completes.
 ///   - block: code to be timed
 /// - Returns: return value of block
+@discardableResult
 public func timed_execution<T>(_ msg: String, debug: Bool = true, block: () -> T) -> T {
     if !debug {
         return block()
@@ -42,6 +43,7 @@ public func timed_execution<T>(_ msg: String, debug: Bool = true, block: () -> T
 ///   - msg: Descriptive message printed after block completes.
 ///   - block: code to be timed
 /// - Returns: return value of block
+@discardableResult
 public func timed_execution<T>(_ msg: String, debug: Bool = true, block: () throws -> T) throws -> T {
     if !debug {
         return try block()
@@ -51,6 +53,17 @@ public func timed_execution<T>(_ msg: String, debug: Bool = true, block: () thro
     let result = try block()
     print("\(msg): \(now.elapsedTime) seconds")
     return result
+}
+
+/// Time a block of code.
+///
+/// - Parameters:
+///   - block: code to be timed
+/// - Returns: return value of block and time (in seconds) of execution
+public func time_execution<T>(block: () throws -> T) throws -> (T, Double) {
+    let now = Date()
+    let result = try block()
+    return (result, now.elapsedTime)
 }
 
 /// Returns the current time in seconds modulo 100 seconds.

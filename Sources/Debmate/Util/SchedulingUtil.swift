@@ -14,7 +14,9 @@ fileprivate var namedTimers = [String : Timer]()
 /// Sleep (convenience call to Dispatch.usleep).
 /// - Parameter seconds: sleep duration
 public func sleep(seconds: Double) {
+#if !os(Linux)
     Dispatch.usleep(useconds_t(1e6 * seconds))
+#endif
 }
 
 extension Util {

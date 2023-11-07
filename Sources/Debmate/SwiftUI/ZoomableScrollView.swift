@@ -138,7 +138,11 @@ public struct ZoomableScrollView<Content : View> : View {
          configureCallback: ((ZoomableScrollViewControl) ->())? = nil,
          @ViewBuilder content: @escaping (ZoomableScrollViewState, ZoomableScrollViewControl) -> Content) {
         self.contentSize = contentSize
+        #if os(tvOS)
+        self.minZoom = minZoom / 10     // avoid bounce because bouncesZoom appears to be broken...
+        #else
         self.minZoom = minZoom
+        #endif
         self.maxZoom = maxZoom
         self.editDelegate = editDelegate
         self.configureCallback = configureCallback
@@ -246,6 +250,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         coordinator = Coordinator(contentSize, configureCallback, editDelegate: editDelegate)
         coordinator.scrollView.minimumZoomScale = minMagnification
         coordinator.scrollView.maximumZoomScale = maxMagnification
+        coordinator.scrollView.bouncesZoom = false
     }
     
     func makeCoordinator() -> Coordinator {
@@ -344,6 +349,8 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
             self.editDelegate = editDelegate
             self.offset = 0.5 * CGPoint(fromSize: contentSize)
             self.scrollView = LockableUIScrollView()
+            self.scrollView.bounces = false
+            self.scrollView.bouncesZoom = false
             self.scrollView.editDelegate = editDelegate
             super.init()
             #if os(iOS)
@@ -380,51 +387,22 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
 
         var previousVisibleRect: CGRect?
         
-        func computeVisibleRect() -> (CGRect, CGRect) {
-            let invZoom = 1.0 / scrollView.zoomScale
-            let origin = scrollView.contentOffset * invZoom
+        func computeVisibleRect(zoomScale: CGFloat? = nil, contentOffset: CGPoint? = nil) -> CGRect {
+            let invZoom = 1.0 / (zoomScale ?? scrollView.zoomScale)
+            let origin = (contentOffset ?? scrollView.contentOffset) * invZoom
             let size = scrollView.bounds.size * invZoom
-
-            var x0 = origin.x
-            var x1 = origin.x + size.width
-            var y0 = origin.y
-            var y1 = origin.y + size.height
-            
-            let trueVisibleRect = CGRect(origin: origin, size: size)
-
-            if inExternalControl && isAnimating {
-                if let previousVisibleRect = previousVisibleRect {
-                    if previousVisibleRect.minX < x0 {
-                        x0 -= 0.2 * size.width
-                    }
-                    if previousVisibleRect.maxX > x1 {
-                        x1 += 0.2 * size.width
-                    }
-                    if previousVisibleRect.minY < y0 {
-                        y0 -= 0.2 * size.height
-                    }
-                    if previousVisibleRect.maxY > y1 {
-                        y1 += 0.2 * size.height
-                    }
-                }
-                else {
-                    x0 -= 0.2 * size.width
-                    x1 += 0.2 * size.width
-                    y0 -= 0.2 * size.height
-                    y1 += 0.2 * size.height
-                }
-                return (CGRect(x: x0, y: y0, width: x1 - x0, height: y1 - y0), trueVisibleRect)
-            }
-            else {
-                return (trueVisibleRect, trueVisibleRect)
-            }
+            return CGRect(origin: origin, size: size)
         }
  
-        func scrollViewStateChanged(treatAsExternal: Bool = false) {
+        func scrollViewStateChanged(treatAsExternal: Bool = false, zoomScale: CGFloat? = nil, contentOffset: CGPoint? = nil) {
             guard scrollViewState.valid else { return }
-            (scrollViewState.visibleRect, scrollViewState.trueVisibleRect) = computeVisibleRect()
+            let visibleRect = computeVisibleRect(zoomScale: zoomScale, contentOffset: contentOffset)
+            guard scrollViewState.visibleRect != visibleRect else { return }
+            scrollViewState.visibleRect = visibleRect
+            scrollViewState.trueVisibleRect = visibleRect
+
             scrollViewState.zoomScale = scrollView.zoomScale
-            scrollViewState.invZoomScale = 1.0 / scrollView.zoomScale
+            scrollViewState.invZoomScale = 1.0 / (zoomScale ?? scrollView.zoomScale)
             scrollViewState.externalControl = inExternalControl || treatAsExternal
         }
         
@@ -457,18 +435,70 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         }
         
         private var inExternalControl = false
-        private var isAnimating = false
+        var startingZoomScale = 1.0
+        var endingZoomScale = 1.0
+        var startingContentOffset = CGPoint.zero
+        var endingContentOffset = CGPoint.zero
         
+        var curDisplayLink: CADisplayLink?
+        var cumulativeTime = 0.0
+        var minZoomScale = 1.0
+        let animationDuration = 0.3
+        
+        @objc func step(displayLink: CADisplayLink) {
+            cumulativeTime += displayLink.targetTimestamp - displayLink.timestamp
+
+            let t = min(cumulativeTime / animationDuration, 1)
+            let fraction = 2 * (t - 0.5 * t * t)
+            let interpolatedZoomScale = startingZoomScale * (1 - fraction) + endingZoomScale * fraction
+            let interpolatedContentOffset = startingContentOffset * (1 - fraction) + endingContentOffset * fraction
+
+            scrollView.zoomScale = interpolatedZoomScale
+            scrollView.contentOffset = interpolatedContentOffset
+
+            if t >= 1 {
+                displayLink.invalidate()
+                curDisplayLink = nil
+                inExternalControl = false
+                #if !os(tvOS)
+                scrollView.minimumZoomScale = minZoomScale
+                #endif
+            }
+        }
+
         func scrollCenter(to position: CGPoint, zoom: CGFloat? = nil, animated: Bool = false, externalControl: Bool = false,
                           completion: (() -> ())? = nil) {
             let z = max(min(zoom ?? scrollView.zoomScale, scrollView.maximumZoomScale), scrollView.minimumZoomScale)
             let p = z * position - 0.5 * CGPoint(fromSize: scrollView.bounds.size)
             
             inExternalControl = externalControl
-            if animated {
-                isAnimating = true
-                previousVisibleRect = nil
-                UIView.animate(withDuration: animated ? 0.2 : 0.0) {
+            if inExternalControl && animated {
+                if curDisplayLink == nil {
+                    #if !os(tvOS)
+                    minZoomScale = scrollView.minimumZoomScale
+                    scrollView.minimumZoomScale = scrollView.minimumZoomScale / 10      // bouncesZoom set false doesn't seem to stop bouncing...
+                    #endif
+                    startingZoomScale = scrollView.zoomScale
+                    endingZoomScale = zoom ?? startingZoomScale
+
+                    startingContentOffset = scrollView.contentOffset
+                    endingContentOffset = p
+
+                    let displayLink = CADisplayLink(target: self, selector: #selector(step))
+                    cumulativeTime = 0
+                    displayLink.add(to: .current, forMode: .default)
+                    curDisplayLink = displayLink
+                }
+                else {
+                    startingZoomScale = scrollView.zoomScale
+                    endingZoomScale = zoom ?? startingZoomScale
+                    startingContentOffset = scrollView.contentOffset
+                    endingContentOffset = p
+                    cumulativeTime = 0
+                }
+            }
+            else if animated {
+                UIView.animate(withDuration: animated ? 0.3 : 0.0) {
                     if let zoom = zoom {
                         self.scrollView.zoomScale = zoom
                     }
@@ -476,7 +506,6 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
                 } completion: { finished in
                     if finished {
                         self.inExternalControl = false
-                        self.isAnimating = false
                         completion?()
                     }
                 }

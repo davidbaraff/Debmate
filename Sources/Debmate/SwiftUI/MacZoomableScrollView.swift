@@ -351,7 +351,7 @@ fileprivate class Coordinator: NSObject {
 
         clipView.currentMagnification = newMagnification
         if newContentOrigin.x.isNaN || newContentOrigin.y.isNaN {
-            fatalErrorForCrashReport("found nans: factor = \(factor), cp = \(cp), curOrig = \(currentOrigin), curMag = \(clipView.currentMagnification)")
+            fatalErrorForCrashReport("found nans: factor = \(factor), cp = \(cp), curOrig = \(String(describing: currentOrigin)), curMag = \(clipView.currentMagnification)")
         }
         scrollOrigin(to: newContentOrigin)
     }

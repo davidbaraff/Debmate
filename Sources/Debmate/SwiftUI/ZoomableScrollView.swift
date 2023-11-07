@@ -250,7 +250,6 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         coordinator = Coordinator(contentSize, configureCallback, editDelegate: editDelegate)
         coordinator.scrollView.minimumZoomScale = minMagnification
         coordinator.scrollView.maximumZoomScale = maxMagnification
-        coordinator.scrollView.bouncesZoom = false
     }
     
     func makeCoordinator() -> Coordinator {

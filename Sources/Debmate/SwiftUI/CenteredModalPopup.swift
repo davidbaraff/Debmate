@@ -15,6 +15,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
     let shadowColor: Color?
     let closeText: String
     let acceptText: String?
+    let titleText: String?
     let acceptAction: (() -> ())?
     var popupContent: PopupContent
     var overlayedContent: OverlayedContent
@@ -25,7 +26,9 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                 backgroundColor: Color = Color(.displayP3, white: 0.6, opacity: 0.5),
                 shadowColor: Color?,
                 closeText: String,
-                acceptText: String?, acceptAction: (() ->())?,
+                acceptText: String?,
+                titleText: String? = nil,
+                acceptAction: (() ->())?,
                 @ViewBuilder popupContent: () -> PopupContent,
                 @ViewBuilder overlayedContent: () -> OverlayedContent) {
         self._isPresented = isPresented
@@ -34,6 +37,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
         self.shadowColor = shadowColor
         self.closeText = closeText
         self.acceptText = acceptText
+        self.titleText = titleText
         self.acceptAction = acceptAction
         self.overlayedContent = overlayedContent()
         self.popupContent = popupContent()
@@ -45,20 +49,22 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                 DispatchQueue.main.async {
                     self.parentWidth = proxy.size.width
                 }
-                if !self.isPresented {
-                    return self.overlayedContent.anyView()
-                }
-                else {
-                    #if os(iOS)
-                    return self.overlayedContent
-                        .blur(radius: blurRadius)
-                        .overlay(backgroundColor)
-                        .onTapGesture { withAnimation { self.isPresented = false} }.anyView()
-                    #else
-                    return self.overlayedContent.blur(radius: blurRadius)
-                        .overlay(Color(.displayP3, white: 0.6, opacity: 0.5)).anyView()
-                    #endif
-                }
+                #if os(iOS)
+                return self.overlayedContent
+                    .blur(radius: isPresented ? blurRadius : 0)
+                    .overlay(isPresented ? backgroundColor : .clear)
+                    .onTapGesture {
+                        if isPresented {
+                            withAnimation {
+                                self.isPresented = false
+                                self.blurRadius = 0
+                            }
+                        }
+                    }.anyView()
+                #else
+                return self.overlayedContent.blur(radius: blurRadius)
+                    .overlay(Color(.displayP3, white: 0.6, opacity: 0.5)).anyView()
+                #endif
             }
 
             if isPresented {
@@ -68,6 +74,10 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                             Text(closeText)
                         }
                         Spacer()
+                        if let titleText = titleText {
+                            Text(titleText)
+                            Spacer()
+                        }
                         if let acceptText = acceptText {
                             Button(action: {
                                 self.acceptAction?()
@@ -83,10 +93,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                  .fixedSize().background(Color.white).cornerRadius(12)
                  .shadow(color: shadowColor ?? .clear, radius: 5, x: 0, y: 0)
                  .onAppear {
-                     blurRadius = 0
-                     withAnimation {
-                         blurRadius = 6
-                     }
+                     blurRadius = 6
                  }
             }
         }
@@ -101,6 +108,7 @@ public extension View {
     ///   - backgroundColor: color of full cover bacground over arent
     ///   - shadowColor: shadow color if non-nil
     ///   - closeText: text for the dismiss button
+    ///   - titleText: extra information about this popup
     ///   - acceptText: optional text for an "accept" button
     ///   - acceptAction: optional action taken if the "accept" button is clicked
     ///   - popupContent: The content of the popup to be presented
@@ -111,11 +119,15 @@ public extension View {
                             shadowColor: Color? = nil,
                             closeText: String = "Close",
                             acceptText: String? = nil,
+                            titleText: String? = nil,
                             acceptAction: (() ->())? = nil,
                             @ViewBuilder popupContent: () -> PopupContentView) -> CenteredModalPopupView<Self, PopupContentView> {
         CenteredModalPopupView(isPresented: isPresented, parentWidthFraction: parentWidthFraction,
                                backgroundColor: backgroundColor, shadowColor: shadowColor,
-                               closeText: closeText, acceptText: acceptText, acceptAction: acceptAction,
+                               closeText: closeText,
+                               acceptText: acceptText,
+                               titleText: titleText,
+                               acceptAction: acceptAction,
                                popupContent: popupContent) {
                                 self
         }

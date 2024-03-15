@@ -52,13 +52,20 @@ extension Util {
 
     /// Returns the time of a date in readable form.
     /// - Parameter date: the date
+    /// - Parameter seconds: true to print seconds
     /// - Returns: textual description
-    static public func textualTime(_ date: Date) -> String {
+    static public func textualTime(_ date: Date, seconds: Bool = false) -> String {
         let calendar = NSCalendar.current
         let hour = calendar.component(.hour, from: date)
         let minute = String(format: "%02d", calendar.component(.minute, from: date))
         let hhour = (hour % 12) == 0 ? 12 : (hour % 12)
-        return "\(hhour):\(minute)\(hour > 11 ? "PM" : "AM")"
+        if seconds {
+            let s = String(format: "%02d", calendar.component(.second, from: date))
+            return "\(hhour):\(minute):\(s) \(hour > 11 ? "PM" : "AM")"
+        }
+        else {
+            return "\(hhour):\(minute)\(hour > 11 ? "PM" : "AM")"
+        }
     }
 
     /// Returns a string of the form <month>-<day> where <month> is a string and <day> is a number

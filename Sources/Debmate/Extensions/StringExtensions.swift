@@ -11,9 +11,19 @@ import SwiftUI
 #endif
 
 public extension String {
+    /// Safely convert string to data via its underlying utf8-view
+    var asData: Data {
+        Data(self.utf8)
+    }
+
+    /// Return the md5 checksum of a string
+    var md5Digest: String {
+        Util.md5Digest(self)
+    }
+
     /// Return an NSRange that full encompasses the string
     var fullRange: NSRange {
-        return NSRange(location: 0, length: count)
+        NSRange(location: 0, length: count)
     }
 
     /// Return a range of the string.
@@ -26,7 +36,7 @@ public extension String {
     
     /// Return the string with leading and trailing whitespace trimmed off.
     var trimmed: String {
-        return self.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        self.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     }
 
     /// Return the string with leading whitespace trimmed off.
@@ -36,7 +46,7 @@ public extension String {
     
     /// Return an ascii-safe version of self
     var asciiSafe: String {
-        return String(self.unicodeScalars.filter { $0.value >= 32 && $0.value <= 126 })
+        String(self.unicodeScalars.filter { $0.value >= 32 && $0.value <= 126 })
     }
     
     /// Returns a utf8 contiguous version of a string
@@ -89,7 +99,7 @@ public extension String {
 #if !os(Linux)
 public extension NSAttributedString {
     var fullRange: NSRange {
-        return NSRange(location: 0, length: length)
+        NSRange(location: 0, length: length)
     }
 }
 #endif

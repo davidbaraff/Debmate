@@ -69,7 +69,8 @@ public func addressInHex<T : AnyObject>(_ obj: T) -> String {
 /// Find the mobile provisioning file and checks the aps-environment key.
 public func apnsSandboxMode() -> Bool {
     guard let fileName = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision") else {
-        return true
+        /* Bundles from the App Store don't keep the mobile previsioning file around. */
+        return false
     }
     
     let fileURL = URL(fileURLWithPath: fileName)

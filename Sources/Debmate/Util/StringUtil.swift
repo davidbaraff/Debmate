@@ -26,13 +26,8 @@ extension Util {
     /// Computes an md5 digest hash string.
     /// - Parameter s: Input string
     /// - Returns: md5 digest string (16 byte long hex string)
-    /// - Warning:  If the passed in string is not UTF8-encodable, the
-    /// process will halt with a fatalError().
     public static func md5Digest(_ s: String) -> String {
-        guard let messageData = s.data(using: .utf8) else {
-            fatalErrorForCrashReport("Failed to convert string into data via utf8 encoding: string is \"\(s)\"")
-        }
-        return md5Digest(messageData)
+        return md5Digest(Data(s.utf8))
     }
 
     /// Computes an md5 digest hash string.

@@ -60,7 +60,9 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                                 self.blurRadius = 0
                             }
                         }
-                    }.anyView()
+                    }
+                    .anyView()
+
                 #else
                 return self.overlayedContent.blur(radius: blurRadius)
                     .overlay(Color(.displayP3, white: 0.6, opacity: 0.5)).anyView()
@@ -75,7 +77,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                         }
                         Spacer()
                         if let titleText = titleText {
-                            Text(titleText)
+                            Text(titleText).font(.title)
                             Spacer()
                         }
                         if let acceptText = acceptText {
@@ -95,6 +97,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                  .onAppear {
                      blurRadius = 6
                  }
+
             }
         }
     }
@@ -129,7 +132,7 @@ public extension View {
                                titleText: titleText,
                                acceptAction: acceptAction,
                                popupContent: popupContent) {
-                                self
+            self
         }
     }
 }

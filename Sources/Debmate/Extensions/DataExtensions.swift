@@ -11,6 +11,11 @@ import Foundation
 import Compression
 
 public extension Data {
+    /// Safely convert data directly to string by considering the data as the string's UTF8 view
+    var asUTF8String: String {
+        String(decoding: self, as: UTF8.self)
+    }
+
     @discardableResult
     func withCompression<T>(algorithm: compression_algorithm, forceCompression: Bool = false, _ handler: (Data, Bool) throws -> (T)) throws -> T? {
         let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.count)

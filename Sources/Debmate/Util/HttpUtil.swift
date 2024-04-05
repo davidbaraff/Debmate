@@ -32,8 +32,11 @@ extension Util {
     ///   - https: if a secure connection is required.
     /// - Returns: URL.
     ///
-    static public func createURL(host: String, port: Int? = nil, command: String? = nil,
-                                 parameters: [String: Any]? = nil, https: Bool = false) throws -> URL {
+    static public func createURL(host: String, port: Int? = nil,
+                                 command: String? = nil,
+                                 parameters: [String: Any]? = nil,
+                                 optionalParameters: [String: Any?]? = nil,
+                                 https: Bool = false) throws -> URL {
         guard var uc1 = URLComponents(string: "http://\(host)") else {
             throw GeneralError("URL with host = '\(host)' is malformed")
         }
@@ -59,6 +62,20 @@ extension Util {
         var queryItems = [URLQueryItem]()
         if let parameters = parameters {
             for (key, value) in parameters {
+                if let values = value as? [Any] {
+                    for (value) in values {
+                        queryItems.append(URLQueryItem(name: key, value: preEncode(value)))
+                    }
+                }
+                else {
+                    queryItems.append(URLQueryItem(name: key, value: preEncode(value)))
+                }
+            }
+        }
+        
+        if let optionalParameters = optionalParameters {
+            for (key, optionalValue) in optionalParameters {
+                guard let value = optionalValue else { continue }
                 if let values = value as? [Any] {
                     for (value) in values {
                         queryItems.append(URLQueryItem(name: key, value: preEncode(value)))

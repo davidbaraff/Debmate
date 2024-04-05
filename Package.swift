@@ -74,7 +74,7 @@ let targets: [Target] = [
 
 let package = Package(
     name: "Debmate",
-    platforms: [.iOS(.v13),
+    platforms: [.iOS(.v14),
                 .tvOS(.v14),
                 .watchOS(.v6),
                 .macOS(.v10_15)],

@@ -56,11 +56,20 @@ public struct AskYesNoAlertView<Content> : View where Content : View {
             }
             else {
                 content.alert(isPresented: self._isPresented) {
-                    Alert(title: Text(title + debugView()),
+                    Alert(title: Text(title),
                           message: Text(message ?? ""),
                           primaryButton: .default(Text(yesText)) { self.action() },
                           secondaryButton: .cancel())
                 }
+
+                /*
+                 content.customizableAlert(title,
+                 isPresented: self._isPresented,
+                 closeText: "Cancel",
+                 acceptText: yesText,
+                 acceptAction: self.action) {
+                 Text(message ?? "")
+                 }*/
             }
         }
     }

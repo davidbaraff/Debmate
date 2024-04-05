@@ -72,7 +72,7 @@ private class Computation<T> : CachableComputation {
         if FileManager.default.fileExists(atPath: cacheFile.path) {
             
             if let data = try? Data(contentsOf: cacheFile),
-                let cachableAny = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data),
+               let cachableAny = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSData.self, from: data),
                 let result: T = decodeFromCachableAny(cachableAny) {
                 DispatchQueue.main.async {
                     self.completionHandler(result, self.key)

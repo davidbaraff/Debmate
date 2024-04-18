@@ -17,7 +17,6 @@ public struct CustomizableAlertPopupView<OverlayedContent, PopupContent> : View 
     let acceptAction: (() -> ())?
     var popupContent: PopupContent
     var overlayedContent: OverlayedContent
-    @State var blurRadius: Double = 0
     
     @Environment(\.colorScheme) var colorScheme
     
@@ -80,11 +79,11 @@ public struct CustomizableAlertPopupView<OverlayedContent, PopupContent> : View 
                     Divider().frame(height: 0.5).overlay(Color.primary).opacity(0.25)
 
                     HStack {
-                        if !closeText.isEmpty {
+                        if !closeText.isEmpty || acceptText == nil {
                             Spacer()
                             
                             Button(action: { withAnimation { self.isPresented = false } }) {
-                                Text(closeText).font(.title3)
+                                Text(closeText.isEmpty ? "OK" : closeText).font(.title3)
                             }.padding([.top, .bottom], 20)
                             
                             Spacer()
@@ -98,8 +97,10 @@ public struct CustomizableAlertPopupView<OverlayedContent, PopupContent> : View 
                             Spacer()
                             
                             Button(action: {
-                                self.acceptAction?()
-                                self.isPresented = false
+                                withAnimation {
+                                    self.acceptAction?()
+                                    self.isPresented = false
+                                }
                             }) {
                                 Text(acceptText).font(.title3)
                             }.padding([.top, .bottom], 20)
@@ -115,7 +116,7 @@ public struct CustomizableAlertPopupView<OverlayedContent, PopupContent> : View 
 }
 
 public extension View {
-    /// Displays a centered modal popup.
+    /// Displays a customizable modal alert.
     /// - Parameters:
     ///   - isPresented: isPresented binding
     ///   - closeText: text for the dismiss button

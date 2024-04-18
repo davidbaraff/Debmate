@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 final public class TextualDateRefresher : ObservableObject {
     private var timer: Debmate.Timer!
 
@@ -18,3 +17,5 @@ final public class TextualDateRefresher : ObservableObject {
         timer.start(repeating: Double(seconds))
     }
 }
+
+

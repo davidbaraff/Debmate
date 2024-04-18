@@ -1,30 +1,31 @@
 //
-//  PersistentValue.swift
+//  PersistedValue.swift
 //  Debmate
 //
-//  Copyright © 2020 David Baraff. All rights reserved.
+//  Copyright © 2024 David Baraff. All rights reserved.
 //
 
 #if !os(Linux)
 
-import Foundation
 import DebmateC
 import SwiftUI
+import Foundation
 
-/// Wrap a value that stores itself persistently in UserDefaults.
-@propertyWrapper
+/// An observable value that stores itself persistently in UserDefaults.
+
+private class _PersistedValueWatcher: ObservableObject {
+    
+}
+
+@available(iOS 17, macOS 17, tvOS 17, *)
 @MainActor
-final public class PersistentValue<T : Equatable> : ObservableObject {
+@Observable
+final public class PersistedValue<T : Equatable> {
     public let key: String
     var refreshHelper: RefreshHelper!
 
     public var value: T {
         didSet { refreshHelper.updateNeeded() }
-    }
-
-    public var wrappedValue: T {
-        get { value }
-        set { value = newValue }
     }
     
     public var binding: Binding<T> {
@@ -32,17 +33,20 @@ final public class PersistentValue<T : Equatable> : ObservableObject {
                 set: { self.value = $0 })
     }
 
-    public var projectedValue: PersistentValue {
+    public var projectedValue: PersistedValue {
         get { self }
     }
 
-    /// Create a PersistentValue instance.
+    private let watcher = _PersistedValueWatcher()
+    
+
+    /// Create a PersistedValue instance.
     ///
     /// - Parameters:
-    ///   - key: The key the value will be stored under in UserDefaults for state restoral.
     ///   - defaultValue: Initial value for data if not present in UserDefaults
+    ///   - key: The key the value will be stored under in UserDefaults for state restoral.
     ///
-    public init(wrappedValue defaultValue: T, key keyName: String) {
+    public init(_ defaultValue: T, key keyName: String) {
         key = keyName
         let serializableDefaultValue = encodeAsCachableAny(defaultValue)
         
@@ -59,8 +63,13 @@ final public class PersistentValue<T : Equatable> : ObservableObject {
 
         refreshHelper = RefreshHelper {  [weak self] in
             self?.flush()
-            self?.objectWillChange.send()
+            self?.watcher.objectWillChange.send()
         }
+    }
+    
+    /// Execute work whever the value changes, using objectWillChange semantics.
+    public func watchForever(onChange work: @escaping (() -> Void)) {
+        watcher.objectWillChange.sinkForever(receiveValue: work)
     }
     
     /// Write value to UserDefaults immediately.
@@ -68,6 +77,7 @@ final public class PersistentValue<T : Equatable> : ObservableObject {
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }
+
 
 #endif
 

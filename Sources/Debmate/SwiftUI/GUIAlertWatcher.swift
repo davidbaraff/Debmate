@@ -5,7 +5,6 @@
 //  Copyright © 2021 David Baraff. All rights reserved.
 //
 
-import Combine
 import SwiftUI
 
 /// An observable object that a GUI can watch to present app-wide alerts/warnings etc.
@@ -18,11 +17,15 @@ import SwiftUI
 ///
 /// Note that popups are not considered dismissable; they will dismiss themselves (by having popupVisible reset to false)
 /// after popupDuration seconds have passed.
+///
+
+@MainActor
 public class GUIAlertWatcher : ObservableObject {
     /// Supported alert types.
     public enum AlertType {
         case warning
         case yesOrCancel
+        case multipleChoice
     }
     
     public enum PopupType {
@@ -54,6 +57,12 @@ public class GUIAlertWatcher : ObservableObject {
         /// Optional dismissal callback.
         public var onDismissAction: (() ->())? = nil
         
+        /// Callback/data for a multipleChoice alert
+        public var multipleChoiceAction: ((Any) -> ())? = nil
+
+        /// Text and values for a multipleChoice alert
+        public var multipleChoiceTextAndValues = [(String, Any)]()
+
         /// Unique integer ID.  The value below is uniquely associated with
         /// each group of attributes; use it to identify if some future
         /// GUI action is looking at the same set of attributes as when the
@@ -68,6 +77,9 @@ public class GUIAlertWatcher : ObservableObject {
     /// The current set of attributes.  If no warning/question should be shown,
     /// then current will be nil.
     public var current: Attributes? { attributesStack.last }
+    
+    /// True if a warning/question is currently being shown.
+    public var active: Bool { current != nil }
 
     /// Dismiss the current warning/qustion.  (Do not call this for popups!)
     @discardableResult
@@ -119,7 +131,6 @@ public class GUIAlertWatcher : ObservableObject {
         objectWillChange.send()
     }
 
-    
     /// Request a yes/no question be displayed
     /// - Parameters:
     ///   - title: title for question
@@ -134,9 +145,43 @@ public class GUIAlertWatcher : ObservableObject {
         attributesStack.append(Attributes(alertType: .yesOrCancel, title: title, details: details, yesButtonText: yesText,
                                           destructive: destructive,
                                           yesOrCancelAction: onDismiss, uniqueID: uniqueIDCounter))
+
         objectWillChange.send()
     }
+
+    public func yesOrCancel(_ title: String, details: String? = nil, yesText: String,
+                            destructive: Bool = false) async -> Bool {
+        uniqueIDCounter += 1
+        objectWillChange.send()
+        
+        return await withCheckedContinuation { continuation in
+            attributesStack.append(Attributes(alertType: .yesOrCancel,
+                                              title: title,
+                                              details: details,
+                                              yesButtonText: yesText,
+                                              destructive: destructive,
+                                              yesOrCancelAction: { continuation.resume(returning: $0) },
+                                              uniqueID: uniqueIDCounter))
+        }
+    }
     
+    public func showMultipleChoiceAlert<T>(_ title: String, details: String? = nil,
+                                           choices: [(String, T)]) async -> T {
+        uniqueIDCounter += 1
+        objectWillChange.send()
+        
+        return await withCheckedContinuation { continuation in
+            attributesStack.append(Attributes(alertType: .multipleChoice,
+                                              title: title,
+                                              details: details,
+                                              multipleChoiceAction: { continuation.resume(returning: $0 as! T) },
+                                              multipleChoiceTextAndValues: choices.map { ($0.0, $0.1) },
+                                              uniqueID: uniqueIDCounter))
+        }
+    }
+    
+    
+
     /// Create a popup which goes away on its own.
     /// - Parameters:
     ///   - title: Short message

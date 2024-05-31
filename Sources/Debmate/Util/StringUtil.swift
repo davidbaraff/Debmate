@@ -12,6 +12,10 @@ import CryptoKit
 import Crypto
 #endif
 
+#if os(iOS)
+import UIKit
+#endif
+
 fileprivate let regex = try! NSRegularExpression(pattern: "([0-9]+)|([^0-9]+)")
 fileprivate func splitIntoWords(_ s: String) -> [String] {
     let ns = s as NSString
@@ -27,19 +31,29 @@ extension Util {
     /// - Parameter s: Input string
     /// - Returns: md5 digest string (16 byte long hex string)
     public static func md5Digest(_ s: String) -> String {
-        return md5Digest(Data(s.utf8))
+        md5Digest(s.asData)
     }
 
     /// Computes an md5 digest hash string.
     /// - Parameter d: Input data
     /// - Returns: md5 digest string
     public static func md5Digest(_ data: Data) -> String {
-        let digest = Insecure.MD5.hash(data: data)
-        return digest.map {
-            String(format: "%02hhx", $0)
-        }.joined()
+        Insecure.MD5.hash(data: data).map { String(format: "%02hhx", $0) }.joined()
     }
 
+    /// Computes an SHA256 digest hash string.
+    /// - Parameter s: Input string
+    /// - Returns: SHA256 hex digest string
+    public static func sha256Digest(_ s: String) -> String {
+        sha256Digest(s.asData)
+    }
+
+    /// Computes an sha256 digest hash string.
+    /// - Parameter data: Input data
+    /// - Returns: SHA256 hex digest string
+    public static func sha256Digest( _ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02hhx", $0) }.joined()
+    }
     
     /// Return a random string of hex digits.
     /// - Parameter length: Number of digits in string.
@@ -48,6 +62,12 @@ extension Util {
         UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(length).lowercased()
     }
     
+    #if os(iOS)
+    public static var uniqueDeviceID: String {
+        String(UIDevice.current.identifierForVendor?.uuidString.replacingOccurrences(of: "-", with: "") ?? "")
+    }
+ 
+    #endif
     
     /// Return a name not found in names.
     /// - Parameters:

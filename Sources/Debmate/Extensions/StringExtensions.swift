@@ -21,6 +21,11 @@ public extension String {
         Util.md5Digest(self)
     }
 
+    /// Return the SHA256 hash of a string
+    var sha256Digest: String {
+        Util.sha256Digest(self)
+    }
+
     /// Return an NSRange that full encompasses the string
     var fullRange: NSRange {
         NSRange(location: 0, length: count)

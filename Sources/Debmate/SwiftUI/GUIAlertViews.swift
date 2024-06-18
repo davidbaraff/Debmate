@@ -5,6 +5,8 @@
 //  Created by David Baraff on 4/5/24.
 //
 
+#if !os(watchOS)
+
 import Foundation
 import SwiftUI
 
@@ -38,6 +40,7 @@ public struct WarningView : View {
     let onDismiss: (() -> ())
     let destructive: Bool
     let textEntryOrCancelAction: ((String?) -> ())?
+    let keyboardType: UIKeyboardType?
     
     @State var textValue = ""
     
@@ -47,6 +50,7 @@ public struct WarningView : View {
     public init(title: String, message: String, actionName: String? = nil, dismissName: String,
                 onAction: @escaping (() -> ()), onDismiss: @escaping (() -> ()),
                 destructive: Bool,
+                keyboardType: UIKeyboardType?,
                 textEntryOrCancelAction: ((String?) ->())? = nil) {
         self.title = title
         self.message = message
@@ -55,6 +59,7 @@ public struct WarningView : View {
         self.onAction = onAction
         self.onDismiss = onDismiss
         self.destructive = destructive
+        self.keyboardType = keyboardType
         self.textEntryOrCancelAction = textEntryOrCancelAction
     }
 
@@ -87,6 +92,7 @@ public struct WarningView : View {
                 
                 if textEntryOrCancelAction != nil {
                     TextField("", text: $textValue).textFieldStyle(.roundedBorder)
+                        .keyboardType(keyboardType ?? .default)
                         .focused($focus)
                         .padding()
                         .onAppear {
@@ -246,3 +252,6 @@ public struct MultipleChoiceAlertView : View {
         }
     }
 }
+
+#endif
+

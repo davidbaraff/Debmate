@@ -34,7 +34,8 @@ final public class OrientationInfo {
             }
 
             Task { @MainActor in
-                self.orientation = device.orientation.isPortrait ? .portrait : .landscape
+                self.orientation = (device.orientation == .landscapeLeft || device.orientation == .landscapeRight) ?
+                    .landscape : .portrait
             }
         }
     }

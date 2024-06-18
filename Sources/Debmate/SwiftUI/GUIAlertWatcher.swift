@@ -19,6 +19,8 @@ import SwiftUI
 /// after popupDuration seconds have passed.
 ///
 
+#if !os(watchOS)
+
 @MainActor
 public class GUIAlertWatcher : ObservableObject {
     /// Supported alert types.
@@ -55,6 +57,9 @@ public class GUIAlertWatcher : ObservableObject {
         
         /// If the action (for askYesNo alerts) needs extra emaphasis.
         public var destructive = false
+        
+        /// Keyboard type for textentry.
+        public var keyboardType: UIKeyboardType?
         
         /// Callback for an yesOrCancel alert.
         public var yesOrCancelAction: ((Bool) -> ())? = nil
@@ -285,7 +290,7 @@ public class GUIAlertWatcher : ObservableObject {
     ///
     /// If the user hits accept, a string with the contents of the text field is filled in.
     /// Otherwise, nil is returned.
-    public func textEntryOrCancel(_ title: String, details: String? = nil, acceptText: String) async -> String? {
+    public func textEntryOrCancel(_ title: String, details: String? = nil, acceptText: String, keyboardType: UIKeyboardType? = nil) async -> String? {
         uniqueIDCounter += 1
         objectWillChange.send()
         
@@ -295,6 +300,7 @@ public class GUIAlertWatcher : ObservableObject {
                                               details: details,
                                               yesButtonText: acceptText,
                                               destructive: false,
+                                              keyboardType: keyboardType,
                                               textEntryOrCancelAction: { continuation.resume(returning: $0) },
                                               uniqueID: uniqueIDCounter))
         }
@@ -367,7 +373,8 @@ public class GUIAlertWatcher : ObservableObject {
                                onDismiss: {
                                     self.dismissCurrent()
                                     current.onDismissAction?()
-                               }, destructive: false).id(current.uniqueID).anyView()
+                               }, destructive: false,
+                               keyboardType: nil).id(current.uniqueID).anyView()
         case .yesOrCancel:
             return WarningView(title: current.title,
                                message: current.details ?? "",
@@ -381,7 +388,8 @@ public class GUIAlertWatcher : ObservableObject {
                                     current.yesOrCancelAction?(false)
                                     self.dismissCurrent()
                                },
-                               destructive: current.destructive).id(current.uniqueID).anyView()
+                               destructive: current.destructive,
+                               keyboardType: nil).id(current.uniqueID).anyView()
         case .textEntryOrCancel:
             return WarningView(title: current.title,
                                message: current.details ?? "",
@@ -394,6 +402,7 @@ public class GUIAlertWatcher : ObservableObject {
                                     self.dismissCurrent()
                                },
                                destructive: current.destructive,
+                               keyboardType: current.keyboardType,
                                textEntryOrCancelAction: current.textEntryOrCancelAction).id(current.uniqueID).anyView()
         case .multipleChoice:
             return MultipleChoiceAlertView(title: current.title,
@@ -440,3 +449,6 @@ public class GUIAlertWatcher : ObservableObject {
         objectWillChange.send()
     }
 }
+
+#endif
+

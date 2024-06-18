@@ -6,11 +6,14 @@
 //
 
 import Foundation
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 import UIKit
-#else
+#elseif os(macOS)
 import AppKit
+#elseif os(watchOS)
+import UserNotifications
 #endif
+
 
 /// Helper class to watch changes to UserDefaults.
 public class UserDefaultsSettingsWatcher: NSObject, UNUserNotificationCenterDelegate {

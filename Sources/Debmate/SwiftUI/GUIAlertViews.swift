@@ -253,5 +253,34 @@ public struct MultipleChoiceAlertView : View {
     }
 }
 
+@available(iOS 17, macOS 17, tvOS 17, *)
+public struct GUIAlertWatcherView<Content> : View where Content : View {
+    var content: Content
+    @EnvironmentObject var guiAlertWatcher: GUIAlertWatcher
+
+    public init( @ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    public var body: some View {
+        ZStack {
+            content
+            
+            if let current = guiAlertWatcher.current {
+                guiAlertWatcher.view(for: current)
+            }
+        }
+    }
+}
+
+@available(iOS 17, macOS 17, tvOS 17, *)
+extension View {
+    public func addGUIAlertWatcher() -> GUIAlertWatcherView<Self> {
+        GUIAlertWatcherView {
+            self
+        }
+    }
+}
+
 #endif
 

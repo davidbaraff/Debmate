@@ -17,6 +17,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
     let acceptText: String?
     let titleText: String?
     let acceptAction: (() -> ())?
+    let inhibitTapToDismiss: Bool
     var popupContent: PopupContent
     var overlayedContent: OverlayedContent
     @State var blurRadius: Double = 0
@@ -29,6 +30,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                 acceptText: String?,
                 titleText: String? = nil,
                 acceptAction: (() ->())?,
+                inhibitTapToDismiss: Bool,
                 @ViewBuilder popupContent: () -> PopupContent,
                 @ViewBuilder overlayedContent: () -> OverlayedContent) {
         self._isPresented = isPresented
@@ -39,6 +41,7 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
         self.acceptText = acceptText
         self.titleText = titleText
         self.acceptAction = acceptAction
+        self.inhibitTapToDismiss = inhibitTapToDismiss
         self.overlayedContent = overlayedContent()
         self.popupContent = popupContent()
     }
@@ -50,18 +53,26 @@ public struct CenteredModalPopupView<OverlayedContent, PopupContent> : View wher
                     self.parentWidth = proxy.size.width
                 }
                 #if os(iOS)
-                return self.overlayedContent
-                    .blur(radius: isPresented ? blurRadius : 0)
-                    .overlay(isPresented ? backgroundColor : .clear)
-                    .onTapGesture {
-                        if isPresented {
-                            withAnimation {
-                                self.isPresented = false
-                                self.blurRadius = 0
+                if self.inhibitTapToDismiss {
+                    return self.overlayedContent
+                        .blur(radius: isPresented ? blurRadius : 0)
+                        .overlay(isPresented ? backgroundColor : .clear)
+                        .anyView()
+                }
+                else {
+                    return self.overlayedContent
+                        .blur(radius: isPresented ? blurRadius : 0)
+                        .overlay(isPresented ? backgroundColor : .clear)
+                        .onTapGesture {
+                            if isPresented {
+                                withAnimation {
+                                    self.isPresented = false
+                                    self.blurRadius = 0
+                                }
                             }
                         }
-                    }
-                    .anyView()
+                        .anyView()
+                }
 
                 #else
                 return self.overlayedContent.blur(radius: blurRadius)
@@ -113,6 +124,7 @@ public extension View {
     ///   - closeText: text for the dismiss button
     ///   - titleText: extra information about this popup
     ///   - acceptText: optional text for an "accept" button
+    ///   - inhibitTapToDismiss: set to  true to inhibis tap to dismiss
     ///   - acceptAction: optional action taken if the "accept" button is clicked
     ///   - popupContent: The content of the popup to be presented
     /// - Returns: some View
@@ -122,6 +134,7 @@ public extension View {
                             shadowColor: Color? = nil,
                             closeText: String = "Close",
                             acceptText: String? = nil,
+                            inhibitTapToDismiss: Bool = false,
                             titleText: String? = nil,
                             acceptAction: (() ->())? = nil,
                             @ViewBuilder popupContent: () -> PopupContentView) -> CenteredModalPopupView<Self, PopupContentView> {
@@ -131,6 +144,7 @@ public extension View {
                                acceptText: acceptText,
                                titleText: titleText,
                                acceptAction: acceptAction,
+                               inhibitTapToDismiss: inhibitTapToDismiss,
                                popupContent: popupContent) {
             self
         }

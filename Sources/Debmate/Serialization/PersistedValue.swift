@@ -20,7 +20,7 @@ private class _PersistedValueWatcher: ObservableObject {
 @available(iOS 17, macOS 17, tvOS 17, *)
 @MainActor
 @Observable
-final public class PersistedValue<T : Equatable> {
+final public class PersistedValue<T /* : Equatable */ > {
     public let key: String
     var refreshHelper: RefreshHelper!
 

@@ -15,6 +15,8 @@ public extension Date {
     var secondsSince1970: Int {
         timeIntervalSince1970.roundedInt
     }
+    
+    var secondsAgo: Double { -timeIntervalSinceNow }
 }
 
 public extension Int {

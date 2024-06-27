@@ -67,7 +67,6 @@ public class ModelState<T : ObservableObject> {
     
     /// Write value to UserDefaults immediately.
     private func flush() {
-        print("Flushing object \(value) under key \(key)")
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
     

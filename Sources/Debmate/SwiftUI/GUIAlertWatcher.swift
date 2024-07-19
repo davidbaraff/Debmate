@@ -96,6 +96,10 @@ public class GUIAlertWatcher : ObservableObject {
         self.compactSize = compactSize
     }
 
+    public init(interfaceIdiom: UIUserInterfaceIdiom?) {
+        self.compactSize = (interfaceIdiom ?? UIDevice.current.userInterfaceIdiom) == .phone
+    }
+
     let compactSize: Bool
 
     /// The current set of attributes.  If no warning/question should be shown,

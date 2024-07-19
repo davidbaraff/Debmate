@@ -21,7 +21,7 @@ public struct CheckboxToggleStyle: ToggleStyle {
 
             Image(systemName: configuration.isOn ? "checkmark.square.fill" : "square")
                 .resizable()
-                .foregroundColor(configuration.isOn ? .blue : .gray)
+                .foregroundColor(configuration.isOn ? .blue : .blue)
                 .frame(width: size, height: size)
                
         }.onTapGesture { withAnimation { configuration.isOn.toggle() } }

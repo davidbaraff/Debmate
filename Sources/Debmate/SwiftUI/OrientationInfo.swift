@@ -40,14 +40,11 @@ final public class OrientationInfo {
         }
     }
         
-    // It would be nice to have this, but it is currently (04/2024) flaggd as an error
-    // with strict concurrency checking on in Xcode 15.3.
-    /*
     deinit {
         if let observer = observer {
             NotificationCenter.default.removeObserver(observer)
         }
-    }*/
+    }
 }
 
 #endif

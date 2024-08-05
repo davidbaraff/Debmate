@@ -10,6 +10,10 @@
 import Foundation
 import SwiftUI
 
+#if os(macOS)
+public typealias UIKeyboardType = Void
+#endif
+
 @available(iOS 17, macOS 17, tvOS 17, *)
 public struct WarningView : View {
     @EnvironmentObject var guiAlertWatcher: GUIAlertWatcher
@@ -19,7 +23,11 @@ public struct WarningView : View {
     }
     
     var maxDeviceHeight: CGFloat? {
+        #if !os(macOS)
         return UIDevice.current.orientation.isLandscape ? 300 * overallScale / 100  : nil
+        #else
+        return nil
+        #endif
     }
 
     @ScaledMetric var spacing = 10
@@ -62,7 +70,7 @@ public struct WarningView : View {
         self.keyboardType = keyboardType
         self.textEntryOrCancelAction = textEntryOrCancelAction
     }
-
+    
     func dismiss(cancel: Bool) {
         guard !alreadyDismissed else { return }
         alreadyDismissed = true
@@ -92,7 +100,9 @@ public struct WarningView : View {
                 
                 if textEntryOrCancelAction != nil {
                     TextField("", text: $textValue).textFieldStyle(.roundedBorder)
+                        #if !os(macOS)
                         .keyboardType(keyboardType ?? .default)
+                        #endif
                         .focused($focus)
                         .padding()
                         .onAppear {

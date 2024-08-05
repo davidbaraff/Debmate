@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 #elseif os(macOS)
 import AppKit
+import UserNotifications
 #elseif os(watchOS)
 import UserNotifications
 #endif

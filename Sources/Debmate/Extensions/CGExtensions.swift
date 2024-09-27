@@ -127,6 +127,11 @@ public extension CGRect {
         offsetBy(dx: p.x, dy: p.y)
     }
 
+    /// Assumes normalized coordinates.
+    var yInverted: CGRect {
+        CGRect(x: minX, y: (1-maxY), width: width, height: height)
+    }
+    
     /// Return a rectangle expanded by delta on all sides.
     func expanded(by delta: CGFloat) -> CGRect {
         CGRect(x: origin.x - delta, y: origin.y - delta,

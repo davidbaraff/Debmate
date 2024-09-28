@@ -11,6 +11,10 @@ import Foundation
 import Compression
 
 public extension Data {
+    func decodedJSONObject(options: JSONSerialization.ReadingOptions = [.mutableContainers]) throws -> Any {
+        try JSONSerialization.jsonObject(with: self, options: options)
+    }
+    
     /// Safely convert data directly to string by considering the data as the string's UTF8 view
     var asUTF8String: String {
         String(decoding: self, as: UTF8.self)

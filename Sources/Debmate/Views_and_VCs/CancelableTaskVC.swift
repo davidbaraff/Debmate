@@ -10,6 +10,7 @@
 
 import UIKit
 
+@MainActor
 class CancelableTaskVC : UIViewController {
     var popupView: UIView!
     var activityIndicatorView: UIActivityIndicatorView!

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate  var ctr = 0
+nonisolated(unsafe) fileprivate var ctr = 0
 
 fileprivate func nextCtr() -> Int {
     ctr += 1

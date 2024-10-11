@@ -10,6 +10,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 private class CancelableGUIOperation {
     let asyncTask = AsyncTask("anonymous-cancelable")
     let presentationDelay: Double
@@ -24,8 +25,10 @@ private class CancelableGUIOperation {
         self.allowCancelationDelay = allowCancelationDelay
         self.descr = descr
         
-        asyncTask.setProgressHandler {
-            self.cancelVC?.setProgress($0)
+        asyncTask.setProgressHandler { progress in
+            MainActor.assumeIsolated {
+                self.cancelVC?.setProgress(progress)
+            }
         }
     }
     
@@ -114,6 +117,7 @@ private class CancelableGUIOperation {
 /// The completion handler passed to run is called with a bool argument that is true
 /// if the user canceled or cancel() was called, and false otherwise.
 
+@MainActor
 public class CancelableModalPopup {
     let presentationDelay: Double
     let allowCancelationDelay: Double?
@@ -204,7 +208,7 @@ public class CancelableModalPopup {
     }
 }
 
-
+@MainActor
 extension AsyncTask {
     @discardableResult
     static public func run<T>(_ work: @escaping (() -> T),

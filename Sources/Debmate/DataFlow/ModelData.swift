@@ -65,6 +65,7 @@ public protocol ModelDataValuedControl: NSControl {
 /// match the type specified for defaultValue in the constructor, a fatal runtime
 /// error will occur.
 
+@MainActor
 public class ModelData<T : Equatable> {
     weak var control: ModelDataValuedControl?
     var curValue: T

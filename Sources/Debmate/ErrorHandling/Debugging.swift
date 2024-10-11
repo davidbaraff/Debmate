@@ -7,7 +7,7 @@
 
 import Foundation
 
-public var logOnCrash: ((String) -> ())?
+public nonisolated(unsafe) var logOnCrash: ((String) -> ())?
 
 private func fileForFatalErrorCrashReport() -> URL {
     return Util.cachesDirectory.appendingPathComponent("debmate-crashreport-msg")

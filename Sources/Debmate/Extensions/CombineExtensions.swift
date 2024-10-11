@@ -13,6 +13,7 @@ import Combine
 
 import Foundation
 
+@MainActor
 fileprivate var keepAlives = [Cancellable]()
 
 public extension CurrentValueSubject where Failure == Never  {
@@ -24,6 +25,8 @@ public extension CurrentValueSubject where Failure == Never  {
     /// This form of sink does not return a cancellable; instead, the cancellable is
     /// retained internally forever, insuring that the subcription stream is never
     /// torn down.
+
+    @MainActor
     func sinkForever(callNow: Bool, receiveValue: @escaping ((Output) -> Void)) {
         if callNow {
             receiveValue(self.value)
@@ -59,6 +62,8 @@ public extension Publisher where Failure == Never {
     /// This form of sink does not return a cancellable; instead, the cancellable is
     /// retained internally forever, insuring that the subcription stream is never
     /// torn down.
+
+    @MainActor
     func sinkForever(callNow callNowValue: Output? = nil, receiveValue: @escaping ((Output) -> Void)) {
         if let value = callNowValue {
             receiveValue(value)

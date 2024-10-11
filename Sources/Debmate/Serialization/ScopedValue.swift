@@ -5,6 +5,8 @@
 //  Copyright © 2021 David Baraff. All rights reserved.
 //
 
+#if false
+
 #if !os(Linux)
 
 import Foundation
@@ -103,5 +105,7 @@ public class ScopedValue<T : Equatable> {
         UserDefaults.standard.set(encodeAsCachableAny(value), forKey: key)
     }
 }
+#endif
+
 #endif
 

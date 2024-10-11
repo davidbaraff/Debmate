@@ -5,6 +5,7 @@
 //  Copyright © 2020 David Baraff. All rights reserved.
 //
 
+#if false
 import Foundation
 
 /// Manage a pool of n workers all doing the same thing.
@@ -135,3 +136,5 @@ public class WorkerPool {
         }
     }
 }
+#endif
+

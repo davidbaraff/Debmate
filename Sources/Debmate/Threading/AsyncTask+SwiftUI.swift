@@ -13,6 +13,8 @@ import SwiftUI
 /// A SwiftUI View can watch the published fields of this object
 /// and show/hide UI elements in response to the changes in the published variables
 /// of this object.
+
+@MainActor
 public class GUIAsyncTaskWatcher : ObservableObject {
     /// True if the work computation is running.
     @Published public var active = false

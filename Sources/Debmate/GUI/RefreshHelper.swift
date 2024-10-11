@@ -29,23 +29,22 @@ import Foundation
 ///         // <actually do the work of resorting items
 ///  }
 ///
-public class RefreshHelper {
-    private let updateHandler: () -> ()
-    private let queue: DispatchQueue
+///
+
+@MainActor
+public final class RefreshHelper : Sendable {
+    private let updateHandler: @Sendable () -> ()
     private var updateScheduled = false
     private var lastUpdate = TimeInterval(0)
     
     /// The supplied handler is called when an update actually occurs.
     ///
-    /// - Parameter queue: queue to execute handler on (defaults to Dispatch.main)
     /// - Parameter handler: callback handler
     ///
-    /// Note: the handler is invoked on the passed in queue.
-    public init(queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
+    /// Note: the handler is invoked on the main queue.
+    public init(_ handler: @escaping @Sendable () -> ()) {
         updateHandler = handler
-        self.queue = queue
     }
-    
     
     /// Schedule a call to the update handler
     ///
@@ -75,7 +74,7 @@ public class RefreshHelper {
             }
             else {
                 updateScheduled = true
-                queue.asyncAfter(deadline: .now() + delay) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                     self?.updateScheduled = false
                     self?.lastUpdate = Date().timeIntervalSince1970
                     self?.updateHandler()
@@ -84,7 +83,7 @@ public class RefreshHelper {
         }
         else {
             updateScheduled = true
-            queue.async { [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 self?.updateScheduled = false
                 self?.lastUpdate = Date().timeIntervalSince1970
                 self?.updateHandler()

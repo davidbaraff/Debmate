@@ -22,7 +22,7 @@ import SwiftUI
 #if !os(watchOS)
 
 @MainActor
-public class GUIAlertWatcher : ObservableObject {
+public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
     /// Supported alert types.
     public enum AlertType {
         case warning
@@ -117,7 +117,7 @@ public class GUIAlertWatcher : ObservableObject {
     /// the current alert.
     ///
     /// However, to dismiss an alert from outside the view code, users should
-    /// never call this routine, but instead call manuallDismissCurrent(), which acts
+    /// never call this routine, but instead call manuallyDismissCurrent(), which acts
     /// as if the user had clicked on the dismiss/cancel button.
     @discardableResult
     public func dismissCurrent() -> Attributes? {
@@ -201,10 +201,31 @@ public class GUIAlertWatcher : ObservableObject {
                                               uniqueID: uniqueIDCounter))
         }
     }
+
+    /// Mutate the details text of the currently shown item (if any).
+    public func updateDetailsText(_ text: String) {
+        if !attributesStack.isEmpty {
+            attributesStack[attributesStack.count - 1].details = text
+            objectWillChange.send()
+        }
+    }
     
     /// Async version of showWarning(_ titile: error: dismissButtonText: onDismiss)
     public func showWarning(_ title: String, error: Error, dismissButtonText: String = "OK") async {
         await showWarning(title, details: error.localizedDescription, dismissButtonText: dismissButtonText)
+    }
+
+    actor OpResult<T : Sendable > {
+        var result: T?
+        var alertDismissed = true
+        
+        func setResult(_ value: T) {
+            result = value
+        }
+            
+        func setAlertDismissed(_ dismissed: Bool) {
+            alertDismissed = dismissed
+        }
     }
 
     /// Run code while a dialog blocks the UI, allowing for cancelation.
@@ -213,26 +234,28 @@ public class GUIAlertWatcher : ObservableObject {
     /// completes before the user clicks the "cancel" button in the shown dialog.
     ///
     /// Otherwise, operation() is canceled and nil is returned.
-    public func withCancelation<T>(_ title: String, details: String? = nil, operation: @Sendable @escaping () async -> T) async -> T? {
-        var result: T?
-        var alertDismissed = true
+    public func withCancelation<T : Sendable>(_ title: String, details: String? = nil, operation: @Sendable @escaping () async -> T) async -> T? {
+        let opResult = OpResult<T>()
         
         await withTaskGroup(of: Void.self) { taskGroup in
-            taskGroup.addTask { @MainActor in
+            taskGroup.addTask {
                 try? await Task.sleep(seconds: 0.25)
-                guard result == nil else {
+                if Task.isCancelled {
                     return
                 }
-
-                alertDismissed = false
+                guard await opResult.result == nil else {
+                    return
+                }
+                
+                await opResult.setAlertDismissed(false)
                 await self.showWarning(title, details: details, dismissButtonText: "Cancel")
-                alertDismissed = true
+                await opResult.setAlertDismissed(true)
             }
             
             taskGroup.addTask {
                 let r = await operation()
-                await MainActor.run {
-                    result = r
+                if !Task.isCancelled {
+                    await opResult.setResult(r)
                 }
             }
             
@@ -243,13 +266,13 @@ public class GUIAlertWatcher : ObservableObject {
              * Who is done with what?
              */
 
-            if !alertDismissed {
+            if !(await opResult.alertDismissed) {
                 try? await Task.sleep(seconds: 0.25)
                 manuallyDismissCurrent()
             }
         }
         
-        return result
+        return await opResult.result
     }
 
     /// Request a yes/no question be displayed
@@ -319,7 +342,7 @@ public class GUIAlertWatcher : ObservableObject {
     ///   - choices: an array of tuples of labels and possible return values
     ///   - defaultIndex: index of choice to be displayed as the default choice
     /// The value of the item the user selects is returned.
-    public func showMultipleChoiceAlert<T>(_ title: String, details: String? = nil,
+    public func showMultipleChoiceAlert<T : Sendable>(_ title: String, details: String? = nil,
                                            choices: [(String, T)],
                                            defaultIndex: Int = -1) async -> T {
         uniqueIDCounter += 1
@@ -421,7 +444,6 @@ public class GUIAlertWatcher : ObservableObject {
             }).id(current.uniqueID).anyView()
         }
     }
-    
     
     /// Hides any popup currently visible.
     public func hidePopup() {

@@ -9,23 +9,29 @@
 import Foundation
 import UIKit
 
-fileprivate class ApplicationStateTracker {
+@MainActor
+fileprivate final class ApplicationStateTracker {
     var observer: NSObjectProtocol!
     let notice = Lnotice<Bool>()
     
     init() {
         observer = NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
-            self.notice.broadcast(false)
+            MainActor.assumeIsolated {
+                self.notice.broadcast(false)
+            }
         }
 
-        observer = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { _ in
-            self.notice.broadcast(true)
+        observer = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated {
+                self.notice.broadcast(true)
+            }
         }
     }
 }
 
-private let stateTracker = ApplicationStateTracker()
+@MainActor private let stateTracker = ApplicationStateTracker()
 
+@MainActor
 extension Util {
     static public var applicationForegroundChangeNotice: Lnotice<Bool> {
         stateTracker.notice
@@ -34,7 +40,6 @@ extension Util {
     static public var applicationIsInForeground: Bool {
         return UIApplication.shared.applicationState != .background
     }
-    
     
     static public func applicationUniqueID(applicationName: String) -> String? {
         if let id = UIDevice.current.identifierForVendor {

@@ -5,6 +5,8 @@
 //  Copyright © 2019 David Baraff. All rights reserved.
 //
 
+#if false
+
 import Foundation
 
 #if os(Linux)
@@ -13,7 +15,7 @@ import OpenCombineShim
 #if !os(watchOS)
 import SystemConfiguration
 #endif
-import Combine
+@preconcurrency import Combine
 #endif
 
 #if !os(Linux) && !os(watchOS)
@@ -116,3 +118,5 @@ public class Reachability {
     }
     #endif
 }
+#endif
+

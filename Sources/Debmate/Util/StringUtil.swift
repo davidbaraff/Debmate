@@ -63,6 +63,7 @@ extension Util {
     }
     
     #if os(iOS)
+    @MainActor
     public static var uniqueDeviceID: String {
         String(UIDevice.current.identifierForVendor?.uuidString.replacingOccurrences(of: "-", with: "") ?? "")
     }

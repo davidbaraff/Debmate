@@ -10,6 +10,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 extension Util {
     /// Return the current root view controller.
     static public func rootViewController() -> UIViewController {

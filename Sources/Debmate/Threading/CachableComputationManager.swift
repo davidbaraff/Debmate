@@ -44,9 +44,9 @@ private protocol CachableComputation {
 }
 
 // MARK: -
-private class Computation<T> : CachableComputation {
-    let work:  () -> (T?, Bool)
-    let completionHandler: (T, String) -> Void
+private final class Computation<T : Sendable> : CachableComputation, Sendable {
+    let work: @Sendable () -> (T?, Bool)
+    let completionHandler: @Sendable (T, String) -> Void
     let key: String
     let cacheFile: URL
     let cutoffDate: Date?
@@ -57,9 +57,9 @@ private class Computation<T> : CachableComputation {
     
     init(key:String,
          cacheFile: URL,
-         work: @escaping (() -> (T?, Bool)),
+         work: @escaping (@Sendable () -> (T?, Bool)),
          cutoffDate: Date?,
-         completionHandler: @escaping ((T, String) -> Void)) {
+         completionHandler: @escaping (@Sendable (T, String) -> Void)) {
         self.key = key
         self.cacheFile = cacheFile
         self.work = work
@@ -112,7 +112,9 @@ private class Computation<T> : CachableComputation {
 // MARK: -
 
 /// Class for managing computations that are designed to be cached for future reuse.
-public class CachableComputationManager {
+///
+
+public final class CachableComputationManager : @unchecked Sendable {
     private let lock:DispatchQueue
     
     private var pendingComputations = Queue<CachableComputation>()
@@ -121,7 +123,7 @@ public class CachableComputationManager {
     private var shutdown = false
     private var keepAlive:CachableComputationManager?
     private var keys = Set<String>()
-    static private var workQueue = DispatchQueue(label: "com.debmate.cachableComputationManager" , qos: .utility,
+    static private let workQueue = DispatchQueue(label: "com.debmate.cachableComputationManager" , qos: .utility,
                                                  attributes: [.concurrent])
     
     /// Create a new manager.
@@ -176,11 +178,11 @@ public class CachableComputationManager {
     /// If an actual result is computed (either from the cache or the computation), it is handed to the
     /// completion handler, along with the key passed in.  The completion handler is always run on the main
     /// GUI thread.
-    public func add<T>(key: String,
+    public func add<T : Sendable>(key: String,
                     cacheFile: URL,
-                    work: @escaping (() -> (T?, Bool)),
+                    work: @escaping (@Sendable () -> (T?, Bool)),
                     ignoringFilesOlderThan date: Date? = nil,
-                    completionHandler: @escaping ((T, String) -> Void)) {
+                    completionHandler: @escaping (@Sendable (T, String) -> Void)) {
         keys.insert(key)
         lock.sync {
             pendingComputations.enqueue(Computation(key: key, cacheFile: cacheFile,

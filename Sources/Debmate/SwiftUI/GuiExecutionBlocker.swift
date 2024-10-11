@@ -27,6 +27,8 @@ import Foundation
 /// Somewhere else in the UI, a notice of computation appears,
 /// and user activity is disabled, as guiExecutionBlocker.visible and
 /// guiExecutionBlocker.active become true, respectively.
+
+@MainActor
 public class GUIExecutionBlocker : ObservableObject {
     /// True if the work computation is running
     @Published public var active = false
@@ -41,12 +43,12 @@ public class GUIExecutionBlocker : ObservableObject {
     let queue: DispatchQueue
     var requestID = 0
     
-    struct State<T> {
+    struct State<T : Sendable> : Sendable {
         let startTime = Date()
         let showAfter: Double
         let minimumDisplayTime: Double
         let requestID: Int
-        let completion: (T) -> ()
+        let completion: @Sendable (T) -> ()
     }
     
     /// Returns an initialized instance of GUIExecutionBlocker.
@@ -66,13 +68,13 @@ public class GUIExecutionBlocker : ObservableObject {
     ///   - allowDragging: don't break the GUI by halting an IP drag operation
     ///   - work: work to be performed off the main queue)
     ///   - completion: completion (run on the main queue) after work completes
-    public func begin<T>(message: String? = nil,
+    public func begin<T : Sendable>(message: String? = nil,
                          queue: DispatchQueue? = nil,
                          showAfter: Double = 0.2,
                          minimumDisplayTime: Double = 0.5,
                          allowDragging: Bool = false,
-                         work: @escaping () -> T,
-                         completion: @escaping (T) -> ()) {
+                         work: @escaping @Sendable () -> T,
+                         completion: @escaping @Sendable (T) -> ()) {
         requestID += 1
         active = true
         self.allowDragging = allowDragging
@@ -103,12 +105,12 @@ public class GUIExecutionBlocker : ObservableObject {
     ///   - allowDragging: don't break the GUI by halting an IP drag operation
     ///   - work: async work function to be performed off the main queue)
     ///   - completion: completion (run on the main queue) after work completes
-    public func begin<T>(message: String? = nil,
+    public func begin<T : Sendable>(message: String? = nil,
                          showAfter: Double = 0.2,
                          minimumDisplayTime: Double = 0.5,
                          allowDragging: Bool = false,
                          asyncWork work: @escaping (() async -> T),
-                         completion: @escaping (T) -> ()) {
+                         completion: @escaping @Sendable (T) -> ()) {
         requestID += 1
         active = true
         self.allowDragging = allowDragging

@@ -7,8 +7,8 @@
 
 import Foundation
 
-fileprivate var coalesceSet = Set<String>()
-fileprivate var namedTimers = [String : Timer]()
+nonisolated(unsafe) fileprivate var coalesceSet = Set<String>()
+nonisolated(unsafe) fileprivate var namedTimers = [String : Timer]()
 
 
 /// Sleep (convenience call to Dispatch.usleep).

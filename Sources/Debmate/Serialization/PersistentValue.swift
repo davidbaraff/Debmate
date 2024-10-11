@@ -58,8 +58,10 @@ final public class PersistentValue<T : Equatable> : ObservableObject {
         }
 
         refreshHelper = RefreshHelper {  [weak self] in
-            self?.flush()
-            self?.objectWillChange.send()
+            MainActor.assumeIsolated {
+                self?.flush()
+                self?.objectWillChange.send()
+            }
         }
     }
     

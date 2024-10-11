@@ -33,9 +33,9 @@ public class ZoomableScrollViewState : ObservableObject{
     }
 
 
-    public internal (set) var valid = false
+    public internal(set) var valid = false
     
-    public internal (set) var recentTouchLocation: (() -> CGPoint)!
+    public internal(set) var recentTouchLocation: (() -> CGPoint)!
     
     public init() {
         
@@ -43,6 +43,8 @@ public class ZoomableScrollViewState : ObservableObject{
 }
 
 /// Class for controlling a ZoomableScrollView.
+
+@MainActor
 public protocol ZoomableScrollViewControl : AnyObject {
     /// Scroll and zoom the view.
     /// - Parameters:
@@ -310,7 +312,9 @@ fileprivate struct InternalZoomableScrollView<Content : View> : UIViewRepresenta
         }
     }
     
+    @MainActor
     class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
+        @MainActor
         class Control : ZoomableScrollViewControl {
             weak var coordinator: Coordinator?
 

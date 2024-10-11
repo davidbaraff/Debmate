@@ -49,7 +49,7 @@ extension Util {
     ///   - duration: duration of the single-frame movie produced
     /// - Returns: true on success
     static public func saveImageAsOneFrameMovie(cgImage: CGImage, outputFileURL: URL, duration: TimeInterval = 1.0 / 24.0,
-                                                completionHandler: @escaping () ->()) throws {
+                                                completionHandler: @escaping @Sendable () ->()) throws {
         let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
         let videoWriter = try AVAssetWriter(outputURL: outputFileURL, fileType: AVFileType.mov)
         let videoSettings: [String: Any] = [AVVideoCodecKey: AVVideoCodecType.h264,

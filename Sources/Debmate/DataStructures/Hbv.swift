@@ -198,12 +198,12 @@ public class HbvNode : ClassIdentityBase {
     }
     
     /// The contents of the node.
-    public internal (set) var contents: Contents
+    public internal(set) var contents: Contents
 
     /// The bounding box for all the children of this node.
     /// For a leaf, the range is the same as the matching rect stored
     /// by the Hbv which constructed this node.
-    public internal (set) var range = Range2d()
+    public internal(set) var range = Range2d()
     
     /// The bounding box as a CGRect.
     public var cgRect: CGRect { range.cgRect }

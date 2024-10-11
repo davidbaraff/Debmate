@@ -10,7 +10,8 @@ import Foundation
 
 
 /// Schedule a sequence of tasks to be run asychronously, with compacted scheduling.
-class CompactingWorkerTask {
+
+final class CompactingWorkerTask : @unchecked Sendable {
     let workQueue: DispatchQueue
     let lock = DispatchQueue(label: "com.debmate.compactingworkertask.lock")
 
@@ -34,7 +35,7 @@ class CompactingWorkerTask {
     /// However, if submitWork() is called again before the work scheduled has even begin,
     /// the new work scheduled preempts the old work, and the scheduled, but never begun
     /// task is "compacted" away.
-    public func submitWork(work: @escaping () -> ()) {
+    public func submitWork(work: @escaping @Sendable () -> ()) {
         lock.sync {
             if !running {
                 running = true

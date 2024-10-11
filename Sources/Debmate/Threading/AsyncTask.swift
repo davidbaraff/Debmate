@@ -7,7 +7,7 @@
 
 import Foundation
 
-internal protocol WorkItem {
+internal protocol WorkItem : Sendable {
     func execute()
     func cancel()
     func addCancelationHandler(_ handler:@escaping () -> Void)
@@ -60,7 +60,7 @@ internal protocol WorkItem {
  receiving a cancel request.
 */
 public class AsyncTask {
-    private class Work<T> : WorkItem {
+    private class Work<T> : WorkItem, @unchecked Sendable  {
         var throwingWorkClosure: (() throws -> T)? = nil
         var workClosure: (() -> T)? = nil
         var completionHandlerForThrowing: ((T?, Error?) -> Void)? = nil
@@ -79,7 +79,7 @@ public class AsyncTask {
               _ work: @escaping () throws -> T,
               _ cancelationHandler: (() -> Void)?,
               _ completionHandler: @escaping (T?, Error?) -> Void,
-              _ progressHandler: ((Float) -> Void)?,
+              _ progressHandler: (@Sendable (Float) -> Void)?,
               _ qos: DispatchQoS) {
             workQueue = DispatchQueue(label: name, qos: qos)
             lock = DispatchQueue(label: "\(name)-lock")
@@ -97,7 +97,7 @@ public class AsyncTask {
               _ work: @escaping () -> T,
               _ cancelationHandler: (() -> Void)?,
               _ completionHandler: @escaping (T) -> Void,
-              _ progressHandler: ((Float) -> Void)?,
+              _ progressHandler: (@Sendable (Float) -> Void)?,
               _ qos: DispatchQoS) {
             workQueue = DispatchQueue(label: name, qos: qos)
             lock = DispatchQueue(label: "\(name)-lock")
@@ -111,7 +111,7 @@ public class AsyncTask {
             }
         }
         
-        private func installProgressHandler(_ progressHandler: ((Float) -> Void)?) {
+        private func installProgressHandler(_ progressHandler: (@MainActor (Float) -> Void)?) {
             if let progressHandler = progressHandler {
                 currentProgressHandler = { value in
                     let (base, delta) = self.progressTransformStack.last ?? (0, 1)
@@ -332,7 +332,7 @@ public class AsyncTask {
     var ctr = 0
     static let currentWorkKey = DispatchSpecificKey<WorkItem?>()
     var currentWork: WorkItem? = nil
-    var pendingProgressHandler: ((Float) -> Void)?
+    var pendingProgressHandler: (@Sendable (Float) -> Void)?
     
     /// Create a new container for running tasks.
     ///
@@ -375,7 +375,7 @@ public class AsyncTask {
     /// a call to AsyncTask.progressHandler.  The task can then periodically pass
     /// a value between 0.0 and 1.0 to the handler to indicate progress. 
 
-    public func setProgressHandler(_ progressHandler: @escaping (Float) -> Void) {
+    public func setProgressHandler(_ progressHandler: @escaping @Sendable (Float) -> Void) {
         self.pendingProgressHandler = progressHandler
     }
     

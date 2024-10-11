@@ -5,7 +5,7 @@
 //  Created by David Baraff on 5/14/24.
 //
 
-import Foundation
+@preconcurrency import Foundation
 import SwiftUI
 
 #if os(iOS)

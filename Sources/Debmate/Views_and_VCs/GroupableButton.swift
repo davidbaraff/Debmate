@@ -28,8 +28,9 @@ public class GroupableButton : UIButton {
 /// When any button in the group is highlighted, all the buttons in the group
 /// are highlighted.  The touchUpInside action for any button causes the
 /// (optional) pressed closure of the ButtonGroup to be run.
+
+@MainActor
 public class ButtonGroup {
-    
     /// Closure that is run when any button in the group has its touchUpInside action invoked.
     public var pressed: (() -> ())?
     
@@ -37,7 +38,6 @@ public class ButtonGroup {
     }
     
     var buttons = [UIButton]()
-    
     
     /// Add a button to the group
     ///

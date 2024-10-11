@@ -16,7 +16,8 @@ import Combine
 /// values to UserDefaults, while also allowing for anonymous notification
 /// when the held value changes.  The value is stored as a published property
 /// on the ModelValue<> object, which is an observable object.
-///
+
+@MainActor
 public class ModelValue<T : Equatable> : ObservableObject {
     @Published public var value: T
 
@@ -40,7 +41,11 @@ public class ModelValue<T : Equatable> : ObservableObject {
             value = defaultValue
         }
 
-        refreshHelper = RefreshHelper {  [weak self] in self?.flush() }
+        refreshHelper = RefreshHelper { [weak self] in
+            MainActor.assumeIsolated {
+                self?.flush()
+            }
+        }
         primaryCancellable = objectWillChange.sink { [weak self] _ in self?.refreshHelper.updateNeeded() }
     }
     

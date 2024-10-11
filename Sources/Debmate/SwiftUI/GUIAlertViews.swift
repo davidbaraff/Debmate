@@ -264,6 +264,79 @@ public struct MultipleChoiceAlertView : View {
 }
 
 @available(iOS 17, macOS 17, tvOS 17, *)
+struct GUIAlertWatcherPopupView: View {
+    @State var opacity = 0.0
+    @State var counter = 0
+    let message: String
+    let duration: Double?
+    let popupType: GUIAlertWatcher.PopupType
+    let uniqueID: Int
+
+    var backgroundColor: Color {
+        switch popupType {
+        case .okPopup:
+            return Self.okColor
+        case .warningPopup:
+            return Self.warningColor
+        case .bottomInfoPopup:
+            return Self.bottomInfoColor
+        }
+    }
+
+    static let bottomInfoColor = Color(red: 0.4, green: 0.4, blue: 0.4, opacity: 0.75)
+    static let warningColor = Color(red: 0.6, green: 0.6, blue: 0.1, opacity: 0.85)
+    static let okColor = Color(red: 0.1, green: 0.6, blue: 0.1, opacity: 0.75)
+
+    var body: some View {
+        VStack {
+            if popupType == .bottomInfoPopup {
+                Spacer()
+            }
+            VStack (alignment: .center, spacing: 20) {
+                if popupType == .okPopup {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.white)
+                        .font(.system(size: 40, weight: .regular))
+                        .padding(EdgeInsets(top: 20, leading: 5, bottom: 5, trailing: 5))
+                }
+                Text(message).multilineTextAlignment(.center)
+                    .frame(maxWidth: 180)
+                    .foregroundColor(.white.opacity(popupType == .bottomInfoPopup ? 0.6 : 1))
+                    .font(.title3)
+                    .padding(EdgeInsets(top: 0, leading: 10, bottom: 5, trailing: 10))
+            }.frame(width: 200, height: popupType == .bottomInfoPopup ? 50 : 200)
+                .background(backgroundColor)
+                .cornerRadius(12)
+                .opacity(opacity)
+                .onTapGesture {
+                    withAnimation(.linear(duration: 0.2)) {
+                        opacity = 0
+                    }
+                }
+            if popupType == .bottomInfoPopup {
+                Spacer().frame(height: 25)
+            }
+        }
+        .onAppear {
+            withAnimation {
+                opacity = 1
+            }
+            let id = uniqueID
+            if let duration = duration {
+                DispatchQueue.main.asyncAfter(deadline: .now() + max(duration - 0.5, 0)) {
+                    if id == uniqueID {
+                        withAnimation {
+                            opacity = 0.0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@available(iOS 17, macOS 17, tvOS 17, *)
 public struct GUIAlertWatcherView<Content> : View where Content : View {
     var content: Content
     @EnvironmentObject var guiAlertWatcher: GUIAlertWatcher
@@ -278,6 +351,14 @@ public struct GUIAlertWatcherView<Content> : View where Content : View {
             
             if let current = guiAlertWatcher.current {
                 guiAlertWatcher.view(for: current)
+            }
+            
+            if guiAlertWatcher.popupVisible {
+                GUIAlertWatcherPopupView(message: guiAlertWatcher.popupMessage,
+                                         duration: guiAlertWatcher.popupDuration,
+                                         popupType: guiAlertWatcher.popupType,
+                                         uniqueID: guiAlertWatcher.popupUniqueID)
+                .id(guiAlertWatcher.popupUniqueID)
             }
         }
     }

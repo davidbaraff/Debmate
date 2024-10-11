@@ -17,6 +17,8 @@ import Combine
 /// objects to UserDefaults, while also allowing for anonymous notification when any
 /// (published) )member of the observable object changes.
 ///
+
+@MainActor
 @propertyWrapper
 public class ModelState<T : ObservableObject> {
     let key: String
@@ -60,7 +62,11 @@ public class ModelState<T : ObservableObject> {
         }
 
         watchValue()
-        refreshHelper = RefreshHelper {  [weak self] in self?.flush() }
+        refreshHelper = RefreshHelper { [weak self] in
+            MainActor.assumeIsolated {
+                self?.flush()
+            }
+        }
     }
     
     private var deferredWriteLevel = 0

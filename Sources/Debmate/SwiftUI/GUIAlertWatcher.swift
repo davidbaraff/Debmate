@@ -31,6 +31,13 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         case multipleChoice
     }
     
+    /// Supported progress types.
+    public enum ProgressType: Sendable {
+        case none
+        case indeterminate
+        case determinate
+    }
+    
     /// Supported popup tyypes.
     public enum PopupType {
         case okPopup
@@ -49,6 +56,12 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         /// Optional details.
         public var details: String?
         
+        /// Optional progress value (from 0 to 1).
+        public var progress = 0.0
+        
+        /// Progress type.
+        public var progressType: ProgressType = .none
+
         /// Label for primary button (for askYesNo alerts).
         public var yesButtonText = ""
         
@@ -202,10 +215,38 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         }
     }
 
+    /// Request a progress indicator be displayed.
+    /// - Parameters:
+    ///   - title: title of warning
+    ///   - details: details of operation
+    ///   - progressType: type of progress indicator to display.
+    private func showProgress(_ title: String, details: String? = nil, progressType: ProgressType = .none) async {
+        uniqueIDCounter += 1
+        objectWillChange.send()
+        
+        return await withCheckedContinuation { continuation in
+            attributesStack.append(Attributes(alertType: .warning,
+                                              title: title,
+                                              details: details,
+                                              progressType: progressType,
+                                              dismissButtonText: "Cancel",
+                                              onDismissAction: { continuation.resume() },
+                                              uniqueID: uniqueIDCounter))
+        }
+    }
+    
     /// Mutate the details text of the currently shown item (if any).
     public func updateDetailsText(_ text: String) {
         if !attributesStack.isEmpty {
             attributesStack[attributesStack.count - 1].details = text
+            objectWillChange.send()
+        }
+    }
+    
+    /// Mutate the details text of the currently shown progress indicator (if any).
+    public func updateProgressValue(_ value: Double) {
+        if !attributesStack.isEmpty {
+            attributesStack[attributesStack.count - 1].progress = value
             objectWillChange.send()
         }
     }
@@ -234,7 +275,13 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
     /// completes before the user clicks the "cancel" button in the shown dialog.
     ///
     /// Otherwise, operation() is canceled and nil is returned.
-    public func withCancelation<T : Sendable>(_ title: String, details: String? = nil, operation: @Sendable @escaping () async -> T) async -> T? {
+    ///
+    /// If showProgress is true, then a progress indicator is shown. The progress can be updated
+    /// during the operation via a call to updateProgress(), but only has an effect if the progress
+    /// type is .determinate.
+    public func withCancelation<T : Sendable>(_ title: String, details: String? = nil,
+                                              progressType: ProgressType,
+                                              operation: @Sendable @escaping () async -> T) async -> T? {
         let opResult = OpResult<T>()
         
         await withTaskGroup(of: Void.self) { taskGroup in
@@ -248,7 +295,7 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
                 }
                 
                 await opResult.setAlertDismissed(false)
-                await self.showWarning(title, details: details, dismissButtonText: "Cancel")
+                await self.showProgress(title, details: details, progressType: progressType)
                 await opResult.setAlertDismissed(true)
             }
             
@@ -395,14 +442,18 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
     public func view(for current: Attributes) -> some View {
         switch current.alertType {
         case .warning:
-            return WarningView(title: current.title, message: current.details ?? "",
+            return WarningView(title: current.title,
+                               message: current.details ?? "",
                                actionName: nil,
                                dismissName: current.dismissButtonText,
                                onAction: { self.dismissCurrent() },
                                onDismiss: {
                                     self.dismissCurrent()
                                     current.onDismissAction?()
-                               }, destructive: false,
+                               },
+                               destructive: false,
+                               progressType: current.progressType,
+                               progress: current.progress,
                                keyboardType: nil).id(current.uniqueID).anyView()
         case .yesOrCancel:
             return WarningView(title: current.title,

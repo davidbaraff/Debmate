@@ -49,6 +49,8 @@ public struct WarningView : View {
     let destructive: Bool
     let textEntryOrCancelAction: ((String?) -> ())?
     let keyboardType: UIKeyboardType?
+    let progressType: GUIAlertWatcher.ProgressType
+    let progress: Double
     
     @State var textValue = ""
     
@@ -58,6 +60,8 @@ public struct WarningView : View {
     public init(title: String, message: String, actionName: String? = nil, dismissName: String,
                 onAction: @escaping (() -> ()), onDismiss: @escaping (() -> ()),
                 destructive: Bool,
+                progressType: GUIAlertWatcher.ProgressType = .none,
+                progress: Double = 0,
                 keyboardType: UIKeyboardType?,
                 textEntryOrCancelAction: ((String?) ->())? = nil) {
         self.title = title
@@ -69,6 +73,8 @@ public struct WarningView : View {
         self.destructive = destructive
         self.keyboardType = keyboardType
         self.textEntryOrCancelAction = textEntryOrCancelAction
+        self.progressType = progressType
+        self.progress = progress
     }
     
     func dismiss(cancel: Bool) {
@@ -116,6 +122,20 @@ public struct WarningView : View {
                     .font(Font.body)
                     .padding()
                 
+                
+                if progressType != .none {
+                    HStack {
+                        if progressType == .indeterminate {
+                            ProgressView()
+                        }
+                        else {
+                            ProgressView(value: progress) {
+                                Text("\(Int(progress * 100))%").monospaced()
+                            }.padding()
+                        }
+                    }
+                }
+
                 Divider()
                 
                 VStack(spacing: 0) {

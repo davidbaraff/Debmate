@@ -174,11 +174,12 @@ extension Util {
     ///   - centered: center the detail text; otherwise, left justified.
     ///   - completionHandler: completion handler
     ///
+    @discardableResult
     static public func showWarning(_ title: String, details: String? = nil,
                                    over viewController: UIViewController,
                                    transparent: Bool = false,
                                    centered: Bool = true,
-                                   completionHandler: (() -> Void)? = nil) {
+                                   completionHandler: (() -> Void)? = nil) -> UIAlertController {
         let ac = UIAlertController(title: title, message: nil, preferredStyle: .alert)
         if let details = details {
             let paragraphStyle = NSMutableParagraphStyle()
@@ -205,6 +206,7 @@ extension Util {
         
         ac.addAction(okAction)
         viewController.present(ac, animated: true)
+        return ac
      }
     
     /// Show a modal confirmation dialog.
@@ -217,16 +219,18 @@ extension Util {
     ///   - over: view controller (defaults to root view controller)
     ///   - transparent: allow slight transparency (not good for dark background)
     ///   - completionHandler: completion handler (called with true or false)
+
+    @discardableResult
     static public func confirmAction(_ title: String, action:String,
                                      details: String? = nil,
                                      autoConfirmWhen: Bool = false,
                                      over viewController: UIViewController,
                                      transparent: Bool = false,
                                      cancelString: String = "Cancel",
-                                     completionHandler: ((Bool) -> Void)? = nil) {
+                                     completionHandler: ((Bool) -> Void)? = nil) -> UIAlertController? {
         if autoConfirmWhen {
             completionHandler?(true)
-            return
+            return nil
         }
         
         let ac = UIAlertController(title: title, message:details, preferredStyle: .alert)
@@ -247,6 +251,7 @@ extension Util {
         ac.addAction(cancelAction)
         ac.addAction(confirmAction)
         viewController.present(ac, animated: true)
+        return ac
     }
 }
 

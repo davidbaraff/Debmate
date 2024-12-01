@@ -25,4 +25,23 @@ public extension Dictionary {
     mutating func overwritingMerge(_ dictionary: Dictionary) {
         self.merge(dictionary, uniquingKeysWith: { $1 })
     }
+
+    /// Return self merged with another dictionary.
+    ///
+    /// - Parameter dictionary: values in dictionary are merged on top of self
+    func overwritingMerge(_ dictionary: Dictionary) -> Dictionary {
+        var result = self
+        result.merge(dictionary, uniquingKeysWith: { $1 })
+        return result
+    }
+}
+
+public extension Dictionary where Dictionary.Key == String, Dictionary.Value == Any {
+    struct SendableHolder : @unchecked Sendable {
+        public let dictionary: Dictionary<String, Any>
+
+        public init(_ dictionary: Dictionary<String, Any>) {
+            self.dictionary = dictionary
+        }
+    }
 }

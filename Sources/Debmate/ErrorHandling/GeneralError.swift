@@ -9,7 +9,7 @@ import Foundation
 
 
 /// General error type that simply holds a string description.
-public struct GeneralError : Error, CustomStringConvertible {
+public struct GeneralError : Error, CustomStringConvertible, LocalizedError {
     private let details: String
     
     public init(_ details: String) {
@@ -18,5 +18,9 @@ public struct GeneralError : Error, CustomStringConvertible {
     
     public var description: String {
         return details
+    }
+
+    public var errorDescription: String? {
+        self.description
     }
 }

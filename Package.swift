@@ -77,7 +77,7 @@ let package = Package(
     platforms: [.iOS(.v14),
                 .tvOS(.v14),
                 .watchOS(.v10),
-                .macOS(.v11)],
+                .macOS(.v15)],
     products: [
         .library(
             name: "Debmate",

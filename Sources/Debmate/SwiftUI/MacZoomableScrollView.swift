@@ -219,6 +219,7 @@ fileprivate struct InternalZoomableScrollView<Content : View> : NSViewRepresenta
     }
 }
 
+@MainActor
 fileprivate class Coordinator: NSObject {
     class Control : ZoomableScrollViewControl {
         var windowSize: CGSize {

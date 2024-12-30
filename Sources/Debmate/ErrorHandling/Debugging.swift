@@ -46,7 +46,7 @@ public func fatalErrorForCrashReport(_ msg: String, file: StaticString = #file, 
 ///   after the message is read
 /// - Returns: last message sent by fatalErrorForCrashReport
 public func fatalErrorForCrashReportMessage(deleteOnRead: Bool = true) -> String? {
-    if let msg = try? String(contentsOf: fileForFatalErrorCrashReport()) {
+    if let msg = try? String(contentsOf: fileForFatalErrorCrashReport(), encoding: .utf8) {
         if deleteOnRead {
             try? FileManager.default.removeItem(at: fileForFatalErrorCrashReport())
         }

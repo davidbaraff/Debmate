@@ -1,0 +1,21 @@
+//
+//  JSONSerializable.swift
+//  Debmate
+//
+//  Created by David Baraff on 12/17/24.
+//
+
+import Foundation
+
+public protocol JSONSerializable : Codable {
+}
+
+public extension JSONSerializable {
+    func jsonData() throws -> Data {
+        try JSONEncoder().encode(self)
+    }
+
+    static func fromJSONData(_ data: Data) throws -> Self {
+        try JSONDecoder().decode(Self.self, from: data)
+    }
+}

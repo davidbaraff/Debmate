@@ -14,6 +14,24 @@ public extension simd_float4x4 {
     }
 }
 
+public extension SIMD3<Double> {
+    var magnitude: Double {
+        sqrt(x*x + y*y + z*z)
+    }
+    
+    var normalized: SIMD3<Double> {
+        self / magnitude
+    }
+}
+
+public func * (lhs: SIMD3<Double>, rhs: SIMD3<Double>) -> Double {
+    simd_dot(lhs, rhs)
+}
+
+public func ^ (lhs: SIMD3<Double>, rhs: SIMD3<Double>) -> SIMD3<Double> {
+    simd_cross(lhs, rhs)
+}
+
 public extension SIMD3<Float> {
     var magnitude: Float {
         sqrt(x*x + y*y + z*z)
@@ -26,19 +44,19 @@ public extension SIMD3<Float> {
 
 public struct SIMDPlane {
     // normal * p + d = 0
-    let normal: SIMD3<Float>
-    let d: Float
+    let normal: SIMD3<Double>
+    let d: Double
     
-    public init(normal: SIMD3<Float>, point: SIMD3<Float>) {
+    public init(normal: SIMD3<Double>, point: SIMD3<Double>) {
         self.normal = normal.normalized
         d = -simd_dot(normal, point)
     }
     
-    public func evaluate(point: SIMD3<Float>) -> Float {
+    public func evaluate(point: SIMD3<Double>) -> Double {
         simd_dot(normal, point) + d
     }
     
-    public func intersection(line: SIMDLine) -> SIMD3<Float>? {
+    public func intersection(line: SIMDLine) -> SIMD3<Double>? {
         let n_dir = simd_dot(line.direction, normal)
         guard abs(n_dir) > 1e-5 else { return nil }
         let t = -(d + simd_dot(normal, line.p)) / n_dir
@@ -47,10 +65,10 @@ public struct SIMDPlane {
 }
 
 public struct SIMDLine {
-    let p: SIMD3<Float>
-    let direction: SIMD3<Float>
+    let p: SIMD3<Double>
+    let direction: SIMD3<Double>
     
-    public init(_ p0: SIMD3<Float>, _ p1: SIMD3<Float>) {
+    public init(_ p0: SIMD3<Double>, _ p1: SIMD3<Double>) {
         p = p0
         direction = (p1 - p0).normalized
     }

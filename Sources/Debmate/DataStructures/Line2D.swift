@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Line2D : Sendable {
+public struct Line2D : Sendable, Codable {
     public init(p1: CGPoint, p2: CGPoint) {
         let t = (p2 - p1).normalizedDirection
         normal = CGPoint(-t.y, t.x)

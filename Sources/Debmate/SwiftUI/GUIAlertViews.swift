@@ -359,25 +359,32 @@ struct GUIAlertWatcherPopupView: View {
 @available(iOS 17, macOS 17, tvOS 17, *)
 public struct GUIAlertWatcherView<Content> : View where Content : View {
     var content: Content
+    let enabled: Bool
+    let popupScale: Double
     @EnvironmentObject var guiAlertWatcher: GUIAlertWatcher
 
-    public init( @ViewBuilder content: () -> Content) {
+    public init(enabled: Bool = true, popupScale: Double = 1.0, @ViewBuilder content: () -> Content) {
+        self.enabled = enabled
         self.content = content()
+        self.popupScale = popupScale
     }
 
     public var body: some View {
         ZStack {
             content
             
-            if let current = guiAlertWatcher.current {
+            if let current = guiAlertWatcher.current,
+               enabled {
                 guiAlertWatcher.view(for: current)
             }
             
-            if guiAlertWatcher.popupVisible {
+            if enabled,
+               guiAlertWatcher.popupVisible {
                 GUIAlertWatcherPopupView(message: guiAlertWatcher.popupMessage,
                                          duration: guiAlertWatcher.popupDuration,
                                          popupType: guiAlertWatcher.popupType,
                                          uniqueID: guiAlertWatcher.popupUniqueID)
+                .scaleEffect(popupScale)
                 .id(guiAlertWatcher.popupUniqueID)
             }
         }
@@ -386,8 +393,8 @@ public struct GUIAlertWatcherView<Content> : View where Content : View {
 
 @available(iOS 17, macOS 17, tvOS 17, *)
 extension View {
-    public func addGUIAlertWatcher() -> GUIAlertWatcherView<Self> {
-        GUIAlertWatcherView {
+    public func addGUIAlertWatcher(enabled: Bool = true, popupScale: Double = 1.0) -> GUIAlertWatcherView<Self> {
+        GUIAlertWatcherView(enabled: enabled, popupScale: popupScale) {
             self
         }
     }

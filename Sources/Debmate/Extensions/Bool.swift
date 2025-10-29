@@ -12,6 +12,10 @@ public extension Bool {
         self ? 1 : 0
     }
     
+    init(fromInt i: Int) {
+        self = i != 0
+    }
+    
     @available(iOS 18.0, *)
     @available(watchOS 11.0, *)
     class Locked {

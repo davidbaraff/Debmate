@@ -11,8 +11,13 @@ public protocol JSONSerializable : Codable {
 }
 
 public extension JSONSerializable {
-    func jsonData() throws -> Data {
-        try JSONEncoder().encode(self)
+    func jsonData(sortedKeys: Bool = false) throws -> Data {
+        let encoder = JSONEncoder()
+        if sortedKeys {
+            encoder.outputFormatting = [.sortedKeys]
+        }
+        
+        return try encoder.encode(self)
     }
 
     static func fromJSONData(_ data: Data) throws -> Self {

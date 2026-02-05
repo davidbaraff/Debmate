@@ -10,7 +10,7 @@ import SwiftUI
 
 #if os(iOS)
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 @Observable
 @MainActor
 final public class OrientationInfo {

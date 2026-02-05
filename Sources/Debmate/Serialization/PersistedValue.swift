@@ -17,7 +17,7 @@ private class _PersistedValueWatcher: ObservableObject {
     
 }
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 @MainActor
 @Observable
 final public class PersistedValue<T /* : Equatable */ > {
@@ -70,8 +70,11 @@ final public class PersistedValue<T /* : Equatable */ > {
     }
     
     /// Execute work whever the value changes, using objectWillChange semantics.
-    public func watchForever(onChange work: @escaping (() -> Void)) {
+    public func watchForever(callNow: Bool = false, onChange work: @escaping (() -> Void)) {
         watcher.objectWillChange.sinkForever(receiveValue: work)
+        if callNow {
+            work()
+        }
     }
     
     /// Write value to UserDefaults immediately.
@@ -82,4 +85,5 @@ final public class PersistedValue<T /* : Equatable */ > {
 
 
 #endif
+
 

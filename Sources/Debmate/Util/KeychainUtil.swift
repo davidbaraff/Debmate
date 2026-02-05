@@ -8,13 +8,13 @@
 import Foundation
 
 extension Util {
-    @discardableResult
     /// Write a string value to the keychain.
     /// - Parameters:
     ///   - bundleName: bundle name to store secret under
     ///   - serviceName: service name to store secret under
     ///   - secret: secret
     /// - Returns: True if the value was stored, false otherwise.
+    @discardableResult
     static public func writeToKeychain(bundleName: String, serviceName: String, secret: String) -> Bool {
         let query = [kSecClass: kSecClassGenericPassword,
                kSecAttrService: bundleName,
@@ -37,6 +37,51 @@ extension Util {
                kSecAttrService: bundleName,
                kSecAttrAccount: serviceName,
                 kSecReturnData: true] as CFDictionary
+        
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query, &item)
+        guard status == errSecSuccess else {
+            return nil
+        }
+        
+        return (item as! Data).asUTF8String
+    }
+    
+    /// Write a string value to a shared keychain.
+    /// - Parameters:
+    ///   - appGroupName: the shared app group of the keychain
+    ///   - tableName: the table to store the value under
+    ///   - keyName: the specific key name in the table
+    ///   - secret: secret
+    /// - Returns: True if the value was stored, false otherwise.
+    @discardableResult
+    static public func writeToSharedKeychain(appGroupNameName: String, tableName: String, keyName: String, secret: String) -> Bool {
+        let query = [kSecClass: kSecClassGenericPassword,
+               kSecAttrService: keyName,
+               kSecAttrAccount: tableName,
+           kSecAttrAccessGroup: appGroupNameName,
+        kSecAttrSynchronizable: true,
+                 kSecValueData: secret.asData] as CFDictionary
+        
+        SecItemDelete(query)
+        let status = SecItemAdd(query, nil)
+        return status == errSecSuccess
+    }
+    
+    /// Read back a string from the shared keychain.
+    /// - Parameters:
+    ///   - appGroupName: the shared app group of the keychain
+    ///   - tableName: the table to store the value under
+    ///   - keyName: the specific key name in the table
+    /// - Returns: secret (if found)
+    static public func readFromSharedKeychain(appGroupNameName: String, tableName: String, keyName: String) -> String? {
+        let query = [kSecClass: kSecClassGenericPassword,
+               kSecAttrService: keyName,
+               kSecAttrAccount: tableName,
+           kSecAttrAccessGroup: appGroupNameName,
+        kSecAttrSynchronizable: kSecAttrSynchronizableAny,
+                kSecReturnData: true,
+                kSecMatchLimit: kSecMatchLimitOne] as CFDictionary
         
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query, &item)

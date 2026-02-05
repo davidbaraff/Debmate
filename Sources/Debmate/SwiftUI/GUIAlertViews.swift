@@ -14,7 +14,7 @@ import SwiftUI
 public typealias UIKeyboardType = Void
 #endif
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 public struct WarningView : View {
     @EnvironmentObject var guiAlertWatcher: GUIAlertWatcher
     @Environment(\.colorScheme) var colorScheme
@@ -190,7 +190,7 @@ public struct WarningView : View {
     }
 }
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 public struct MultipleChoiceAlertView : View {
     @EnvironmentObject var guiAlertWatcher: GUIAlertWatcher
     @Environment(\.colorScheme) var colorScheme
@@ -283,7 +283,7 @@ public struct MultipleChoiceAlertView : View {
     }
 }
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 struct GUIAlertWatcherPopupView: View {
     @State var opacity = 0.0
     @State var counter = 0
@@ -356,7 +356,7 @@ struct GUIAlertWatcherPopupView: View {
 }
 
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 public struct GUIAlertWatcherView<Content> : View where Content : View {
     var content: Content
     let enabled: Bool
@@ -376,6 +376,8 @@ public struct GUIAlertWatcherView<Content> : View where Content : View {
             if let current = guiAlertWatcher.current,
                enabled {
                 guiAlertWatcher.view(for: current)
+                    .scaleEffect(popupScale)
+                    .tint(Color.blue)
             }
             
             if enabled,
@@ -391,7 +393,7 @@ public struct GUIAlertWatcherView<Content> : View where Content : View {
     }
 }
 
-@available(iOS 17, macOS 17, tvOS 17, *)
+@available(iOS 17, macOS 14, tvOS 17, *)
 extension View {
     public func addGUIAlertWatcher(enabled: Bool = true, popupScale: Double = 1.0) -> GUIAlertWatcherView<Self> {
         GUIAlertWatcherView(enabled: enabled, popupScale: popupScale) {

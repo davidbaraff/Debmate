@@ -438,7 +438,7 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         showPopup(.bottomInfoPopup, title, duration)
     }
     
-    @available(iOS 17, macOS 17, tvOS 17, *)
+    @available(iOS 17, macOS 14, tvOS 17, *)
     public func view(for current: Attributes) -> some View {
         switch current.alertType {
         case .warning:

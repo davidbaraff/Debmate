@@ -79,6 +79,7 @@ public struct WarningView : View {
     
     func dismiss(cancel: Bool) {
         guard !alreadyDismissed else { return }
+        print("In dismiss, set already dismissed to true: cancel = \(cancel)")
         alreadyDismissed = true
         
         withAnimation(.linear(duration: 0.2)) {

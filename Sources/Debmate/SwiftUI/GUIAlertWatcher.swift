@@ -206,12 +206,29 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         objectWillChange.send()
         
         return await withCheckedContinuation { continuation in
+            let holder = ContinuationHolder(continuation: continuation)
             attributesStack.append(Attributes(alertType: .warning,
                                               title: title,
                                               details: details,
                                               dismissButtonText: dismissButtonText,
-                                              onDismissAction: { continuation.resume() },
+                                              onDismissAction: { holder.resume(returning: ()) },
                                               uniqueID: uniqueIDCounter))
+        }
+    }
+
+    private class ContinuationHolder<T> {
+        let continuation: CheckedContinuation<T, Never>
+        var hasContinued = false
+    
+        init(continuation: CheckedContinuation<T, Never>) {
+            self.continuation = continuation
+        }
+
+        func resume(returning value: sending T) {
+            if !hasContinued {
+                hasContinued = true
+                continuation.resume(returning: value)
+            }
         }
     }
 
@@ -220,17 +237,18 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
     ///   - title: title of warning
     ///   - details: details of operation
     ///   - progressType: type of progress indicator to display.
-    private func showProgress(_ title: String, details: String? = nil, progressType: ProgressType = .none) async {
+    public func showProgress(_ title: String, details: String? = nil, progressType: ProgressType = .none) async {
         uniqueIDCounter += 1
         objectWillChange.send()
         
         return await withCheckedContinuation { continuation in
+            let holder = ContinuationHolder(continuation: continuation)
             attributesStack.append(Attributes(alertType: .warning,
                                               title: title,
                                               details: details,
                                               progressType: progressType,
                                               dismissButtonText: "Cancel",
-                                              onDismissAction: { continuation.resume() },
+                                              onDismissAction: { holder.resume(returning: ()) },
                                               uniqueID: uniqueIDCounter))
         }
     }
@@ -347,12 +365,13 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         objectWillChange.send()
         
         return await withCheckedContinuation { continuation in
+            let holder = ContinuationHolder(continuation: continuation)
             attributesStack.append(Attributes(alertType: .yesOrCancel,
                                               title: title,
                                               details: details,
                                               yesButtonText: yesText,
                                               destructive: destructive,
-                                              yesOrCancelAction: { continuation.resume(returning: $0) },
+                                              yesOrCancelAction: { holder.resume(returning: $0) },
                                               uniqueID: uniqueIDCounter))
         }
     }
@@ -371,13 +390,14 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         objectWillChange.send()
         
         return await withCheckedContinuation { continuation in
+            let holder = ContinuationHolder(continuation: continuation)
             attributesStack.append(Attributes(alertType: .textEntryOrCancel,
                                               title: title,
                                               details: details,
                                               yesButtonText: acceptText,
                                               destructive: false,
                                               keyboardType: keyboardType,
-                                              textEntryOrCancelAction: { continuation.resume(returning: $0) },
+                                              textEntryOrCancelAction: { holder.resume(returning: $0) },
                                               uniqueID: uniqueIDCounter))
         }
     }
@@ -396,10 +416,11 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
         objectWillChange.send()
         
         return await withCheckedContinuation { continuation in
+            let holder = ContinuationHolder(continuation: continuation)
             attributesStack.append(Attributes(alertType: .multipleChoice,
                                               title: title,
                                               details: details,
-                                              multipleChoiceAction: { continuation.resume(returning: $0 as! T) },
+                                              multipleChoiceAction: { holder.resume(returning: $0 as! T) },
                                               multipleChoiceTextAndValues: choices.map { ($0.0, $0.1) },
                                               multipleChoiceDefaultIndex: defaultIndex,
                                               uniqueID: uniqueIDCounter))
@@ -530,4 +551,6 @@ public class GUIAlertWatcher : ObservableObject, @unchecked Sendable {
 }
 
 #endif
+
+
 

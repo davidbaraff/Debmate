@@ -36,7 +36,7 @@ extension Util {
                                  command: String? = nil,
                                  parameters: [String: Any]? = nil,
                                  optionalParameters: [String: Any?]? = nil,
-                                 https: Bool = false) throws -> URL {
+                                 https: Bool = true) throws -> URL {
         guard var uc1 = URLComponents(string: "http://\(host)") else {
             throw GeneralError("URL with host = '\(host)' is malformed")
         }

@@ -394,4 +394,32 @@ extension Util {
             return "\(extensionlessFileName)-\(nextVersion).\(ext)"
         }
     }
+    
+    
+    /// Volume info
+    public struct VolumeInfo {
+        public let volumeRootURL: URL
+        public let freeBytes: Int?
+        public let isRemovable: Bool?
+    }
+    
+    /// Return volume info for a URL.
+    /// - Parameter url: url
+    /// - Returns: Information about the volume containing the URL
+    static public func volumeInfo(for url: URL) -> VolumeInfo? {
+        let keys: Set<URLResourceKey> = [
+            .volumeURLKey,
+            .volumeAvailableCapacityKey,
+            .volumeIsRemovableKey,
+        ]
+
+        guard let values = try? url.resourceValues(forKeys: keys),
+              let volumeRootURL = values.volume else {
+            return nil
+        }
+
+        return .init(volumeRootURL: volumeRootURL,
+                     freeBytes: values.volumeAvailableCapacity,
+                     isRemovable: values.volumeIsRemovable)
+    }
 }

@@ -8,6 +8,63 @@
 import Foundation
 
 extension Util {
+    
+    /// Securely write to keychain
+    /// - Parameters:
+    ///   - data: data to be stored
+    ///   - keychainAccount: uniquely named keychain account
+    /// - Returns: true if the write could be performed.
+    @discardableResult
+    static public func writeToKeychain(data: Data, keychainAccount: String) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: keychainAccount,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+
+        SecItemDelete(query as CFDictionary)
+        let status = SecItemAdd(query as CFDictionary, nil)
+        return status == errSecSuccess
+    }
+
+    
+    /// Clear item from keychain
+    /// - Parameter keychainAccount: uniquely named keychain account
+    static public func clearFromKeychain(keychainAccount: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: keychainAccount
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    
+    /// Read (securely) from keychain
+    /// - Parameter keychainAccount: uniquely named keychain account
+    /// - Returns: data, if found
+    static public func readFromKeychain(keychainAccount: String) throws -> Data? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: keychainAccount,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        switch status {
+        case errSecSuccess:
+            if let data =  result as? Data {
+                return data
+            }
+            throw GeneralError("error reading \(keychainAccount): result had type \(type(of: result))")
+        case errSecItemNotFound:
+            return nil
+        default:
+            throw GeneralError("error reading \(keychainAccount) from keychain: \(status)")
+        }
+    }
+    
     /// Write a string value to the keychain.
     /// - Parameters:
     ///   - bundleName: bundle name to store secret under

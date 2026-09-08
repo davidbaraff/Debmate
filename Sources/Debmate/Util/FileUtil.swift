@@ -29,6 +29,14 @@ extension Util {
 
     /// The application's Application Support directory
     public static let applicationSupportDirectory = applicationURL(forDirectory: .applicationSupportDirectory)
+
+    /// Test if a file exists.
+    ///
+    /// - Parameter url: file location
+    /// - Returns: true if the file  exists
+    public static func isExistingFile(url: URL) -> Bool {
+        FileManager.default.fileExists(atPath: url.path)
+    }
     
     /// Test if a directory exists.
     ///

@@ -150,8 +150,23 @@ public extension CGRect {
                       width: newWidth, height: newHeight)
     }
     
+    /// Convert a rectangle in normalized coordiinates
+    /// to a rectangle with the maximum extent given by size.
+    func normalizedTo(size: CGSize) -> CGRect {
+        CGRect(x: (self.minX * size.width).rounded(),
+               y: (self.minY * size.height).rounded(),
+               width: self.width * size.width,
+               height: self.height * size.height)
+    }
+
     var aspectRatio: Double {
         size.aspectRatio
+    }
+    
+    static func boundingRect(for points: [CGPoint]) -> CGRect {
+        points.reduce(.null) { rect, point in
+            rect.union(CGRect(origin: point, size: .zero))
+        }
     }
 }
 
